@@ -43,13 +43,13 @@ jobs:
 
     - name: Create Tag
       uses: rickstaa/action-create-tag@v1.7.2
-      if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/main'
       with:
         tag: waserver-v${{env.VERSION}}
 
     - name: Release
       uses: softprops/action-gh-release@v2
-      if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/main'
       with:
         name: waserver-v${{env.VERSION}}
         tag_name: waserver-v${{env.VERSION}}
