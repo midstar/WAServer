@@ -19,9 +19,11 @@ var applicationBuildTime = "<NOT SET>"
 var applicationGitHash = "<NOT SET>"
 
 func printUsage() {
-	fmt.Printf("Usage: %s [options] [<path>]\n\n", os.Args[0])
-	fmt.Printf("<path> is the directory where your web files are located.\n")
+	fmt.Printf("Usage: %s [options] [<apppath>] [<datapath>]\n\n", os.Args[0])
+	fmt.Printf("<apppath> is the directory where your web files are located.\n")
 	fmt.Printf("Default is current directory.\n\n")
+	fmt.Printf("<datapath> is the directory where data (JSON) is stored.\n")
+	fmt.Printf("Default is same as apppath.\n\n")
 	fmt.Printf("Supported options:\n")
 	flag.PrintDefaults()
 }
@@ -42,27 +44,34 @@ func main() {
 		os.Exit(0)
 	}
 
-	directory := "."
-	if flag.NArg() == 1 {
-		directory = flag.Arg(0)
-	} else if flag.NArg() > 1 {
+	appDir := "."
+	if flag.NArg() >= 1 {
+		appDir = flag.Arg(0)
+	} 
+	dataDir := appDir
+	if flag.NArg() >= 2 {
+		dataDir = flag.Arg(1)
+	} 
+	if flag.NArg() > 2 {
 		fmt.Fprintf(os.Stderr, "Invalid number of arguments!\n\n")
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	fs := http.FileServer(http.Dir(directory))
+	fmt.Printf("apppath %s, datapath %s\n", appDir, dataDir)
+
+	fs := http.FileServer(http.Dir(appDir))
 	http.Handle("/", fs)
 
 	if *tlsEnable {
-		fmt.Printf("Serving path %s on port %d over HTTPS\n", directory, *port)
+		fmt.Printf("Serving path %s on port %d over HTTPS\n", appDir, *port)
 
 		err := http.ListenAndServeTLS(":"+strconv.Itoa(*port), *tlsCertFile, *tlsKeyFile, nil)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error! %s\n", err)
 		}
 	} else {
-		fmt.Printf("Serving path %s on port %d over HTTP\n", directory, *port)
+		fmt.Printf("Serving path %s on port %d over HTTP\n", appDir, *port)
 
 		err := http.ListenAndServe(":"+strconv.Itoa(*port), nil)
 		if err != nil {
