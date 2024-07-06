@@ -7,9 +7,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
-	"strconv"
 )
 
 // Below globals are automatically updated by the CI by providing
@@ -58,24 +56,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("apppath %s, datapath %s\n", appDir, dataDir)
-
-	fs := http.FileServer(http.Dir(appDir))
-	http.Handle("/", fs)
-
-	if *tlsEnable {
-		fmt.Printf("Serving path %s on port %d over HTTPS\n", appDir, *port)
-
-		err := http.ListenAndServeTLS(":"+strconv.Itoa(*port), *tlsCertFile, *tlsKeyFile, nil)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error! %s\n", err)
-		}
-	} else {
-		fmt.Printf("Serving path %s on port %d over HTTP\n", appDir, *port)
-
-		err := http.ListenAndServe(":"+strconv.Itoa(*port), nil)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error! %s\n", err)
-		}	
-	} 
+	startServer(*port, appDir, dataDir, *tlsEnable, *tlsCertFile, *tlsKeyFile)
 }
