@@ -16,6 +16,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 func startServer(port int, appDir, dataDir string, tlsEnable bool, tlsCertFile, tlsKeyFile string) {
 	http.Handle("/app/", http.StripPrefix("/app/", 
 		http.FileServer(http.Dir(appDir))))
+	http.Handle("/", http.RedirectHandler("/app/", 302))
 	http.HandleFunc("/api/", handleRequest)
 	//fs := http.FileServer(http.Dir("/home/joel/git/waserver/app_example"))
 	//http.Handle("/app/", fs)
