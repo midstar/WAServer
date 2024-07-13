@@ -18,12 +18,7 @@ func startServer(port int, appDir, dataDir string, tlsEnable bool, tlsCertFile, 
 		http.FileServer(http.Dir(appDir))))
 	http.Handle("/", http.RedirectHandler("/app/", 302))
 	http.HandleFunc("/api/", handleRequest)
-	//fs := http.FileServer(http.Dir("/home/joel/git/waserver/app_example"))
-	//http.Handle("/app/", fs)
-	//http.Handle("/tmpfiles/", http.StripPrefix("/tmpfiles/", 
-	//	http.FileServer(http.Dir("/home/joel/git/waserver/app_example"))))
-    //s := &server{}
-    //http.Handle("/api", s)
+	
 	if tlsEnable {
 		fmt.Printf("Serving path %s on port %d over HTTPS\n", appDir, port)
 
