@@ -44,13 +44,13 @@ func main() {
 		os.Exit(0)
 	}
 
-	appDir := "."
+	appPath := "."
 	if flag.NArg() >= 1 {
-		appDir = flag.Arg(0)
+		appPath = flag.Arg(0)
 	}
-	dataDir := appDir
+	dataPath := appPath
 	if flag.NArg() >= 2 {
-		dataDir = flag.Arg(1)
+		dataPath = flag.Arg(1)
 	}
 	if flag.NArg() > 2 {
 		fmt.Fprintf(os.Stderr, "Invalid number of arguments!\n\n")
@@ -66,5 +66,12 @@ func main() {
 		slog.SetDefault(l)
 	}
 
-	startServer(*port, appDir, dataDir, *tlsEnable, *tlsCertFile, *tlsKeyFile)
+	if !*tlsEnable {
+		*tlsCertFile = ""
+		*tlsKeyFile = ""
+	}
+
+	webAPI := CreateWebAPI(*port, appPath, dataPath, *tlsCertFile, *tlsKeyFile)
+	httpServerDone := webAPI.Start()
+	<-httpServerDone // Block until http server is done
 }
