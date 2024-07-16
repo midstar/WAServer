@@ -1,3 +1,4 @@
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <html>
 <head>
 <style>
@@ -26,25 +27,94 @@ td .content {
   background: red;
 }
 
+#page-game {
+  display: none;
+}
+
+/* PAGE - NAME */
+#page-name {
+  font-size: 25px;
+  /*display: none;*/
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+input[type='text'] { 
+  font-size: 25px;
+}
+
+#form-user {
+  width: 50%;
+  height: 50%;
+}
+
+#form-user input {
+  width: 100%
+}
+
+/* PAGE - GAME SELECT */
+
+#page-game-select {
+  display: none;
+}
+
+.game-button {
+  font-size: 25px;
+  margin: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 2px;
+  border-radius: 10px;
+  border-style: solid;
+  background-color: aqua;
+}
+
+.game-new {
+  background-color:chartreuse;
+}
+
+#joinable {
+  margin-top: 30px;
+}
+
 </style>
 </head>
 <body>
-  <table>
-    <tr>
-      <td><div class="content">1</div></td>
-      <td><div class="content">1</div></td>
-      <td><div class="content">1</div></td>
-    </tr>
-    <tr>
-      <td><div class="content">1</div></td>
-      <td><div class="content">1</div></td>
-      <td><div class="content">1</div></td>
-    </tr>
-    <tr>
-      <td><div class="content">1</div></td>
-      <td><div class="content">1</div></td>
-      <td><div class="content">1</div></td>
-    </tr>
-  </table>
+  <div id="page-game">
+    <table>
+      <tr>
+        <td><div class="content"></div></td>
+        <td><div class="content"></div></td>
+        <td><div class="content"></div></td>
+      </tr>
+      <tr>
+        <td><div class="content"></div></td>
+        <td><div class="content"></div></td>
+        <td><div class="content"></div></td>
+      </tr>
+      <tr>
+        <td><div class="content"></div></td>
+        <td><div class="content"></div></td>
+        <td><div class="content"></div></td>
+      </tr>
+    </table>
+  </div>
+  <div id="page-name">
+    <form id="form-user">
+      <label for="username">Username:</label><br>
+      <input type="text" id="username" name="username"><br>
+    </form>
+  </div>
+  <div id="page-game-select">
+    <div class="game-button game-new">New game</div>
+    <div id="joinable">
+      <div class="game-button">Join Kalle</div>
+      <div class="game-button">Join Niklas</div>
+      <div class="game-button">Join Stina</div>
+    </div>
+  </div>
 </body>
 </html>

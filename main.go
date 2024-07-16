@@ -7,6 +7,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 )
 
@@ -30,6 +31,7 @@ func main() {
 	flag.Usage = printUsage
 	var version = flag.Bool("v", false, "Display version")
 	var port = flag.Int("p", 8080, "Network port to listen to")
+	var debugEnable = flag.Bool("d", false, "Enable debugging logs")
 	var tlsEnable = flag.Bool("s", false, "Use secure connection (TLS/HTTPS)")
 	var tlsCertFile = flag.String("c", "cert.pem", "TLS certificate file")
 	var tlsKeyFile = flag.String("k", "key.pem", "TLS key file")
@@ -45,15 +47,23 @@ func main() {
 	appDir := "."
 	if flag.NArg() >= 1 {
 		appDir = flag.Arg(0)
-	} 
+	}
 	dataDir := appDir
 	if flag.NArg() >= 2 {
 		dataDir = flag.Arg(1)
-	} 
+	}
 	if flag.NArg() > 2 {
 		fmt.Fprintf(os.Stderr, "Invalid number of arguments!\n\n")
 		flag.Usage()
 		os.Exit(1)
+	}
+
+	if *debugEnable {
+		opts := &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		}
+		l := slog.New(slog.NewTextHandler(os.Stdout, opts))
+		slog.SetDefault(l)
 	}
 
 	startServer(*port, appDir, dataDir, *tlsEnable, *tlsCertFile, *tlsKeyFile)
