@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -11,6 +15,8 @@ var baseURL = "http://localhost:8080"
 
 func startServer(t *testing.T) {
 	t.Helper()
+
+	os.Args = []string{"test", "app"}
 	go main()
 	waitServer(t)
 }
@@ -40,7 +46,30 @@ func shutdownServer(t *testing.T) {
 	http.DefaultServeMux = new(http.ServeMux)
 }
 
-func TestExample(t *testing.T) {
+func respToString(response io.ReadCloser) string {
+	defer response.Close()
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(response)
+	return buf.String()
+}
+
+func getHTML(t *testing.T, path string) string {
+	t.Helper()
+	resp, err := http.Get(fmt.Sprintf("%s/%s", baseURL, path))
+	assertExpectNoErr(t, "", err)
+	assertEqualsInt(t, "", int(http.StatusOK), int(resp.StatusCode))
+	assertEqualsStr(t, "", "text/html; charset=utf-8", resp.Header.Get("content-type"))
+	defer resp.Body.Close()
+	return respToString(resp.Body)
+}
+
+func TestGetStatic(t *testing.T) {
 	startServer(t)
+
+	html := getHTML(t, "app/3_in_a_row/index.html")
+	if !strings.Contains(html, "<title>3 in a row</title>") {
+		t.Fatal("Index html title missing")
+	}
+
 	shutdownServer(t)
 }
