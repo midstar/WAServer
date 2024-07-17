@@ -64,17 +64,6 @@ func (wa *WebAPI) Stop() {
 	wa.server.Shutdown(context.Background())
 }
 
-func (wa *WebAPI) handleDataPost(w http.ResponseWriter, r *http.Request) {
-	/*var head string
-	originalURL := r.URL.Path
-	llog.Trace("Got request: %s", r.URL.Path)
-	head, r.URL.Path = shiftPath(r.URL.Path)*/
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message": "Data post"}`))
-}
-
 func (wa *WebAPI) handleDataGet(w http.ResponseWriter, r *http.Request) {
 	/*var head string
 	originalURL := r.URL.Path
@@ -84,6 +73,17 @@ func (wa *WebAPI) handleDataGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message": "Data get"}`))
+}
+
+func (wa *WebAPI) handleDataPost(w http.ResponseWriter, r *http.Request) {
+	/*var head string
+	originalURL := r.URL.Path
+	llog.Trace("Got request: %s", r.URL.Path)
+	head, r.URL.Path = shiftPath(r.URL.Path)*/
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message": "Data post"}`))
 }
 
 func (wa *WebAPI) handleShutdown(w http.ResponseWriter, r *http.Request) {
