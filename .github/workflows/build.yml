@@ -27,6 +27,10 @@ jobs:
         echo $VERSION
         echo $GITHUB_SHA
 
+    - name: Test
+      run: |
+        go test -cover
+
     - name: Linux PC/x64 build and zip
       run: |
         go build -v -ldflags="-X 'main.applicationBuildTime=$NOW' -X main.applicationVersion=$VERSION -X main.applicationGitHash=$GITHUB_SHA" ./...
