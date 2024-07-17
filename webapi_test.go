@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -149,4 +150,48 @@ func TestDataPost(t *testing.T) {
 	assertEqualsStr(t, "invalid message", "Data get", data["message"])
 
 	shutdownServer(t)
+}
+
+func TestTLS(t *testing.T) {
+	var baseHttpsURL = "https://localhost:8080"
+
+	// Reset flags
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	os.Args = []string{"test", "-d", "-s", "-c", ".test/cert.pem",
+		"-k", ".test/key.pem", "app", "data"}
+	go main()
+
+	// Create the client
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	httpsClient := &http.Client{Transport: tr, Timeout: 100 * time.Millisecond}
+
+	// Wait until server goes up
+	maxTries := 50
+	i := 0
+	for i = 0; i < maxTries; i++ {
+		_, err := httpsClient.Get(baseHttpsURL)
+		if err == nil {
+			// Up and running :-)
+			break
+		}
+	}
+	assertTrue(t, "Server never started using TLS", i < maxTries)
+
+	// Access the main app page
+	resp, err := httpsClient.Get(fmt.Sprintf("%s/app", baseHttpsURL))
+	assertExpectNoErr(t, "Unable to connect over TLS", err)
+	defer resp.Body.Close()
+	assertEqualsInt(t, "", int(http.StatusOK), int(resp.StatusCode))
+	assertEqualsStr(t, "", "text/html; charset=utf-8", resp.Header.Get("content-type"))
+
+	// Shutdown the server
+	// No answer expected on POST shutdown (short timeout)
+	httpsClient = &http.Client{Timeout: 1 * time.Second, Transport: tr}
+	httpsClient.Post(fmt.Sprintf("%s/service/shutdown", baseHttpsURL), "", nil)
+
+	// Reset the serveMux
+	http.DefaultServeMux = new(http.ServeMux)
+
 }
