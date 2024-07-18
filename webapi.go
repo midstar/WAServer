@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"path"
 )
 
 // WebAPI represents the REST API server.
@@ -63,39 +64,22 @@ func (wa *WebAPI) Stop() {
 }
 
 func (wa *WebAPI) handleDataGet(w http.ResponseWriter, r *http.Request) {
-	/*var head string
-	originalURL := r.URL.Path
-	llog.Trace("Got request: %s", r.URL.Path)
-	head, r.URL.Path = shiftPath(r.URL.Path)*/
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message": "Data get"}`))
+	dir, file := path.Split(r.URL.Path)
+	fmt.Printf("dir: %s, file: %s", dir, file)
+	MessageResponse(w, http.StatusOK, "Data get")
 }
 
 func (wa *WebAPI) handleDataPost(w http.ResponseWriter, r *http.Request) {
-	/*var head string
-	originalURL := r.URL.Path
-	llog.Trace("Got request: %s", r.URL.Path)
-	head, r.URL.Path = shiftPath(r.URL.Path)*/
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message": "Data post"}`))
+	MessageResponse(w, http.StatusOK, "Data post")
 }
 
 func (wa *WebAPI) handleShutdown(w http.ResponseWriter, r *http.Request) {
 	wa.Stop()
 }
 
-// shiftPath splits off the first component of p, which will be cleaned of
-// relative components before processing. head will never contain a slash and
-// tail will always be a rooted path without trailing slash.
-/*func shiftPath(p string) (head, tail string) {
-	p = path.Clean("/" + p)
-	i := strings.Index(p[1:], "/") + 1
-	if i <= 0 {
-		return p[1:], "/"
-	}
-	return p[1:i], p[i:]
-}*/
+func MessageResponse(w http.ResponseWriter, status int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	jsonResponse := fmt.Sprintf(`{"message": "%s"}`, message)
+	w.Write([]byte(jsonResponse))
+}

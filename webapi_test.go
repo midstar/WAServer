@@ -118,17 +118,17 @@ func postObject(t *testing.T, path string, recv_obj interface{}, send_obj interf
 
 func TestStaticGet(t *testing.T) {
 	startServer(t)
+	defer shutdownServer(t)
 
 	html := getHTML(t, "app/3_in_a_row/index.html")
 	if !strings.Contains(html, "<title>3 in a row</title>") {
 		t.Fatal("Index html title missing")
 	}
-
-	shutdownServer(t)
 }
 
 func TestDataGet(t *testing.T) {
 	startServer(t)
+	defer shutdownServer(t)
 
 	send_obj := map[string]int{"foo": 1, "bar": 2}
 	var recv_obj map[string]string
@@ -136,20 +136,17 @@ func TestDataGet(t *testing.T) {
 	_, hasMessageKey := recv_obj["message"]
 	assertTrue(t, "Key: message not defined", hasMessageKey)
 	assertEqualsStr(t, "invalid message", "Data post", recv_obj["message"])
-
-	shutdownServer(t)
 }
 
 func TestDataPost(t *testing.T) {
 	startServer(t)
+	defer shutdownServer(t)
 
 	var data map[string]string
 	getObject(t, "data/hej", &data)
 	_, hasMessageKey := data["message"]
 	assertTrue(t, "Key: message not defined", hasMessageKey)
 	assertEqualsStr(t, "invalid message", "Data get", data["message"])
-
-	shutdownServer(t)
 }
 
 func TestTLS(t *testing.T) {
