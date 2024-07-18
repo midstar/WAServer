@@ -192,3 +192,48 @@ func TestTLS(t *testing.T) {
 	http.DefaultServeMux = new(http.ServeMux)
 
 }
+
+func TestDirAndJsonFile(t *testing.T) {
+	dir, file, err := dirAndJsonFile("/nodata/afile")
+	assertEqualsStr(t, "", "", dir)
+	assertEqualsStr(t, "", "", file)
+	assertExpectErr(t, "", err)
+
+	dir, file, err = dirAndJsonFile("/data/")
+	assertEqualsStr(t, "", ".", dir)
+	assertEqualsStr(t, "", "", file)
+	assertExpectNoErr(t, "", err)
+
+	dir, file, err = dirAndJsonFile("/data/afile")
+	assertEqualsStr(t, "", ".", dir)
+	assertEqualsStr(t, "", "afile.json", file)
+	assertExpectNoErr(t, "", err)
+
+	dir, file, err = dirAndJsonFile("/data/adir/")
+	assertEqualsStr(t, "", "adir", dir)
+	assertEqualsStr(t, "", "", file)
+	assertExpectNoErr(t, "", err)
+
+	dir, file, err = dirAndJsonFile("/data/adir/asubdir/")
+	assertEqualsStr(t, "", "adir/asubdir", dir)
+	assertEqualsStr(t, "", "", file)
+	assertExpectNoErr(t, "", err)
+
+	dir, file, err = dirAndJsonFile("/data/adir/asubdir/file")
+	assertEqualsStr(t, "", "adir/asubdir", dir)
+	assertEqualsStr(t, "", "file.json", file)
+	assertExpectNoErr(t, "", err)
+
+	// Hacker attack to get access to files outside the
+	// data directory
+	dir, file, err = dirAndJsonFile("/data/../asubdir/file")
+	assertEqualsStr(t, "", "", dir)
+	assertEqualsStr(t, "", "", file)
+	assertExpectErr(t, "", err)
+
+	dir, file, err = dirAndJsonFile("/data/asubdir/../../file")
+	assertEqualsStr(t, "", "", dir)
+	assertEqualsStr(t, "", "", file)
+	assertExpectErr(t, "", err)
+
+}

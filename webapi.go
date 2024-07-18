@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"path"
+	"strings"
 )
 
 // WebAPI represents the REST API server.
@@ -66,20 +67,43 @@ func (wa *WebAPI) Stop() {
 func (wa *WebAPI) handleDataGet(w http.ResponseWriter, r *http.Request) {
 	dir, file := path.Split(r.URL.Path)
 	fmt.Printf("dir: %s, file: %s", dir, file)
-	MessageResponse(w, http.StatusOK, "Data get")
+	messageResponse(w, http.StatusOK, "Data get")
 }
 
 func (wa *WebAPI) handleDataPost(w http.ResponseWriter, r *http.Request) {
-	MessageResponse(w, http.StatusOK, "Data post")
+	messageResponse(w, http.StatusOK, "Data post")
 }
 
 func (wa *WebAPI) handleShutdown(w http.ResponseWriter, r *http.Request) {
 	wa.Stop()
 }
 
-func MessageResponse(w http.ResponseWriter, status int, message string) {
+func messageResponse(w http.ResponseWriter, status int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	jsonResponse := fmt.Sprintf(`{"message": "%s"}`, message)
 	w.Write([]byte(jsonResponse))
+}
+
+// Interpretets URL.path and assumes paths ending with / is
+// a directory and last entity of path (which is not ending
+// with /) is a json file.
+func dirAndJsonFile(urlPath string) (string, string, error) {
+	const prefix = "/data/"
+	if !strings.HasPrefix(urlPath, prefix) {
+		return "", "", fmt.Errorf("path needs to start with %s but was: %s", prefix, urlPath)
+	}
+	urlPath = strings.TrimPrefix(urlPath, prefix)
+	dir, file := path.Split(urlPath)
+
+	dir = path.Clean(dir)
+	if strings.HasPrefix(dir, "..") {
+		return "", "", fmt.Errorf("hacker attack. Someone tries to access: %s", dir)
+	}
+
+	if file != "" {
+		file = file + ".json"
+	}
+
+	return dir, file, nil
 }
