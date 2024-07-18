@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 )
@@ -65,9 +66,22 @@ func (wa *WebAPI) Stop() {
 }
 
 func (wa *WebAPI) handleDataGet(w http.ResponseWriter, r *http.Request) {
-	dir, file := path.Split(r.URL.Path)
-	fmt.Printf("dir: %s, file: %s", dir, file)
-	messageResponse(w, http.StatusOK, "Data get")
+	dir, file, _ := dirAndJsonFile(r.URL.Path)
+	// Tests shows that Golang server don't allow invalid paths, thus
+	// no error needs to be handled
+	if file == "" {
+		messageResponse(w, http.StatusNotImplemented, "Directory access not implemented")
+		return
+	}
+	fullPath := path.Join(wa.dataPath, dir, file)
+	dat, err := os.ReadFile(fullPath)
+	if err != nil {
+		messageResponse(w, http.StatusNotFound, err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(dat)
 }
 
 func (wa *WebAPI) handleDataPost(w http.ResponseWriter, r *http.Request) {

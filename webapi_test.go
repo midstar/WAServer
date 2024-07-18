@@ -21,7 +21,7 @@ func startServer(t *testing.T) {
 
 	// Reset flags
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	os.Args = []string{"test", "app"}
+	os.Args = []string{"test", "app", ".test/data"}
 	go main()
 	waitServer(t)
 }
@@ -68,13 +68,13 @@ func getHTML(t *testing.T, path string) string {
 	return respToString(resp.Body)
 }
 
-func getObject(t *testing.T, path string, recv_obj interface{}) {
+func getObject(t *testing.T, path string, expectedStatus int, recv_obj interface{}) {
 	t.Helper()
 	resp, err := http.Get(fmt.Sprintf("%s/%s", baseURL, path))
 	if err != nil {
 		t.Fatalf("Unable to get path %s. Reason: %s", path, err)
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != expectedStatus {
 		t.Fatalf("Unexpected status code for path %s: %d (%s)",
 			path, resp.StatusCode, respToString(resp.Body))
 	}
@@ -126,7 +126,7 @@ func TestStaticGet(t *testing.T) {
 	}
 }
 
-func TestDataGet(t *testing.T) {
+func TestDataPost(t *testing.T) {
 	startServer(t)
 	defer shutdownServer(t)
 
@@ -138,15 +138,21 @@ func TestDataGet(t *testing.T) {
 	assertEqualsStr(t, "invalid message", "Data post", recv_obj["message"])
 }
 
-func TestDataPost(t *testing.T) {
+func TestDataGet(t *testing.T) {
 	startServer(t)
 	defer shutdownServer(t)
 
 	var data map[string]string
-	getObject(t, "data/hej", &data)
-	_, hasMessageKey := data["message"]
-	assertTrue(t, "Key: message not defined", hasMessageKey)
-	assertEqualsStr(t, "invalid message", "Data get", data["message"])
+
+	// Test invalid URL
+	getObject(t, "data/fileDontExist", http.StatusNotFound, &data)
+
+	// Test file that exists
+	getObject(t, "data/adir/myfile", http.StatusOK, &data)
+	_, hasAkey := data["akey"]
+	assertTrue(t, "Key: akey not defined", hasAkey)
+	assertEqualsStr(t, "invalid message", "avalue", data["akey"])
+
 }
 
 func TestTLS(t *testing.T) {
@@ -155,7 +161,7 @@ func TestTLS(t *testing.T) {
 	// Reset flags
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	os.Args = []string{"test", "-d", "-s", "-c", ".test/cert.pem",
-		"-k", ".test/key.pem", "app", "data"}
+		"-k", ".test/key.pem", "app", ".test/data"}
 	go main()
 
 	// Create the client
