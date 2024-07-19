@@ -2,3 +2,4 @@
 *.pem
 waserver
 .test/cover
+.test/data/*

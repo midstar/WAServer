@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -85,7 +86,23 @@ func (wa *WebAPI) handleDataGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (wa *WebAPI) handleDataPost(w http.ResponseWriter, r *http.Request) {
-	messageResponse(w, http.StatusOK, "Data post")
+	dir, file, _ := dirAndJsonFile(r.URL.Path)
+	// Tests shows that Golang server don't allow invalid paths, thus
+	// no error needs to be handled
+	if file == "" {
+		messageResponse(w, http.StatusNotImplemented, "Directory access not implemented")
+		return
+	}
+	fullDir := path.Join(wa.dataPath, dir)
+	err := os.MkdirAll(fullDir, 0777)
+	if err != nil {
+		messageResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	fullPath := path.Join(fullDir, file)
+	body, _ := io.ReadAll(r.Body)
+	os.WriteFile(fullPath, body, 0777)
+	messageResponse(w, http.StatusOK, "JSON post successfull")
 }
 
 func (wa *WebAPI) handleShutdown(w http.ResponseWriter, r *http.Request) {
