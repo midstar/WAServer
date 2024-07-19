@@ -156,6 +156,13 @@ func TestDataPost(t *testing.T) {
 	getObject(t, "data/myjson", http.StatusOK, &recv_obj2)
 	assertEqualsInt(t, "", 5, recv_obj2["foo"])
 
+	// Post into subdirectories
+	filePath = path.Join(dataPath, "a/deep/dir/structure", "myjson2.json")
+	os.Remove(filePath)
+	send_obj["foo"] = 9
+	postObject(t, "data/a/deep/dir/structure/myjson2", &recv_obj, &send_obj)
+	assertFileExist(t, "", filePath)
+
 }
 
 func TestDataGet(t *testing.T) {
