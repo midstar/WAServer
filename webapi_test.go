@@ -9,19 +9,21 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 	"testing"
 	"time"
 )
 
-var baseURL = "http://localhost:8080"
+const baseURL = "http://localhost:8080"
+const dataPath = ".test/data"
 
 func startServer(t *testing.T) {
 	t.Helper()
 
 	// Reset flags
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	os.Args = []string{"test", "app", ".test/data"}
+	os.Args = []string{"test", "app", dataPath}
 	go main()
 	waitServer(t)
 }
@@ -130,12 +132,30 @@ func TestDataPost(t *testing.T) {
 	startServer(t)
 	defer shutdownServer(t)
 
+	// Post object
+	filePath := path.Join(dataPath, "myjson.json")
+	os.Remove(filePath)
 	send_obj := map[string]int{"foo": 1, "bar": 2}
 	var recv_obj map[string]string
-	postObject(t, "data/hej", &recv_obj, &send_obj)
+	postObject(t, "data/myjson", &recv_obj, &send_obj)
 	_, hasMessageKey := recv_obj["message"]
 	assertTrue(t, "Key: message not defined", hasMessageKey)
-	assertEqualsStr(t, "invalid message", "Data post", recv_obj["message"])
+	assertEqualsStr(t, "invalid message", "JSON post successfull", recv_obj["message"])
+	assertFileExist(t, "", filePath)
+
+	// Receive object
+	var recv_obj2 map[string]int
+	getObject(t, "data/myjson", http.StatusOK, &recv_obj2)
+	assertEqualsInt(t, "", 1, recv_obj2["foo"])
+
+	// Update object
+	send_obj["foo"] = 5
+	postObject(t, "data/myjson", &recv_obj, &send_obj)
+
+	// Receive updated object
+	getObject(t, "data/myjson", http.StatusOK, &recv_obj2)
+	assertEqualsInt(t, "", 5, recv_obj2["foo"])
+
 }
 
 func TestDataGet(t *testing.T) {
@@ -161,7 +181,7 @@ func TestTLS(t *testing.T) {
 	// Reset flags
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	os.Args = []string{"test", "-d", "-s", "-c", ".test/cert.pem",
-		"-k", ".test/key.pem", "app", ".test/data"}
+		"-k", ".test/key.pem", "app", dataPath}
 	go main()
 
 	// Create the client
