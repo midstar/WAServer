@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -70,11 +71,25 @@ func (wa *WebAPI) handleDataGet(w http.ResponseWriter, r *http.Request) {
 	dir, file, _ := dirAndJsonFile(r.URL.Path)
 	// Tests shows that Golang server don't allow invalid paths, thus
 	// no error needs to be handled
+	fullDir := path.Join(wa.dataPath, dir)
 	if file == "" {
-		messageResponse(w, http.StatusNotImplemented, "Directory access not implemented")
-		return
+		ls, hasLs := r.URL.Query()["ls"]
+		if hasLs && ls[0] == "true" {
+			filesMap, err := listFilesMap(fullDir)
+			if err != nil {
+				messageResponse(w, http.StatusNotFound, err.Error())
+				return
+			}
+			filesJson, _ := json.Marshal(filesMap)
+			writeResponseStr(w, http.StatusOK, string(filesJson))
+			return
+
+		} else {
+			messageResponse(w, http.StatusNotImplemented, "Directory access not implemented")
+			return
+		}
 	}
-	fullPath := path.Join(wa.dataPath, dir, file)
+	fullPath := path.Join(fullDir, file)
 	dat, err := os.ReadFile(fullPath)
 	if err != nil {
 		messageResponse(w, http.StatusNotFound, err.Error())
@@ -109,11 +124,15 @@ func (wa *WebAPI) handleShutdown(w http.ResponseWriter, r *http.Request) {
 	wa.Stop()
 }
 
-func messageResponse(w http.ResponseWriter, status int, message string) {
+func writeResponseStr(w http.ResponseWriter, status int, response string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
+	w.Write([]byte(response))
+}
+
+func messageResponse(w http.ResponseWriter, status int, message string) {
 	jsonResponse := fmt.Sprintf(`{"message": "%s"}`, message)
-	w.Write([]byte(jsonResponse))
+	writeResponseStr(w, status, jsonResponse)
 }
 
 // Interpretets URL.path and assumes paths ending with / is

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -184,8 +185,17 @@ func TestDataGet(t *testing.T) {
 	assertTrue(t, "Key: akey not defined", hasAkey)
 	assertEqualsStr(t, "invalid message", "avalue", data["akey"])
 
+	// GET directory - ls query
+	var filesMap map[string][]string
+	getObject(t, "data/adir/?ls=true", http.StatusOK, &filesMap)
+	assertTrue(t, "", slices.Contains(filesMap["files"], "myfile.json"))
+
+	// GET directory - ls query - not found
+	var resp map[string]string
+	getObject(t, "data/this/dir/dont/exist/?ls=true", http.StatusNotFound, &resp)
+
 	// GET directory (not implemented)
-	getObject(t, "data/adir/myfile/", http.StatusNotImplemented, &data)
+	getObject(t, "data/adir/", http.StatusNotImplemented, &data)
 
 }
 
