@@ -91,7 +91,8 @@ func getObject(t *testing.T, path string, expectedStatus int, recv_obj interface
 	}
 }
 
-func postObject(t *testing.T, path string, recv_obj interface{}, send_obj interface{}) {
+func postObject(t *testing.T, path string, expectedStatus int,
+	recv_obj interface{}, send_obj interface{}) {
 	t.Helper()
 	send_bytes, err := json.Marshal(send_obj)
 	if err != nil {
@@ -103,7 +104,7 @@ func postObject(t *testing.T, path string, recv_obj interface{}, send_obj interf
 	if err != nil {
 		t.Fatalf("Unable to get path %s. Reason: %s", path, err)
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != expectedStatus {
 		t.Fatalf("Unexpected status code for path %s: %d (%s)",
 			path, resp.StatusCode, respToString(resp.Body))
 	}
@@ -137,7 +138,7 @@ func TestDataPost(t *testing.T) {
 	os.Remove(filePath)
 	send_obj := map[string]int{"foo": 1, "bar": 2}
 	var recv_obj map[string]string
-	postObject(t, "data/myjson", &recv_obj, &send_obj)
+	postObject(t, "data/myjson", http.StatusOK, &recv_obj, &send_obj)
 	_, hasMessageKey := recv_obj["message"]
 	assertTrue(t, "Key: message not defined", hasMessageKey)
 	assertEqualsStr(t, "invalid message", "JSON post successfull", recv_obj["message"])
@@ -150,7 +151,7 @@ func TestDataPost(t *testing.T) {
 
 	// Update object
 	send_obj["foo"] = 5
-	postObject(t, "data/myjson", &recv_obj, &send_obj)
+	postObject(t, "data/myjson", http.StatusOK, &recv_obj, &send_obj)
 
 	// Receive updated object
 	getObject(t, "data/myjson", http.StatusOK, &recv_obj2)
@@ -160,8 +161,11 @@ func TestDataPost(t *testing.T) {
 	filePath = path.Join(dataPath, "a/deep/dir/structure", "myjson2.json")
 	os.Remove(filePath)
 	send_obj["foo"] = 9
-	postObject(t, "data/a/deep/dir/structure/myjson2", &recv_obj, &send_obj)
+	postObject(t, "data/a/deep/dir/structure/myjson2", http.StatusOK, &recv_obj, &send_obj)
 	assertFileExist(t, "", filePath)
+
+	// Post directory (not allowed)
+	postObject(t, "data/directory/", http.StatusForbidden, &recv_obj, &send_obj)
 
 }
 
@@ -179,6 +183,9 @@ func TestDataGet(t *testing.T) {
 	_, hasAkey := data["akey"]
 	assertTrue(t, "Key: akey not defined", hasAkey)
 	assertEqualsStr(t, "invalid message", "avalue", data["akey"])
+
+	// GET directory (not implemented)
+	getObject(t, "data/adir/myfile/", http.StatusNotImplemented, &data)
 
 }
 

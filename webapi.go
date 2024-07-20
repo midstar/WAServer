@@ -90,7 +90,7 @@ func (wa *WebAPI) handleDataPost(w http.ResponseWriter, r *http.Request) {
 	// Tests shows that Golang server don't allow invalid paths, thus
 	// no error needs to be handled
 	if file == "" {
-		messageResponse(w, http.StatusNotImplemented, "Directory access not implemented")
+		messageResponse(w, http.StatusForbidden, "POST to directory not allowed")
 		return
 	}
 	fullDir := path.Join(wa.dataPath, dir)
