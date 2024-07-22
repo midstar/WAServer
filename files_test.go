@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"slices"
 	"testing"
 )
@@ -26,4 +27,10 @@ func TestListFilesMap(t *testing.T) {
 	// List files in a non-existing directory
 	_, err = listFilesMap("dir/dont/exist")
 	assertExpectErr(t, "", err)
+}
+
+func TestJsonOfJsons(t *testing.T) {
+	res, _ := jsonOfJsons(".test/data/adir")
+	fmt.Print(res)
+	fmt.Print("\n")
 }
