@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"slices"
 	"testing"
 )
@@ -30,7 +30,30 @@ func TestListFilesMap(t *testing.T) {
 }
 
 func TestJsonOfJsons(t *testing.T) {
-	res, _ := jsonOfJsons(".test/data/adir")
-	fmt.Print(res)
-	fmt.Print("\n")
+	// Check a directory without json files
+	res, err := jsonOfJsons(".")
+	assertExpectNoErr(t, "", err)
+	assertEqualsStr(t, "", "{\n}", res)
+
+	// Check a directory with multiple jsons
+	res, err = jsonOfJsons(".test/data/adir")
+	assertExpectNoErr(t, "", err)
+	var m map[string]interface{}
+	err = json.Unmarshal([]byte(res), &m)
+	assertExpectNoErr(t, "", err)
+	_, hasKey := m["myarray"]
+	assertTrue(t, "", hasKey)
+	_, hasKey = m["myfile"]
+	assertTrue(t, "", hasKey)
+	_, hasKey = m["myfile2"]
+	assertTrue(t, "", hasKey)
+
+	// Check element 2 of myarr
+	arr := m["myarray"].([]interface{})
+	arr2 := int(arr[2].(float64))
+	assertEqualsInt(t, "", 12, arr2)
+
+	// Try a directory that not exist
+	_, err = jsonOfJsons("non/existing")
+	assertExpectErr(t, "", err)
 }
