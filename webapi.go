@@ -85,7 +85,12 @@ func (wa *WebAPI) handleDataGet(w http.ResponseWriter, r *http.Request) {
 			return
 
 		} else {
-			messageResponse(w, http.StatusNotImplemented, "Directory access not implemented")
+			jsonOfJsonsStr, err := jsonOfJsons(fullDir)
+			if err != nil {
+				messageResponse(w, http.StatusNotFound, err.Error())
+				return
+			}
+			writeResponseStr(w, http.StatusOK, jsonOfJsonsStr)
 			return
 		}
 	}

@@ -194,8 +194,18 @@ func TestDataGet(t *testing.T) {
 	var resp map[string]string
 	getObject(t, "data/this/dir/dont/exist/?ls=true", http.StatusNotFound, &resp)
 
-	// GET directory (not implemented)
-	getObject(t, "data/adir/", http.StatusNotImplemented, &data)
+	// GET directory
+	var m map[string]interface{}
+	getObject(t, "data/adir/", http.StatusOK, &m)
+	_, hasKey := m["myarray"]
+	assertTrue(t, "", hasKey)
+	// Check element 2 of myarr
+	arr := m["myarray"].([]interface{})
+	arr2 := int(arr[2].(float64))
+	assertEqualsInt(t, "", 12, arr2)
+
+	// GET directory - not found
+	getObject(t, "data/this/dir/dont/exist/", http.StatusNotFound, &resp)
 
 }
 
