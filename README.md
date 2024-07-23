@@ -18,23 +18,27 @@ the software yourself according to the instructions below.
 Copy the waserver to a directory of your choice and add it to your PATH
 environment variable.
 
-    Usage: waserver [options] [<apppath>] [<datapath>]
+    Usage: ./waserver [options] [<apppath>] [<datapath>]
 
     <apppath> is the directory where your web files are located.
-    Default is current directory.
+    Default is app directory.
 
     <datapath> is the directory where data (JSON) is stored.
-    Default is same as apppath.
+    Default is data directory.
 
     Supported options:
     -c string
             TLS certificate file (default "cert.pem")
+    -d    Enable debugging logs
     -k string
             TLS key file (default "key.pem")
     -p int
             Network port to listen to (default 8080)
     -s    Use secure connection (TLS/HTTPS)
     -v    Display version
+
+The WEB applications (i.e. html, js, css files etc.) are put in the
+directory set as apppath.
 
 OpenSSL can be used to generate the public and private key required for TLS/HTTPS:
 

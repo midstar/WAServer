@@ -3,3 +3,4 @@
 waserver
 .test/cover
 .test/data/*
+data/*

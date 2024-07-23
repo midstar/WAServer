@@ -20,9 +20,9 @@ var applicationGitHash = "<NOT SET>"
 func printUsage() {
 	fmt.Printf("Usage: %s [options] [<apppath>] [<datapath>]\n\n", os.Args[0])
 	fmt.Printf("<apppath> is the directory where your web files are located.\n")
-	fmt.Printf("Default is current directory.\n\n")
+	fmt.Printf("Default is app directory.\n\n")
 	fmt.Printf("<datapath> is the directory where data (JSON) is stored.\n")
-	fmt.Printf("Default is same as apppath.\n\n")
+	fmt.Printf("Default is data directory.\n\n")
 	fmt.Printf("Supported options:\n")
 	flag.PrintDefaults()
 }
@@ -44,11 +44,11 @@ func main() {
 		os.Exit(0)
 	}
 
-	appPath := "."
+	appPath := "app"
 	if flag.NArg() >= 1 {
 		appPath = flag.Arg(0)
 	}
-	dataPath := appPath
+	dataPath := "data"
 	if flag.NArg() >= 2 {
 		dataPath = flag.Arg(1)
 	}
