@@ -36,6 +36,7 @@ func CreateWebAPI(port int, appPath, dataPath string,
 		http.FileServer(http.Dir(appPath))))
 	http.HandleFunc("GET /data/", webAPI.handleDataGet)
 	http.HandleFunc("POST /data/", webAPI.handleDataPost)
+	http.HandleFunc("DELETE /data/", webAPI.handleDataDelete)
 	http.HandleFunc("POST /service/shutdown", webAPI.handleShutdown)
 	return webAPI
 }
@@ -123,6 +124,29 @@ func (wa *WebAPI) handleDataPost(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	os.WriteFile(fullPath, body, 0777)
 	messageResponse(w, http.StatusOK, "JSON post successfull")
+}
+
+func (wa *WebAPI) handleDataDelete(w http.ResponseWriter, r *http.Request) {
+	dir, file, _ := dirAndJsonFile(r.URL.Path)
+	// Tests shows that Golang server don't allow invalid paths, thus
+	// no error needs to be handled
+	fullDir := path.Join(wa.dataPath, dir)
+	fullPath := fullDir // Might be overwritten later
+	if file == "" {
+		if dir == "." || dir == "" {
+			messageResponse(w, http.StatusForbidden, "Deleting root directory not allowed")
+			return
+		}
+	} else {
+		fullPath = path.Join(fullDir, file)
+	}
+	_, err := os.Stat(fullPath)
+	if err != nil {
+		messageResponse(w, http.StatusNotFound, err.Error())
+		return
+	}
+	os.RemoveAll(fullPath)
+	messageResponse(w, http.StatusOK, "Deleted "+fullPath)
 }
 
 func (wa *WebAPI) handleShutdown(w http.ResponseWriter, r *http.Request) {

@@ -120,6 +120,34 @@ func postObject(t *testing.T, path string, expectedStatus int,
 	}
 }
 
+func deleteObject(t *testing.T, path string, expectedStatus int, recv_obj interface{}) {
+	t.Helper()
+
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/%s", baseURL, path), bytes.NewBuffer(nil))
+	if err != nil {
+		t.Fatalf("Unable create req for delete path %s. Reason: %s", path, err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("Unable to delete path %s. Reason: %s", path, err)
+	}
+
+	if resp.StatusCode != expectedStatus {
+		t.Fatalf("Unexpected status code for path %s: %d (%s)",
+			path, resp.StatusCode, respToString(resp.Body))
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("Unable to read body for %s. Reason: %s", path, err)
+	}
+	err = json.Unmarshal(body, &recv_obj)
+	if err != nil {
+		t.Fatalf("Unable decode path %s. Reason: %s", path, err)
+	}
+}
+
 func TestStaticGet(t *testing.T) {
 	startServer(t)
 	defer shutdownServer(t)
@@ -128,6 +156,49 @@ func TestStaticGet(t *testing.T) {
 	if !strings.Contains(html, "<title>3 in a row</title>") {
 		t.Fatal("Index html title missing")
 	}
+}
+
+func TestDataDelete(t *testing.T) {
+	startServer(t)
+	defer shutdownServer(t)
+
+	// Try to delete root directory (=forbidden)
+	var recv_obj map[string]string
+	deleteObject(t, "data/", http.StatusForbidden, &recv_obj)
+
+	// Tro to delete a directory that dont exist
+	deleteObject(t, "data/directory/dont/exist/", http.StatusNotFound, &recv_obj)
+
+	// Tro to delete a file that dont exist
+	deleteObject(t, "data/adir/filedontexist", http.StatusNotFound, &recv_obj)
+
+	// Create a directory with three files
+	tmpPath := path.Join(dataPath, "deleteTest")
+	os.Remove(tmpPath)
+	send_obj := map[string]int{"id": 1}
+
+	postObject(t, "data/deleteTest/one", http.StatusOK, &recv_obj, &send_obj)
+	assertFileExist(t, "", path.Join(tmpPath, "one.json"))
+
+	send_obj["id"] = 2
+	postObject(t, "data/deleteTest/two", http.StatusOK, &recv_obj, &send_obj)
+	assertFileExist(t, "", path.Join(tmpPath, "two.json"))
+
+	send_obj["id"] = 3
+	postObject(t, "data/deleteTest/three", http.StatusOK, &recv_obj, &send_obj)
+	assertFileExist(t, "", path.Join(tmpPath, "three.json"))
+
+	// Delete three.js
+	deleteObject(t, "data/deleteTest/two", http.StatusOK, &recv_obj)
+	assertFileExist(t, "", tmpPath)
+	assertFileExist(t, "", path.Join(tmpPath, "one.json"))
+	assertFileNotExist(t, "", path.Join(tmpPath, "two.json"))
+	assertFileExist(t, "", path.Join(tmpPath, "three.json"))
+
+	// Delete the whole path
+	deleteObject(t, "data/deleteTest/", http.StatusOK, &recv_obj)
+	assertFileNotExist(t, "", tmpPath)
+
 }
 
 func TestDataPost(t *testing.T) {
