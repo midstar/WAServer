@@ -95,6 +95,25 @@ input[type='text'] {
 const APP_URL = `${window.location.protocol}//${window.location.host}/data/3_in_a_row`
 
 //////////////////////////////////////////////////////////////////////////////
+// Startup
+window.onload = async function() {
+  username = getUrlParam("user");
+  if (username != null) {
+    const url = `${APP_URL}/user/${username}`;
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+      }
+      userLogin(username);
+    } catch (error) {
+      document.getElementById("username").value = username;
+      onNameUpdate();
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // User login page
 
 async function onNameUpdate() {
@@ -174,8 +193,8 @@ async function listGameInvites() {
     const json = await response.json();
     for (name of Object.keys(json)) {
       elemInvite = document.createElement("div");
-      elemInvite.classList.add("button")
-      elemInvite.innerText=name
+      elemInvite.classList.add("button");
+      elemInvite.innerText=`Join ${name}`;
       elemGameInvites.appendChild(elemInvite);
     }
   } catch (error) {
@@ -202,7 +221,7 @@ async function onNewGame() {
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// Game cancel game
+// Game wait page
 async function onCancelGame() {
   username = getUrlParam("user");
   const url = `${APP_URL}/game-invites/${username}`;
@@ -243,13 +262,12 @@ function getUrlParam(param) {
 </head>
 <body>
   <div id="page-name">
-    <form id="form-user">
+    <div id="form-user">
       <label for="username">User name:</label><br>
       <input type="text" id="username" name="user" oninput="onNameUpdate()"><br>
       <div class="button" id="user-login" style="display:none;" onclick="onUserLogin()">Login</div>
       <div class="button" id="user-create"  style="display:none;" onclick="onUserCreate()">Create user</div>
-      
-    </form>
+    </div>
   </div>
   <div id="page-game-select">
     <div class="button game-new" onclick="onNewGame()">New game</div>
