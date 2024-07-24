@@ -35,7 +35,6 @@ td .content {
 /* PAGE - NAME */
 #page-name {
   font-size: 25px;
-  /*display: none;*/
   display: flex;
   align-items: center;
   justify-content: center;
@@ -56,12 +55,11 @@ input[type='text'] {
 }
 
 /* PAGE - GAME SELECT */
-
 #page-game-select {
   display: none;
 }
 
-.game-button {
+.button {
   font-size: 25px;
   margin: 5px;
   display: flex;
@@ -82,8 +80,89 @@ input[type='text'] {
 }
 
 </style>
+
+<script>
+
+const APP_URL = `${window.location.protocol}//${window.location.host}/data/3_in_a_row`
+
+//////////////////////////////////////////////////////////////////////////////
+// User login page
+
+async function onNameUpdate() {
+  username = document.getElementById("username").value;
+  const url = `${APP_URL}/user/${username}`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    document.getElementById("user-login").style.display = "flex";
+    document.getElementById("user-create").style.display = "none";
+  } catch (error) {
+    document.getElementById("user-login").style.display = "none";
+    document.getElementById("user-create").style.display = "flex";
+  }
+}
+
+async function onUserCreate() {
+  username = document.getElementById("username").value;
+  const url = `${APP_URL}/user/${username}`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify({ creationDate: new Date().toLocaleString() }),
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    userLogin(username);
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+function onUserLogin() {
+  username = document.getElementById("username").value;
+  userLogin(username);
+}
+
+function userLogin(username) {
+  setUrlParam("user", username);
+  document.getElementById("page-name").style.display = "none";
+  document.getElementById("page-game-select").style.display = "block";
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Misc helpers
+function setUrlParam(param, value) {
+  const params = new URLSearchParams(window.location.search);
+  params.set(param, value);
+  history.pushState({},"","?" + params.toString());
+  //window.location.search = params.toString(); 
+}
+
+</script>
+
 </head>
 <body>
+  <div id="page-name">
+    <form id="form-user">
+      <label for="username">User name:</label><br>
+      <input type="text" id="username" name="username" oninput="onNameUpdate()"><br>
+      <div class="button" id="user-login" style="display:none;" onclick="onUserLogin()">Login</div>
+      <div class="button" id="user-create"  style="display:none;" onclick="onUserCreate()">Create user</div>
+      
+    </form>
+  </div>
+  <div id="page-game-select">
+    <div class="button game-new">New game</div>
+    <div id="joinable">
+      <div class="button">Join Kalle</div>
+      <div class="button">Join Niklas</div>
+      <div class="button">Join Stina</div>
+    </div>
+  </div>
   <div id="page-game">
     <table>
       <tr>
@@ -102,20 +181,6 @@ input[type='text'] {
         <td><div class="content"></div></td>
       </tr>
     </table>
-  </div>
-  <div id="page-name">
-    <form id="form-user">
-      <label for="username">Username:</label><br>
-      <input type="text" id="username" name="username"><br>
-    </form>
-  </div>
-  <div id="page-game-select">
-    <div class="game-button game-new">New game</div>
-    <div id="joinable">
-      <div class="game-button">Join Kalle</div>
-      <div class="game-button">Join Niklas</div>
-      <div class="game-button">Join Stina</div>
-    </div>
   </div>
 </body>
 </html>
