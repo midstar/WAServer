@@ -75,8 +75,17 @@ input[type='text'] {
   background-color:chartreuse;
 }
 
-#joinable {
+#game-invites {
   margin-top: 30px;
+}
+
+/* PAGE - GAME WAIT */
+#page-game-wait {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 25px;
 }
 
 </style>
@@ -131,7 +140,89 @@ function userLogin(username) {
   setUrlParam("user", username);
   document.getElementById("page-name").style.display = "none";
   document.getElementById("page-game-select").style.display = "block";
+  updateGameSelectPage()
 }
+
+//////////////////////////////////////////////////////////////////////////////
+// Game select page
+
+async function updateGameSelectPage() {
+  username = getUrlParam("user");
+  const url = `${APP_URL}/game-invites/${username}`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    // We already have a game invite
+    document.getElementById("page-game-select").style.display = "none";
+    document.getElementById("page-game-wait").style.display = "flex";
+  } catch (error) {
+    listGameInvites();
+  }
+}
+
+async function listGameInvites() {
+  elemGameInvites = document.getElementById("game-invites");
+  elemGameInvites.innerHTML = "";
+  const url = `${APP_URL}/game-invites/`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    const json = await response.json();
+    for (name of Object.keys(json)) {
+      elemInvite = document.createElement("div");
+      elemInvite.classList.add("button")
+      elemInvite.innerText=name
+      elemGameInvites.appendChild(elemInvite);
+    }
+  } catch (error) {
+    console.log(error.message);
+  }
+}
+
+async function onNewGame() {
+  username = getUrlParam("user");
+  const url = `${APP_URL}/game-invites/${username}`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify({ creationDate: new Date().toLocaleString() }),
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    updateGameSelectPage();
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Game cancel game
+async function onCancelGame() {
+  username = getUrlParam("user");
+  const url = `${APP_URL}/game-invites/${username}`;
+  const request = new Request(url, {
+    method: "DELETE",
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    document.getElementById("page-game-select").style.display = "block";
+    document.getElementById("page-game-wait").style.display = "none";
+    updateGameSelectPage();
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+
 
 //////////////////////////////////////////////////////////////////////////////
 // Misc helpers
@@ -142,6 +233,11 @@ function setUrlParam(param, value) {
   //window.location.search = params.toString(); 
 }
 
+function getUrlParam(param) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(param); 
+}
+
 </script>
 
 </head>
@@ -149,18 +245,21 @@ function setUrlParam(param, value) {
   <div id="page-name">
     <form id="form-user">
       <label for="username">User name:</label><br>
-      <input type="text" id="username" name="username" oninput="onNameUpdate()"><br>
+      <input type="text" id="username" name="user" oninput="onNameUpdate()"><br>
       <div class="button" id="user-login" style="display:none;" onclick="onUserLogin()">Login</div>
       <div class="button" id="user-create"  style="display:none;" onclick="onUserCreate()">Create user</div>
       
     </form>
   </div>
   <div id="page-game-select">
-    <div class="button game-new">New game</div>
-    <div id="joinable">
-      <div class="button">Join Kalle</div>
-      <div class="button">Join Niklas</div>
-      <div class="button">Join Stina</div>
+    <div class="button game-new" onclick="onNewGame()">New game</div>
+    <div id="game-invites">
+    </div>
+  </div>
+  <div id="page-game-wait">
+    <div>
+      <div>Waiting for player to join</div>
+      <div class="button" id="cancel-game" onclick="onCancelGame()">Cancel</div>
     </div>
   </div>
   <div id="page-game">
