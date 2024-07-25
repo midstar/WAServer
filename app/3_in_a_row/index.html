@@ -28,10 +28,6 @@ td .content {
   background: red;
 }
 
-#page-game {
-  display: none;
-}
-
 /* PAGE - NAME */
 #page-name {
   font-size: 25px;
@@ -55,10 +51,6 @@ input[type='text'] {
 }
 
 /* PAGE - GAME SELECT */
-#page-game-select {
-  display: none;
-}
-
 .button {
   font-size: 25px;
   margin: 5px;
@@ -81,7 +73,7 @@ input[type='text'] {
 
 /* PAGE - GAME WAIT */
 #page-game-wait {
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   height: 100vh;
@@ -97,6 +89,7 @@ const APP_URL = `${window.location.protocol}//${window.location.host}/data/3_in_
 //////////////////////////////////////////////////////////////////////////////
 // Startup
 window.onload = async function() {
+  pageInit("page-name");
   username = getUrlParam("user");
   if (username != null) {
     const url = `${APP_URL}/user/${username}`;
@@ -157,8 +150,7 @@ function onUserLogin() {
 
 function userLogin(username) {
   setUrlParam("user", username);
-  document.getElementById("page-name").style.display = "none";
-  document.getElementById("page-game-select").style.display = "block";
+  pageShow("page-game-select");
   updateGameSelectPage()
 }
 
@@ -174,8 +166,7 @@ async function updateGameSelectPage() {
       throw new Error(`Response status: ${response.status}`);
     }
     // We already have a game invite
-    document.getElementById("page-game-select").style.display = "none";
-    document.getElementById("page-game-wait").style.display = "flex";
+    pageShow("page-game-wait");
   } catch (error) {
     listGameInvites();
   }
@@ -194,6 +185,7 @@ async function listGameInvites() {
     for (name of Object.keys(json)) {
       elemInvite = document.createElement("div");
       elemInvite.classList.add("button");
+      elemInvite.setAttribute("onclick", `onJoinGame('${name}')`)
       elemInvite.innerText=`Join ${name}`;
       elemGameInvites.appendChild(elemInvite);
     }
@@ -220,6 +212,60 @@ async function onNewGame() {
   }
 }
 
+async function onJoinGame(opponent) {
+  username = getUrlParam("user");
+
+  // Remove game invite
+  const url = `${APP_URL}/game-invites/${opponent}`;
+  const request = new Request(url, {
+    method: "DELETE",
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    // Start game
+    setUrlParam("opponent", opponent);
+    startGame();
+    
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+async function startGame() {
+  username = getUrlParam("user");
+  opponent = getUrlParam("opponent");
+  players = [opponent, username];
+  game = {
+    "creationDate": new Date().toLocaleString(), 
+    "lastUpdate" : new Date().toLocaleString(),
+    "players" : players,
+    "turn" : randArray(players),
+    "board" : [
+                [0,0,0],
+                [0,0,0],
+                [0,0,0]
+              ],
+    "wins" : [0, 0] // Same order as players
+  };
+  const url = `${APP_URL}/game/${opponent}`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify(game),
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    pageShow("page-game");
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // Game wait page
 async function onCancelGame() {
@@ -233,18 +279,43 @@ async function onCancelGame() {
     if (!response.ok) {
       throw new Error(`Response status: ${response.status}`);
     }
-    document.getElementById("page-game-select").style.display = "block";
-    document.getElementById("page-game-wait").style.display = "none";
+    pageShow("page-game-select");
     updateGameSelectPage();
   } catch (error) {
     console.error(error.message);
   }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Generic page handling
 
+// First function to call. Will store the display properties of each
+// page (for use later) and hide all pages except "showPage".
+function pageInit(showPage) {
+  elemPages = document.getElementsByClassName("page");
+  for (let elemPage of elemPages) {
+    elemPage.setAttribute("old-display", getComputedStyle(elemPage, null).display);
+    if (elemPage.id != showPage) {
+      elemPage.style.display = "none";
+    }
+  }
+}
+
+// Hides all pages except "page"
+function pageShow(page) {
+  elemPages = document.getElementsByClassName("page");
+  for (let elemPage of elemPages) {
+    if (elemPage.id != page) {
+      elemPage.style.display = "none";
+    } else {
+      elemPage.style.display = elemPage.getAttribute("old-display");
+    }
+  }
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // Misc helpers
+
 function setUrlParam(param, value) {
   const params = new URLSearchParams(window.location.search);
   params.set(param, value);
@@ -257,11 +328,16 @@ function getUrlParam(param) {
   return params.get(param); 
 }
 
+// Get random item from array
+function randArray(array) {
+  return array[Math.floor(Math.random()*array.length)]
+}
+
 </script>
 
 </head>
 <body>
-  <div id="page-name">
+  <div id="page-name" class="page">
     <div id="form-user">
       <label for="username">User name:</label><br>
       <input type="text" id="username" name="user" oninput="onNameUpdate()"><br>
@@ -269,18 +345,18 @@ function getUrlParam(param) {
       <div class="button" id="user-create"  style="display:none;" onclick="onUserCreate()">Create user</div>
     </div>
   </div>
-  <div id="page-game-select">
+  <div id="page-game-select" class="page">
     <div class="button game-new" onclick="onNewGame()">New game</div>
     <div id="game-invites">
     </div>
   </div>
-  <div id="page-game-wait">
+  <div id="page-game-wait" class="page">
     <div>
       <div>Waiting for player to join</div>
       <div class="button" id="cancel-game" onclick="onCancelGame()">Cancel</div>
     </div>
   </div>
-  <div id="page-game">
+  <div id="page-game" class="page">
     <table>
       <tr>
         <td><div class="content"></div></td>
