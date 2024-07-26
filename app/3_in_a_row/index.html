@@ -167,6 +167,7 @@ async function updateGameSelectPage() {
     }
     // We already have a game invite
     pageShow("page-game-wait");
+    updateGameWaitPage();
   } catch (error) {
     listGameInvites();
   }
@@ -261,13 +262,26 @@ async function startGame() {
       throw new Error(`Response status: ${response.status}`);
     }
     pageShow("page-game");
+    updateGamePage();
   } catch (error) {
     console.error(error.message);
   }
 }
 
+
+
+
 //////////////////////////////////////////////////////////////////////////////
 // Game wait page
+
+// Flag for waiting game to start
+var globWaitGameStarted = false;
+
+async function updateGameWaitPage() {
+  globWaitGameStarted = true;
+  waitGameStarted();
+}
+
 async function onCancelGame() {
   username = getUrlParam("user");
   const url = `${APP_URL}/game-invites/${username}`;
@@ -279,11 +293,54 @@ async function onCancelGame() {
     if (!response.ok) {
       throw new Error(`Response status: ${response.status}`);
     }
+    globWaitGameStarted = false;
     pageShow("page-game-select");
     updateGameSelectPage();
   } catch (error) {
     console.error(error.message);
   }
+}
+
+
+
+// Waits for game to start as long as globWaitGameStarted == true
+async function waitGameStarted() {
+  var gameStarted = await getGame();
+  if (gameStarted == null) {
+    if (globWaitGameStarted) {
+      setTimeout(waitGameStarted, 1000);
+    }
+    return
+  }
+  globWaitGameStarted = false;
+  pageShow("page-game");
+  updateGamePage();
+}
+
+// Returns game key (id) if game has started else null
+async function getGame() {
+  username = getUrlParam("user");
+  const url = `${APP_URL}/game/`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    const json = await response.json();
+    for ([key, game] of Object.entries(json)) {
+      if (game["players"].includes(username)) {
+        return key
+      }
+    }
+  } catch (error) {
+  }
+  return null
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Game page
+function updateGamePage() {
+
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -374,6 +431,7 @@ function randArray(array) {
         <td><div class="content"></div></td>
       </tr>
     </table>
+    <div class="button" id="cancel-game" onclick="onCancelGame()">Cancel</div>
   </div>
 </body>
 </html>
