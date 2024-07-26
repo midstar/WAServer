@@ -158,6 +158,15 @@ function userLogin(username) {
 // Game select page
 
 async function updateGameSelectPage() {
+  // Check if we have a started game
+  var gameStarted = await getGame();
+  if (gameStarted != null) {
+    pageShow("page-game");
+    updateGamePage(gameStarted);
+    return
+  }
+
+  // Check if we have a game invite
   username = getUrlParam("user");
   const url = `${APP_URL}/game-invites/${username}`;
   try {
@@ -262,7 +271,7 @@ async function startGame() {
       throw new Error(`Response status: ${response.status}`);
     }
     pageShow("page-game");
-    updateGamePage();
+    updateGamePage(opponent);
   } catch (error) {
     console.error(error.message);
   }
@@ -282,7 +291,7 @@ async function updateGameWaitPage() {
   waitGameStarted();
 }
 
-async function onCancelGame() {
+async function onCancelInvite() {
   username = getUrlParam("user");
   const url = `${APP_URL}/game-invites/${username}`;
   const request = new Request(url, {
@@ -314,7 +323,7 @@ async function waitGameStarted() {
   }
   globWaitGameStarted = false;
   pageShow("page-game");
-  updateGamePage();
+  updateGamePage(gameStarted);
 }
 
 // Returns game key (id) if game has started else null
@@ -339,8 +348,26 @@ async function getGame() {
 
 //////////////////////////////////////////////////////////////////////////////
 // Game page
-function updateGamePage() {
+function updateGamePage(gameName) {
+  setUrlParam("game", gameName);
+}
 
+async function onCancelGame() {
+  const gameName = getUrlParam("game");
+  const url = `${APP_URL}/game/${gameName}`;
+  const request = new Request(url, {
+    method: "DELETE",
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    pageShow("page-game-select");
+    updateGameSelectPage();
+  } catch (error) {
+    console.error(error.message);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -410,7 +437,7 @@ function randArray(array) {
   <div id="page-game-wait" class="page">
     <div>
       <div>Waiting for player to join</div>
-      <div class="button" id="cancel-game" onclick="onCancelGame()">Cancel</div>
+      <div class="button" id="cancel-game" onclick="onCancelInvite()">Cancel</div>
     </div>
   </div>
   <div id="page-game" class="page">
