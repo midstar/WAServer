@@ -4,6 +4,35 @@
 <title>3 in a row</title>
 <style>
 @media all and (orientation:portrait) {
+  #page-game {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+
+  #game-area {
+    width: 100%;
+  }
+
+  #game-score {
+    font-size: 25px;
+    margin-left: 5%;
+    margin-bottom: 2%;
+  }
+
+  #cancel-game {
+    text-align: center;
+    font-size: 25px;
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-top: 5%;
+    border-width: 2px;
+    border-radius: 10px;
+    border-style: solid;
+    background-color: aqua;
+  }
+
   table {
     width: 90%;
     margin-left: auto;
@@ -12,6 +41,31 @@
 }
 
 @media all and (orientation:landscape) {
+  #page-game {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+
+  #game-area {
+    display: flex;
+    width: 100%;
+  }
+
+  #game-score {
+    font-size: 25px;
+  }
+
+  #cancel-game {
+    text-align: center;
+    font-size: 25px;
+    border-width: 2px;
+    border-radius: 10px;
+    border-style: solid;
+    background-color: aqua;
+  }
+
   table {
     width: 90vh;
     margin-left: auto;
@@ -27,6 +81,8 @@ td .content {
   aspect-ratio: 1 / 1 ;
   background: red;
 }
+
+
 
 /* PAGE - NAME */
 #page-name {
@@ -437,28 +493,36 @@ function randArray(array) {
   <div id="page-game-wait" class="page">
     <div>
       <div>Waiting for player to join</div>
-      <div class="button" id="cancel-game" onclick="onCancelInvite()">Cancel</div>
+      <div class="button" id="cancel-invite" onclick="onCancelInvite()">Cancel</div>
     </div>
   </div>
   <div id="page-game" class="page">
-    <table>
-      <tr>
-        <td><div class="content"></div></td>
-        <td><div class="content"></div></td>
-        <td><div class="content"></div></td>
-      </tr>
-      <tr>
-        <td><div class="content"></div></td>
-        <td><div class="content"></div></td>
-        <td><div class="content"></div></td>
-      </tr>
-      <tr>
-        <td><div class="content"></div></td>
-        <td><div class="content"></div></td>
-        <td><div class="content"></div></td>
-      </tr>
-    </table>
-    <div class="button" id="cancel-game" onclick="onCancelGame()">Cancel</div>
+    <div id="game-area">
+      <div id="game-score">
+          Joel: 5<br>
+          Nisse: 3
+      </div>
+      <table>
+        <tr>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+        </tr>
+      </table>
+      <div>
+        <div id="cancel-game" onclick="onCancelGame()">Cancel</div>
+      </div>
+    </div>      
   </div>
 </body>
 </html>
