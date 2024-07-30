@@ -79,9 +79,20 @@ td {
 }
 td .content {
   aspect-ratio: 1 / 1 ;
+  background: lightgray;
+}
+
+td .brick-player1 {
   background: red;
 }
 
+td .brick-player2 {
+  background: blue;
+}
+
+.other-turn {
+  opacity: 50%;
+}
 
 
 /* PAGE - NAME */
@@ -502,21 +513,21 @@ function randArray(array) {
           Joel: 5<br>
           Nisse: 3
       </div>
-      <table>
+      <table class="">
         <tr>
           <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
+          <td><div class="content brick-player1"></div></td>
           <td><div class="content"></div></td>
         </tr>
         <tr>
           <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
+          <td><div class="content brick-player1"></div></td>
           <td><div class="content"></div></td>
         </tr>
         <tr>
+          <td><div class="content brick-player2 other-turn"></div></td>
           <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
+          <td><div class="content brick-player2"></div></td>
         </tr>
       </table>
       <div>
