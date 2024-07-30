@@ -90,6 +90,12 @@ td .brick-player2 {
   background: blue;
 }
 
+td .brick-selected {
+  border-width: 4px;
+  border-style: solid;
+  border-color: black;
+}
+
 .other-turn {
   opacity: 50%;
 }
@@ -415,8 +421,23 @@ async function getGame() {
 
 //////////////////////////////////////////////////////////////////////////////
 // Game page
-function updateGamePage(gameName) {
+async function updateGamePage(gameName) {
   setUrlParam("game", gameName);
+  TODO
+  const url = `${APP_URL}/game/${gameName}`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    const json = await response.json();
+    for ([key, game] of Object.entries(json)) {
+      if (game["players"].includes(username)) {
+        return key
+      }
+    }
+  } catch (error) {
+  }
 }
 
 async function onCancelGame() {
@@ -462,6 +483,10 @@ function pageShow(page) {
       elemPage.style.display = elemPage.getAttribute("old-display");
     }
   }
+}
+
+function onBrick(row, col) {
+  console.log(row + " " + col);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -515,19 +540,19 @@ function randArray(array) {
       </div>
       <table class="">
         <tr>
-          <td><div class="content"></div></td>
-          <td><div class="content brick-player1"></div></td>
-          <td><div class="content"></div></td>
+          <td><div class="content" onclick="onBrick(0,0)"></div></td>
+          <td><div class="content brick-player1" onclick="onBrick(0,1)"></div></td>
+          <td><div class="content" onclick="onBrick(0,2)"></div></td>
         </tr>
         <tr>
-          <td><div class="content"></div></td>
-          <td><div class="content brick-player1"></div></td>
-          <td><div class="content"></div></td>
+          <td><div class="content" onclick="onBrick(1,0)"></div></td>
+          <td><div class="content brick-player1 brick-selected" onclick="onBrick(1,1)"></div></td>
+          <td><div class="content" onclick="onBrick(1,2)"></div></td>
         </tr>
         <tr>
-          <td><div class="content brick-player2 other-turn"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content brick-player2"></div></td>
+          <td><div class="content brick-player2 other-turn" onclick="onBrick(2,0)"></div></td>
+          <td><div class="content" onclick="onBrick(2,1)"></div></td>
+          <td><div class="content brick-player2" onclick="onBrick(2,2)"></div></td>
         </tr>
       </table>
       <div>
