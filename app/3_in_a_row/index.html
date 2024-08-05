@@ -15,7 +15,7 @@
     width: 100%;
   }
 
-  #game-score {
+  #game-data {
     font-size: 25px;
     margin-left: 5%;
     margin-bottom: 2%;
@@ -53,7 +53,7 @@
     width: 100%;
   }
 
-  #game-score {
+  #game-data {
     font-size: 25px;
   }
 
@@ -98,6 +98,11 @@ td .brick-selected {
 
 .other-turn {
   opacity: 50%;
+}
+
+#game-turn {
+  font-size: 45px;
+  font-weight: bold;
 }
 
 
@@ -325,7 +330,7 @@ async function startGame() {
     "creationDate": new Date().toLocaleString(), 
     "lastUpdate" : new Date().toLocaleString(),
     "players" : players,
-    "turn" : randArray(players),
+    "turn" : Math.floor(Math.random()),
     "board" : [
                 [0,0,0],
                 [0,0,0],
@@ -434,11 +439,24 @@ async function updateGamePage(gameName) {
       throw new Error(`Response status: ${response.status}`);
     }
     globGameObj = await response.json();
-    
-    if (globGame["players"][0] == username) {
+    var opponent = 0;
+    if (globGameObj["players"][0] == username) {
       globMe = 0;
+      opponent = 1;
     } else {
       globMe = 1;
+      opponent = 0;
+    }
+    document.getElementById("game-me").innerHTML = globGameObj["players"][globMe] + ": " + 
+      globGameObj["wins"][globMe];
+    document.getElementById("game-opponent").innerHTML = globGameObj["players"][opponent] + ": " + 
+      globGameObj["wins"][opponent];
+    var elemTurn = document.getElementById("game-turn");
+    console.log("globMe: " + globMe + " turn: " + globGameObj["turn"]);
+    if (globGameObj["turn"] == globMe) {
+      elemTurn.innerHTML = "My turn";
+    } else {
+      elemTurn.innerHTML = "Wait for opponent";
     }
   } catch (error) {
   }
@@ -521,11 +539,6 @@ function getUrlParam(param) {
   return params.get(param); 
 }
 
-// Get random item from array
-function randArray(array) {
-  return array[Math.floor(Math.random()*array.length)]
-}
-
 </script>
 
 </head>
@@ -551,9 +564,10 @@ function randArray(array) {
   </div>
   <div id="page-game" class="page">
     <div id="game-area">
-      <div id="game-score">
-          Joel: 5<br>
-          Nisse: 3
+      <div id="game-data">
+          <div id="game-turn"></div>
+          <div id="game-me"></div>
+          <div id="game-opponent"></div>
       </div>
       <table id="brick-table" class="">
         <tr>
