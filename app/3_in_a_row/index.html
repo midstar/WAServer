@@ -428,6 +428,8 @@ async function getGame() {
 // Game page
 var globGame = null;
 var globMe = 0;
+var globSelRow = -1;
+var globSelCol = -1;
 
 async function updateGamePage(gameName = "") {
   if (gameName == "") {
@@ -456,7 +458,6 @@ async function updateGamePage(gameName = "") {
     document.getElementById("game-opponent").innerHTML = globGame["players"][opponent] + ": " + 
       globGame["wins"][opponent];
     var elemTurn = document.getElementById("game-turn");
-    console.log("globMe: " + globMe + " turn: " + globGame["turn"]);
     if (globGame["turn"] == globMe) {
       elemTurn.innerHTML = "My turn";
     } else {
@@ -499,8 +500,44 @@ function brickElem(row, col) {
   return elemRow.children.item(col).children.item(0);
 }
 
+function maxBricks() {
+  return globGame["board"].length;
+}
+
+function nbrBricks(player) {
+  var board = globGame["board"];
+  var result = 0;
+  for (var row = 0; row < board.length; row++) {
+    for (var col = 0; col < board[row].length; col++) {
+      if(board[row][col] == player) {
+        result += 1;
+      }
+    }
+  }
+  return result;
+}
+
 function onBrick(row, col) {
-  console.log(row + " " + col);
+  if (globGame["turn"] != globMe) {
+    return // Not my turn
+  }
+  var board = globGame["board"];
+  if (board[row][col] == -1) {
+    if (nbrBricks(globMe) < maxBricks()) {
+      board[row][col] = globMe;
+    } else if (globSelRow >= 0 && globSelCol >= 0) {
+      board[globSelRow][globSelCol] = -1;
+      brickElem(globSelRow,globSelCol).classList.remove("brick-selected");
+      globSelRow = -1;
+      globSelCol = -1;
+      board[row][col] = globMe;
+    }
+    updateBoard();
+  } else if ((board[row][col] == globMe) && (nbrBricks(globMe) == maxBricks())) {
+    globSelRow = row;
+    globSelCol = col;
+    brickElem(row,col).classList.add("brick-selected");
+  }
 }
 
 async function onCancelGame() {
@@ -511,9 +548,6 @@ async function onCancelGame() {
   });
   try {
     const response = await fetch(request);
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
     pageShow("page-game-select");
     updateGameSelectPage();
   } catch (error) {
