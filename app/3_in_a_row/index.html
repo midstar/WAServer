@@ -332,9 +332,9 @@ async function startGame() {
     "players" : players,
     "turn" : Math.floor(Math.random()),
     "board" : [
-                [0,0,0],
-                [0,0,0],
-                [0,0,0]
+                [-1,0,-1],
+                [-1,0,1],
+                [1,-1,-1]
               ],
     "wins" : [0, 0] // Same order as players
   };
@@ -426,11 +426,15 @@ async function getGame() {
 
 //////////////////////////////////////////////////////////////////////////////
 // Game page
-const globGame = null;
+var globGame = null;
 var globMe = 0;
 
-async function updateGamePage(gameName) {
-  setUrlParam("game", gameName);
+async function updateGamePage(gameName = "") {
+  if (gameName == "") {
+    gameName = getUrlParam("game");
+  } else {
+    setUrlParam("game", gameName);
+  }
   username = getUrlParam("user");
   const url = `${APP_URL}/game/${gameName}`;
   try {
@@ -438,40 +442,61 @@ async function updateGamePage(gameName) {
     if (!response.ok) {
       throw new Error(`Response status: ${response.status}`);
     }
-    globGameObj = await response.json();
+    globGame = await response.json();
     var opponent = 0;
-    if (globGameObj["players"][0] == username) {
+    if (globGame["players"][0] == username) {
       globMe = 0;
       opponent = 1;
     } else {
       globMe = 1;
       opponent = 0;
     }
-    document.getElementById("game-me").innerHTML = globGameObj["players"][globMe] + ": " + 
-      globGameObj["wins"][globMe];
-    document.getElementById("game-opponent").innerHTML = globGameObj["players"][opponent] + ": " + 
-      globGameObj["wins"][opponent];
+    document.getElementById("game-me").innerHTML = globGame["players"][globMe] + ": " + 
+      globGame["wins"][globMe];
+    document.getElementById("game-opponent").innerHTML = globGame["players"][opponent] + ": " + 
+      globGame["wins"][opponent];
     var elemTurn = document.getElementById("game-turn");
-    console.log("globMe: " + globMe + " turn: " + globGameObj["turn"]);
-    if (globGameObj["turn"] == globMe) {
+    console.log("globMe: " + globMe + " turn: " + globGame["turn"]);
+    if (globGame["turn"] == globMe) {
       elemTurn.innerHTML = "My turn";
     } else {
       elemTurn.innerHTML = "Wait for opponent";
     }
+    updateBoard();
   } catch (error) {
+    console.error(error);
   }
 }
 
-function updateBricks(brickMatrix, me) {
-  for (var row = 0; row < 3; row++) {
-    for (var col = 0; col < 3; col++) {
-
+function updateBoard() {
+  var board = globGame["board"];
+  if (globGame["turn"] != globMe) {
+    document.getElementById("brick-table").setAttribute("class", "other-turn");
+  } else {
+    document.getElementById("brick-table").setAttribute("class", "");
+  }
+  for (var row = 0; row < board.length; row++) {
+    for (var col = 0; col < board[row].length; col++) {
+      var pos = board[row][col];
+      var cl = "content";
+      if (pos == 0) {
+        cl += " brick-player1";
+      } else if (pos == 1) {
+        cl += " brick-player2";
+      }
+      if (pos >= 0 && pos != globMe) {
+        cl += " other-turn";
+      }
+      elemBrick = brickElem(row, col);
+      elemBrick.setAttribute("class", cl);
     }
   }
 }
 
 function brickElem(row, col) {
-
+  var elemBoard = document.getElementById("brick-table").children.item(0);
+  var elemRow = elemBoard.children.item(row);
+  return elemRow.children.item(col).children.item(0);
 }
 
 function onBrick(row, col) {
