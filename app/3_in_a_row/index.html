@@ -421,23 +421,43 @@ async function getGame() {
 
 //////////////////////////////////////////////////////////////////////////////
 // Game page
+const globGame = null;
+var globMe = 0;
+
 async function updateGamePage(gameName) {
   setUrlParam("game", gameName);
-  TODO
+  username = getUrlParam("user");
   const url = `${APP_URL}/game/${gameName}`;
   try {
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Response status: ${response.status}`);
     }
-    const json = await response.json();
-    for ([key, game] of Object.entries(json)) {
-      if (game["players"].includes(username)) {
-        return key
-      }
+    globGameObj = await response.json();
+    
+    if (globGame["players"][0] == username) {
+      globMe = 0;
+    } else {
+      globMe = 1;
     }
   } catch (error) {
   }
+}
+
+function updateBricks(brickMatrix, me) {
+  for (var row = 0; row < 3; row++) {
+    for (var col = 0; col < 3; col++) {
+
+    }
+  }
+}
+
+function brickElem(row, col) {
+
+}
+
+function onBrick(row, col) {
+  console.log(row + " " + col);
 }
 
 async function onCancelGame() {
@@ -457,6 +477,7 @@ async function onCancelGame() {
     console.error(error.message);
   }
 }
+
 
 //////////////////////////////////////////////////////////////////////////////
 // Generic page handling
@@ -483,10 +504,6 @@ function pageShow(page) {
       elemPage.style.display = elemPage.getAttribute("old-display");
     }
   }
-}
-
-function onBrick(row, col) {
-  console.log(row + " " + col);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -538,7 +555,7 @@ function randArray(array) {
           Joel: 5<br>
           Nisse: 3
       </div>
-      <table class="">
+      <table id="brick-table" class="">
         <tr>
           <td><div class="content" onclick="onBrick(0,0)"></div></td>
           <td><div class="content brick-player1" onclick="onBrick(0,1)"></div></td>
