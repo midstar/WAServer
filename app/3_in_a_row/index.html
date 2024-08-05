@@ -462,12 +462,15 @@ async function updateGamePage(gameName = "") {
       elemTurn.innerHTML = "My turn";
     } else {
       elemTurn.innerHTML = "Wait for opponent";
+      setTimeout(updateGamePage, 1000); // Try again later
     }
     updateBoard();
   } catch (error) {
     console.error(error);
   }
 }
+
+
 
 function updateBoard() {
   var board = globGame["board"];
@@ -517,6 +520,59 @@ function nbrBricks(player) {
   return result;
 }
 
+function hasWon(player) {
+  var board = globGame["board"];
+  // Check row
+  for (var row = 0; row < board.length; row++) {
+    var sameRow = 0;
+    for (var col = 0; col < board[row].length; col++) {
+      if(board[row][col] == player) {
+        sameRow += 1;
+      }
+    }
+    if (sameRow == board[row].length) {
+      return true;
+    }
+  }
+  // Check column
+  for (var col = 0; col < board.length; col++) {
+    var sameCol = 0;
+    for (var row = 0; row < board.length; row++) {
+      if(board[row][col] == player) {
+        sameCol += 1;
+      }
+    }
+    if (sameCol == board.length) {
+      return true;
+    }
+  }
+  // Check diagonal - left - right
+  var col = 0;
+  var sameDiag = 0;
+  for (var row = 0; row < board.length; row++) {
+      if(board[row][col] == player) {
+        sameDiag += 1;
+      }
+      col += 1;
+  }
+  if (sameDiag == board.length) {
+    return true;
+  }
+  // Check diagonal - right - left
+  var col = board.length - 1;
+  var sameDiag = 0;
+  for (var row = 0; row < board.length; row++) {
+      if(board[row][col] == player) {
+        sameDiag += 1;
+      }
+      col -= 1;
+  }
+  if (sameDiag == board.length) {
+    return true;
+  }
+  return false;
+}
+
 function onBrick(row, col) {
   if (globGame["turn"] != globMe) {
     return // Not my turn
@@ -536,6 +592,9 @@ function onBrick(row, col) {
     }
     updateBoard();
   } else if ((board[row][col] == globMe) && (nbrBricks(globMe) == maxBricks())) {
+    if (globSelRow >= 0 && globSelCol >= 0) {
+      brickElem(globSelRow,globSelCol).classList.remove("brick-selected");
+    } 
     globSelRow = row;
     globSelCol = col;
     brickElem(row,col).classList.add("brick-selected");
@@ -545,6 +604,13 @@ function onBrick(row, col) {
 async function sendGameUpdate() {
   globGame["lastUpdate"] = new Date().toLocaleString();
   globGame["turn"] = globOpponent;
+
+  // Check if I won
+  if (hasWon(globMe)) {
+    alert("you won");
+  }
+
+
   var game = getUrlParam("game");
   const url = `${APP_URL}/game/${game}`;
   const request = new Request(url, {
