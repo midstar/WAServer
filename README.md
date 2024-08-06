@@ -69,7 +69,7 @@ To build an application following REST API is exposed by waserver. wasserver
 reads or stores javascript objects as ordinary text files under the data
 directory (default data).
 
-**&lt;addr&gt** is the IP address and port of waserver.
+**&lt;addr&gt;** is the IP address and port of waserver.
 
 **&lt;directories&gt;** are optional and any number of directories can be
 added such as:
@@ -78,6 +78,9 @@ added such as:
 
 Directories are created by wasserver if they do not exist.
 
+**NOTE!** waserver has no authentification or any other security protection.
+Applications are not isolated from eachother and my overwrite or delete each
+others data. 
 
 ### GET &lt;addr&gt;/data/&lt;directories&gt;/&lt;objname&gt;
 
