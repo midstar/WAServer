@@ -79,7 +79,7 @@ added such as:
 Directories are created by wasserver if they do not exist.
 
 **NOTE!** waserver has no authentification or any other security protection.
-Applications are not isolated from eachother and my overwrite or delete each
+Applications are not isolated from each other and might overwrite or delete each
 others data. 
 
 ### GET &lt;addr&gt;/data/&lt;directories&gt;/&lt;objname&gt;
