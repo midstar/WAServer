@@ -69,6 +69,16 @@ To build an application following REST API is exposed by waserver. wasserver
 reads or stores javascript objects as ordinary text files under the data
 directory (default data).
 
+**&lt;addr&gt** is the IP address and port of waserver.
+
+**&lt;directories&gt;** are optional and any number of directories can be
+added such as:
+
+    192.168.1.104:8080/data/this/is/a/deep/dir/structure/myobj
+
+Directories are created by wasserver if they do not exist.
+
+
 ### GET &lt;addr&gt;/data/&lt;directories&gt;/&lt;objname&gt;
 
 Get javascript object with name &lt;objname&gt;. 
