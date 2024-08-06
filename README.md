@@ -69,23 +69,23 @@ To build an application following REST API is exposed by waserver. wasserver
 reads or stores javascript objects as ordinary text files under the data
 directory (default data).
 
-### GET &lt;addr&gt;/data/&lt;directories&lt;/&lt;objname&lt;
+### GET &lt;addr&gt;/data/&lt;directories&gt;/&lt;objname&gt;
 
-Get javascript object with name &lt;objname&lt;. 
+Get javascript object with name &lt;objname&gt;. 
 
-### POST &lt;addr&gt;/data/&lt;directories&lt;/&lt;objname&lt;
+### POST &lt;addr&gt;/data/&lt;directories&gt;/&lt;objname&gt;
 
-Write (or overwrite) javascript object with name &lt;objname&lt;.
+Write (or overwrite) javascript object with name &lt;objname&gt;.
 
-### DELETE &lt;addr&gt;/data/&lt;directories&lt;/&lt;objname&lt;
+### DELETE &lt;addr&gt;/data/&lt;directories&gt;/&lt;objname&gt;
 
-Delete javascript object with name &lt;objname&lt;.  
+Delete javascript object with name &lt;objname&gt;.  
 
-### GET &lt;addr&gt;/data/&lt;directories&lt;/&lt;dirname/&lt;
+### GET &lt;addr&gt;/data/&lt;directories&lt;/&lt;dirname&gt;/
 
 **Note that dirname needs to end with /**
 
-Get a javascript object including all objects inside &lt;dirname/&lt.
+Get a javascript object including all objects inside &lt;dirname&gt;/.
 The entries are named after the object names and values are the contents. 
 
 For example:
@@ -95,7 +95,7 @@ For example:
         "obj2" : <obj2 contents>
     }
 
-### GET &lt;addr&gt;/data/&lt;directories&lt;/&lt;dirname/&lt?ls=true;
+### GET &lt;addr&gt;/data/&lt;directories&lt;/&lt;dirname&gt;/?ls=true;
 
 **Note that dirname needs to end with /**
 
@@ -106,11 +106,11 @@ List all files inside directory. Returns following javascript object:
       "dirs" : ["dir1", "dir2", ...]
     }
 
-### Delete &lt;addr&gt;/data/&lt;directories&lt;/&lt;dirname/&lt;
+### Delete &lt;addr&gt;/data/&lt;directories&lt;/&lt;dirname&gt;/
 
 **Note that dirname needs to end with /**
 
-Delete directory with name &lt;dirname/&lt.
+Delete directory with name &lt;dirname&gt;/.
 
 ## Build from source (any platform)
 
