@@ -81,7 +81,7 @@ Write (or overwrite) javascript object with name &lt;objname&gt;.
 
 Delete javascript object with name &lt;objname&gt;.  
 
-### GET &lt;addr&gt;/data/&lt;directories&lt;/&lt;dirname&gt;/
+### GET &lt;addr&gt;/data/&lt;directories&gt;/&lt;dirname&gt;/
 
 **Note that dirname needs to end with /**
 
@@ -95,7 +95,7 @@ For example:
         "obj2" : <obj2 contents>
     }
 
-### GET &lt;addr&gt;/data/&lt;directories&lt;/&lt;dirname&gt;/?ls=true;
+### GET &lt;addr&gt;/data/&lt;directories&gt;/&lt;dirname&gt;/?ls=true;
 
 **Note that dirname needs to end with /**
 
@@ -106,7 +106,7 @@ List all files inside directory. Returns following javascript object:
       "dirs" : ["dir1", "dir2", ...]
     }
 
-### Delete &lt;addr&gt;/data/&lt;directories&lt;/&lt;dirname&gt;/
+### Delete &lt;addr&gt;/data/&lt;directories&gt;/&lt;dirname&gt;/
 
 **Note that dirname needs to end with /**
 
