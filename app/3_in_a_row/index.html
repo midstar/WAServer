@@ -2,6 +2,8 @@
 <html>
 <head>
 <title>3 in a row</title>
+<link rel="stylesheet" href="../was/was.css">
+<script src="../was/was.js"></script>
 <style>
 @media all and (orientation:portrait) {
   #page-game {
@@ -106,57 +108,6 @@ td .brick-selected {
 }
 
 
-/* PAGE - NAME */
-#page-name {
-  font-size: 25px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-}
-
-input[type='text'] { 
-  font-size: 25px;
-}
-
-#form-user {
-  width: 50%;
-  height: 50%;
-}
-
-#form-user input {
-  width: 100%
-}
-
-/* PAGE - GAME SELECT */
-.button {
-  font-size: 25px;
-  margin: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-width: 2px;
-  border-radius: 10px;
-  border-style: solid;
-  background-color: aqua;
-}
-
-.game-new {
-  background-color:chartreuse;
-}
-
-#game-invites {
-  margin-top: 30px;
-}
-
-/* PAGE - GAME WAIT */
-#page-game-wait {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  font-size: 25px;
-}
 
 </style>
 
@@ -167,7 +118,7 @@ const APP_URL = `${window.location.protocol}//${window.location.host}/data/3_in_
 //////////////////////////////////////////////////////////////////////////////
 // Startup
 window.onload = async function() {
-  pageInit("page-name");
+  wasInit("3_in_a_row");
   username = getUrlParam("user");
   if (username != null) {
     const url = `${APP_URL}/user/${username}`;
@@ -228,7 +179,7 @@ function onUserLogin() {
 
 function userLogin(username) {
   setUrlParam("user", username);
-  pageShow("page-game-select");
+  wasPageShow("page-game-select");
   updateGameSelectPage()
 }
 
@@ -239,7 +190,7 @@ async function updateGameSelectPage() {
   // Check if we have a started game
   var gameStarted = await getGame();
   if (gameStarted != null) {
-    pageShow("page-game");
+    wasPageShow("page-game");
     updateGamePage(gameStarted);
     return
   }
@@ -253,7 +204,7 @@ async function updateGameSelectPage() {
       throw new Error(`Response status: ${response.status}`);
     }
     // We already have a game invite
-    pageShow("page-game-wait");
+    wasPageShow("was-page-game-wait");
     updateGameWaitPage();
   } catch (error) {
     listGameInvites();
@@ -261,7 +212,7 @@ async function updateGameSelectPage() {
 }
 
 async function listGameInvites() {
-  elemGameInvites = document.getElementById("game-invites");
+  elemGameInvites = document.getElementById("was-game-invites");
   elemGameInvites.innerHTML = "";
   const url = `${APP_URL}/game-invites/`;
   try {
@@ -272,7 +223,7 @@ async function listGameInvites() {
     const json = await response.json();
     for (name of Object.keys(json)) {
       elemInvite = document.createElement("div");
-      elemInvite.classList.add("button");
+      elemInvite.classList.add("was-button");
       elemInvite.setAttribute("onclick", `onJoinGame('${name}')`)
       elemInvite.innerText=`Join ${name}`;
       elemGameInvites.appendChild(elemInvite);
@@ -348,7 +299,7 @@ async function startGame() {
     if (!response.ok) {
       throw new Error(`Response status: ${response.status}`);
     }
-    pageShow("page-game");
+    wasPageShow("page-game");
     updateGamePage(opponent);
   } catch (error) {
     console.error(error.message);
@@ -381,7 +332,7 @@ async function onCancelInvite() {
       throw new Error(`Response status: ${response.status}`);
     }
     globWaitGameStarted = false;
-    pageShow("page-game-select");
+    wasPageShow("page-game-select");
     updateGameSelectPage();
   } catch (error) {
     console.error(error.message);
@@ -400,7 +351,7 @@ async function waitGameStarted() {
     return
   }
   globWaitGameStarted = false;
-  pageShow("page-game");
+  wasPageShow("page-game");
   updateGamePage(gameStarted);
 }
 
@@ -629,7 +580,7 @@ async function sendGameUpdate() {
       throw new Error(`Response status: ${response.status}`);
     }
     if (!hasWon(globMe)) {
-      pageShow("page-game");
+      wasPageShow("page-game");
       updateGamePage(game);
     } else {
       setTimeout(resetGame, 3000); 
@@ -657,7 +608,7 @@ async function resetGame() {
     if (!response.ok) {
       throw new Error(`Response status: ${response.status}`);
     }
-    pageShow("page-game");
+    wasPageShow("page-game");
     updateGamePage(game);
   } catch (error) {
     console.error(error.message);
@@ -672,38 +623,10 @@ async function onCancelGame() {
   });
   try {
     const response = await fetch(request);
-    pageShow("page-game-select");
+    wasPageShow("page-game-select");
     updateGameSelectPage();
   } catch (error) {
     console.error(error.message);
-  }
-}
-
-
-//////////////////////////////////////////////////////////////////////////////
-// Generic page handling
-
-// First function to call. Will store the display properties of each
-// page (for use later) and hide all pages except "showPage".
-function pageInit(showPage) {
-  elemPages = document.getElementsByClassName("page");
-  for (let elemPage of elemPages) {
-    elemPage.setAttribute("old-display", getComputedStyle(elemPage, null).display);
-    if (elemPage.id != showPage) {
-      elemPage.style.display = "none";
-    }
-  }
-}
-
-// Hides all pages except "page"
-function pageShow(page) {
-  elemPages = document.getElementsByClassName("page");
-  for (let elemPage of elemPages) {
-    if (elemPage.id != page) {
-      elemPage.style.display = "none";
-    } else {
-      elemPage.style.display = elemPage.getAttribute("old-display");
-    }
   }
 }
 
@@ -726,26 +649,26 @@ function getUrlParam(param) {
 
 </head>
 <body>
-  <div id="page-name" class="page">
-    <div id="form-user">
+  <div id="was-page-name" class="was-page">
+    <div id="was-page-name-form">
       <label for="username">User name:</label><br>
       <input type="text" id="username" name="user" oninput="onNameUpdate()"><br>
-      <div class="button" id="user-login" style="display:none;" onclick="onUserLogin()">Login</div>
-      <div class="button" id="user-create"  style="display:none;" onclick="onUserCreate()">Create user</div>
+      <div class="was-button" id="user-login" style="display:none;" onclick="onUserLogin()">Login</div>
+      <div class="was-button" id="user-create"  style="display:none;" onclick="onUserCreate()">Create user</div>
     </div>
   </div>
-  <div id="page-game-select" class="page">
-    <div class="button game-new" onclick="onNewGame()">New game</div>
-    <div id="game-invites">
+  <div id="page-game-select" class="was-page">
+    <div class="was-button was-game-new" onclick="onNewGame()">New game</div>
+    <div id="was-game-invites">
     </div>
   </div>
-  <div id="page-game-wait" class="page">
+  <div id="was-page-game-wait" class="was-page">
     <div>
       <div>Waiting for player to join</div>
-      <div class="button" id="cancel-invite" onclick="onCancelInvite()">Cancel</div>
+      <div class="was-button" id="cancel-invite" onclick="onCancelInvite()">Cancel</div>
     </div>
   </div>
-  <div id="page-game" class="page">
+  <div id="page-game" class="was-page">
     <div id="game-area">
       <div id="game-data">
           <div id="game-turn"></div>
