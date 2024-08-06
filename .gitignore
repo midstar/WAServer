@@ -1,3 +1,6 @@
 *.exe
-waserver
 *.pem
+waserver
+.test/cover
+.test/data/*
+data/*

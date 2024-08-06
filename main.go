@@ -7,6 +7,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 )
 
@@ -19,9 +20,9 @@ var applicationGitHash = "<NOT SET>"
 func printUsage() {
 	fmt.Printf("Usage: %s [options] [<apppath>] [<datapath>]\n\n", os.Args[0])
 	fmt.Printf("<apppath> is the directory where your web files are located.\n")
-	fmt.Printf("Default is current directory.\n\n")
+	fmt.Printf("Default is app directory.\n\n")
 	fmt.Printf("<datapath> is the directory where data (JSON) is stored.\n")
-	fmt.Printf("Default is same as apppath.\n\n")
+	fmt.Printf("Default is data directory.\n\n")
 	fmt.Printf("Supported options:\n")
 	flag.PrintDefaults()
 }
@@ -30,6 +31,7 @@ func main() {
 	flag.Usage = printUsage
 	var version = flag.Bool("v", false, "Display version")
 	var port = flag.Int("p", 8080, "Network port to listen to")
+	var debugEnable = flag.Bool("d", false, "Enable debugging logs")
 	var tlsEnable = flag.Bool("s", false, "Use secure connection (TLS/HTTPS)")
 	var tlsCertFile = flag.String("c", "cert.pem", "TLS certificate file")
 	var tlsKeyFile = flag.String("k", "key.pem", "TLS key file")
@@ -42,19 +44,34 @@ func main() {
 		os.Exit(0)
 	}
 
-	appDir := "."
+	appPath := "app"
 	if flag.NArg() >= 1 {
-		appDir = flag.Arg(0)
-	} 
-	dataDir := appDir
+		appPath = flag.Arg(0)
+	}
+	dataPath := "data"
 	if flag.NArg() >= 2 {
-		dataDir = flag.Arg(1)
-	} 
+		dataPath = flag.Arg(1)
+	}
 	if flag.NArg() > 2 {
 		fmt.Fprintf(os.Stderr, "Invalid number of arguments!\n\n")
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	startServer(*port, appDir, dataDir, *tlsEnable, *tlsCertFile, *tlsKeyFile)
+	if *debugEnable {
+		opts := &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		}
+		l := slog.New(slog.NewTextHandler(os.Stdout, opts))
+		slog.SetDefault(l)
+	}
+
+	if !*tlsEnable {
+		*tlsCertFile = ""
+		*tlsKeyFile = ""
+	}
+
+	webAPI := CreateWebAPI(*port, appPath, dataPath, *tlsCertFile, *tlsKeyFile)
+	httpServerDone := webAPI.Start()
+	<-httpServerDone // Block until http server is done
 }

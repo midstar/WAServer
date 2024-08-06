@@ -27,10 +27,14 @@ jobs:
         echo $VERSION
         echo $GITHUB_SHA
 
+    - name: Test
+      run: |
+        go test -cover
+
     - name: Linux PC/x64 build and zip
       run: |
         go build -v -ldflags="-X 'main.applicationBuildTime=$NOW' -X main.applicationVersion=$VERSION -X main.applicationGitHash=$GITHUB_SHA" ./...
-        tar -zcvf waserver_linux_x64.tar.gz  waserver
+        tar -zcvf waserver_linux_x64.tar.gz  waserver app/
 
     - name: Linux ARM (cross compile from linux x64)
       run: |
@@ -39,7 +43,7 @@ jobs:
         export GOARCH=arm
         export GOARM=5
         go build -v -ldflags="-X 'main.applicationBuildTime=$NOW' -X main.applicationVersion=$VERSION -X main.applicationGitHash=$GITHUB_SHA" ./...
-        tar -zcvf waserver_linux_arm.tar.gz  waserver
+        tar -zcvf waserver_linux_arm.tar.gz  waserver app/
 
     - name: Create Tag
       uses: rickstaa/action-create-tag@v1.7.2

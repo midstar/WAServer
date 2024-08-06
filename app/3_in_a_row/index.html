@@ -1,0 +1,778 @@
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<html>
+<head>
+<title>3 in a row</title>
+<style>
+@media all and (orientation:portrait) {
+  #page-game {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+
+  #game-area {
+    width: 100%;
+  }
+
+  #game-data {
+    font-size: 25px;
+    margin-left: 5%;
+    margin-bottom: 2%;
+  }
+
+  #cancel-game {
+    text-align: center;
+    font-size: 25px;
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-top: 5%;
+    border-width: 2px;
+    border-radius: 10px;
+    border-style: solid;
+    background-color: aqua;
+  }
+
+  table {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media all and (orientation:landscape) {
+  #page-game {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+
+  #game-area {
+    display: flex;
+    width: 100%;
+  }
+
+  #game-data {
+    font-size: 25px;
+  }
+
+  #cancel-game {
+    text-align: center;
+    font-size: 25px;
+    border-width: 2px;
+    border-radius: 10px;
+    border-style: solid;
+    background-color: aqua;
+  }
+
+  table {
+    width: 90vh;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+td {
+  width: 33.33%;
+  position: relative;
+}
+td .content {
+  aspect-ratio: 1 / 1 ;
+  background: lightgray;
+}
+
+td .brick-player1 {
+  background: red;
+}
+
+td .brick-player2 {
+  background: blue;
+}
+
+td .brick-selected {
+  border-width: 4px;
+  border-style: solid;
+  border-color: black;
+}
+
+.other-turn {
+  opacity: 50%;
+}
+
+#game-turn {
+  font-size: 45px;
+  font-weight: bold;
+}
+
+
+/* PAGE - NAME */
+#page-name {
+  font-size: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+input[type='text'] { 
+  font-size: 25px;
+}
+
+#form-user {
+  width: 50%;
+  height: 50%;
+}
+
+#form-user input {
+  width: 100%
+}
+
+/* PAGE - GAME SELECT */
+.button {
+  font-size: 25px;
+  margin: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 2px;
+  border-radius: 10px;
+  border-style: solid;
+  background-color: aqua;
+}
+
+.game-new {
+  background-color:chartreuse;
+}
+
+#game-invites {
+  margin-top: 30px;
+}
+
+/* PAGE - GAME WAIT */
+#page-game-wait {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 25px;
+}
+
+</style>
+
+<script>
+
+const APP_URL = `${window.location.protocol}//${window.location.host}/data/3_in_a_row`
+
+//////////////////////////////////////////////////////////////////////////////
+// Startup
+window.onload = async function() {
+  pageInit("page-name");
+  username = getUrlParam("user");
+  if (username != null) {
+    const url = `${APP_URL}/user/${username}`;
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+      }
+      userLogin(username);
+    } catch (error) {
+      document.getElementById("username").value = username;
+      onNameUpdate();
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// User login page
+
+async function onNameUpdate() {
+  username = document.getElementById("username").value;
+  const url = `${APP_URL}/user/${username}`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    document.getElementById("user-login").style.display = "flex";
+    document.getElementById("user-create").style.display = "none";
+  } catch (error) {
+    document.getElementById("user-login").style.display = "none";
+    document.getElementById("user-create").style.display = "flex";
+  }
+}
+
+async function onUserCreate() {
+  username = document.getElementById("username").value;
+  const url = `${APP_URL}/user/${username}`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify({ creationDate: new Date().toLocaleString() }),
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    userLogin(username);
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+function onUserLogin() {
+  username = document.getElementById("username").value;
+  userLogin(username);
+}
+
+function userLogin(username) {
+  setUrlParam("user", username);
+  pageShow("page-game-select");
+  updateGameSelectPage()
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Game select page
+
+async function updateGameSelectPage() {
+  // Check if we have a started game
+  var gameStarted = await getGame();
+  if (gameStarted != null) {
+    pageShow("page-game");
+    updateGamePage(gameStarted);
+    return
+  }
+
+  // Check if we have a game invite
+  username = getUrlParam("user");
+  const url = `${APP_URL}/game-invites/${username}`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    // We already have a game invite
+    pageShow("page-game-wait");
+    updateGameWaitPage();
+  } catch (error) {
+    listGameInvites();
+  }
+}
+
+async function listGameInvites() {
+  elemGameInvites = document.getElementById("game-invites");
+  elemGameInvites.innerHTML = "";
+  const url = `${APP_URL}/game-invites/`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    const json = await response.json();
+    for (name of Object.keys(json)) {
+      elemInvite = document.createElement("div");
+      elemInvite.classList.add("button");
+      elemInvite.setAttribute("onclick", `onJoinGame('${name}')`)
+      elemInvite.innerText=`Join ${name}`;
+      elemGameInvites.appendChild(elemInvite);
+    }
+  } catch (error) {
+    console.log(error.message);
+  }
+}
+
+async function onNewGame() {
+  username = getUrlParam("user");
+  const url = `${APP_URL}/game-invites/${username}`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify({ creationDate: new Date().toLocaleString() }),
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    updateGameSelectPage();
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+async function onJoinGame(opponent) {
+  username = getUrlParam("user");
+
+  // Remove game invite
+  const url = `${APP_URL}/game-invites/${opponent}`;
+  const request = new Request(url, {
+    method: "DELETE",
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    // Start game
+    setUrlParam("opponent", opponent);
+    startGame();
+    
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+async function startGame() {
+  username = getUrlParam("user");
+  opponent = getUrlParam("opponent");
+  players = [opponent, username];
+  game = {
+    "creationDate": new Date().toLocaleString(), 
+    "lastUpdate" : new Date().toLocaleString(),
+    "players" : players,
+    "turn" : Math.floor(Math.random()),
+    "board" : [
+                [-1,-1,-1],
+                [-1,-1,-1],
+                [-1,-1,-1]
+              ],
+    "wins" : [0, 0] // Same order as players
+  };
+  const url = `${APP_URL}/game/${opponent}`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify(game),
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    pageShow("page-game");
+    updateGamePage(opponent);
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+// Game wait page
+
+// Flag for waiting game to start
+var globWaitGameStarted = false;
+
+async function updateGameWaitPage() {
+  globWaitGameStarted = true;
+  waitGameStarted();
+}
+
+async function onCancelInvite() {
+  username = getUrlParam("user");
+  const url = `${APP_URL}/game-invites/${username}`;
+  const request = new Request(url, {
+    method: "DELETE",
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    globWaitGameStarted = false;
+    pageShow("page-game-select");
+    updateGameSelectPage();
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+
+
+// Waits for game to start as long as globWaitGameStarted == true
+async function waitGameStarted() {
+  var gameStarted = await getGame();
+  if (gameStarted == null) {
+    if (globWaitGameStarted) {
+      setTimeout(waitGameStarted, 1000);
+    }
+    return
+  }
+  globWaitGameStarted = false;
+  pageShow("page-game");
+  updateGamePage(gameStarted);
+}
+
+// Returns game key (id) if game has started else null
+async function getGame() {
+  username = getUrlParam("user");
+  const url = `${APP_URL}/game/`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    const json = await response.json();
+    for ([key, game] of Object.entries(json)) {
+      if (game["players"].includes(username)) {
+        return key
+      }
+    }
+  } catch (error) {
+  }
+  return null
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Game page
+var globGame = null;
+var globMe = 0;
+var globOpponent = 0;
+var globSelRow = -1;
+var globSelCol = -1;
+
+async function updateGamePage(gameName = "") {
+  if (gameName == "") {
+    gameName = getUrlParam("game");
+  } else {
+    setUrlParam("game", gameName);
+  }
+  username = getUrlParam("user");
+  const url = `${APP_URL}/game/${gameName}`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    globGame = await response.json();
+    if (globGame["players"][0] == username) {
+      globMe = 0;
+      globOpponent = 1;
+    } else {
+      globMe = 1;
+      globOpponent = 0;
+    }
+    document.getElementById("game-me").innerHTML = globGame["players"][globMe] + ": " + 
+      globGame["wins"][globMe];
+    document.getElementById("game-opponent").innerHTML = globGame["players"][globOpponent] + ": " + 
+      globGame["wins"][globOpponent];
+    var elemTurn = document.getElementById("game-turn");
+    if (hasWon(globOpponent)) {
+      elemTurn.innerHTML = "You loose!";
+      setTimeout(updateGamePage, 1000); // Wait for opponent to reset
+    }
+    else if (globGame["turn"] == globMe) {
+      elemTurn.innerHTML = "My turn";
+    } else {
+      elemTurn.innerHTML = "Wait for opponent";
+      setTimeout(updateGamePage, 1000); // Try again later
+    }
+    updateBoard();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+
+
+function updateBoard() {
+  var board = globGame["board"];
+  if (globGame["turn"] != globMe) {
+    document.getElementById("brick-table").setAttribute("class", "other-turn");
+  } else {
+    document.getElementById("brick-table").setAttribute("class", "");
+  }
+  for (var row = 0; row < board.length; row++) {
+    for (var col = 0; col < board[row].length; col++) {
+      var pos = board[row][col];
+      var cl = "content";
+      if (pos == 0) {
+        cl += " brick-player1";
+      } else if (pos == 1) {
+        cl += " brick-player2";
+      }
+      if (pos >= 0 && pos != globMe) {
+        cl += " other-turn";
+      }
+      elemBrick = brickElem(row, col);
+      elemBrick.setAttribute("class", cl);
+    }
+  }
+}
+
+function brickElem(row, col) {
+  var elemBoard = document.getElementById("brick-table").children.item(0);
+  var elemRow = elemBoard.children.item(row);
+  return elemRow.children.item(col).children.item(0);
+}
+
+function maxBricks() {
+  return globGame["board"].length;
+}
+
+function nbrBricks(player) {
+  var board = globGame["board"];
+  var result = 0;
+  for (var row = 0; row < board.length; row++) {
+    for (var col = 0; col < board[row].length; col++) {
+      if(board[row][col] == player) {
+        result += 1;
+      }
+    }
+  }
+  return result;
+}
+
+function hasWon(player) {
+  var board = globGame["board"];
+  // Check row
+  for (var row = 0; row < board.length; row++) {
+    var sameRow = 0;
+    for (var col = 0; col < board[row].length; col++) {
+      if(board[row][col] == player) {
+        sameRow += 1;
+      }
+    }
+    if (sameRow == board[row].length) {
+      return true;
+    }
+  }
+  // Check column
+  for (var col = 0; col < board.length; col++) {
+    var sameCol = 0;
+    for (var row = 0; row < board.length; row++) {
+      if(board[row][col] == player) {
+        sameCol += 1;
+      }
+    }
+    if (sameCol == board.length) {
+      return true;
+    }
+  }
+  // Check diagonal - left - right
+  var col = 0;
+  var sameDiag = 0;
+  for (var row = 0; row < board.length; row++) {
+      if(board[row][col] == player) {
+        sameDiag += 1;
+      }
+      col += 1;
+  }
+  if (sameDiag == board.length) {
+    return true;
+  }
+  // Check diagonal - right - left
+  var col = board.length - 1;
+  var sameDiag = 0;
+  for (var row = 0; row < board.length; row++) {
+      if(board[row][col] == player) {
+        sameDiag += 1;
+      }
+      col -= 1;
+  }
+  if (sameDiag == board.length) {
+    return true;
+  }
+  return false;
+}
+
+function onBrick(row, col) {
+  if (globGame["turn"] != globMe) {
+    return // Not my turn
+  }
+  var board = globGame["board"];
+  if (board[row][col] == -1) {
+    if (nbrBricks(globMe) < maxBricks()) {
+      board[row][col] = globMe;
+      sendGameUpdate();
+    } else if (globSelRow >= 0 && globSelCol >= 0) {
+      board[globSelRow][globSelCol] = -1;
+      brickElem(globSelRow,globSelCol).classList.remove("brick-selected");
+      globSelRow = -1;
+      globSelCol = -1;
+      board[row][col] = globMe;
+      sendGameUpdate();
+    }
+    updateBoard();
+  } else if ((board[row][col] == globMe) && (nbrBricks(globMe) == maxBricks())) {
+    if (globSelRow >= 0 && globSelCol >= 0) {
+      brickElem(globSelRow,globSelCol).classList.remove("brick-selected");
+    } 
+    globSelRow = row;
+    globSelCol = col;
+    brickElem(row,col).classList.add("brick-selected");
+  }
+}
+
+async function sendGameUpdate() {
+  globGame["lastUpdate"] = new Date().toLocaleString();
+
+  // Check if I won
+  if (hasWon(globMe)) {
+    document.getElementById("game-turn").innerHTML = "You Win!";
+    globGame["wins"][globMe]++; 
+  } else {
+    globGame["turn"] = globOpponent;
+  }
+
+
+  var game = getUrlParam("game");
+  const url = `${APP_URL}/game/${game}`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify(globGame),
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    if (!hasWon(globMe)) {
+      pageShow("page-game");
+      updateGamePage(game);
+    } else {
+      setTimeout(resetGame, 3000); 
+    }
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+async function resetGame() {
+  globGame["turn"] = globOpponent;
+  globGame["board"] = [
+                [-1,-1,-1],
+                [-1,-1,-1],
+                [-1,-1,-1]
+              ];
+  var game = getUrlParam("game");
+  const url = `${APP_URL}/game/${game}`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify(globGame),
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    pageShow("page-game");
+    updateGamePage(game);
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+async function onCancelGame() {
+  const gameName = getUrlParam("game");
+  const url = `${APP_URL}/game/${gameName}`;
+  const request = new Request(url, {
+    method: "DELETE",
+  });
+  try {
+    const response = await fetch(request);
+    pageShow("page-game-select");
+    updateGameSelectPage();
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// Generic page handling
+
+// First function to call. Will store the display properties of each
+// page (for use later) and hide all pages except "showPage".
+function pageInit(showPage) {
+  elemPages = document.getElementsByClassName("page");
+  for (let elemPage of elemPages) {
+    elemPage.setAttribute("old-display", getComputedStyle(elemPage, null).display);
+    if (elemPage.id != showPage) {
+      elemPage.style.display = "none";
+    }
+  }
+}
+
+// Hides all pages except "page"
+function pageShow(page) {
+  elemPages = document.getElementsByClassName("page");
+  for (let elemPage of elemPages) {
+    if (elemPage.id != page) {
+      elemPage.style.display = "none";
+    } else {
+      elemPage.style.display = elemPage.getAttribute("old-display");
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Misc helpers
+
+function setUrlParam(param, value) {
+  const params = new URLSearchParams(window.location.search);
+  params.set(param, value);
+  history.pushState({},"","?" + params.toString());
+  //window.location.search = params.toString(); 
+}
+
+function getUrlParam(param) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(param); 
+}
+
+</script>
+
+</head>
+<body>
+  <div id="page-name" class="page">
+    <div id="form-user">
+      <label for="username">User name:</label><br>
+      <input type="text" id="username" name="user" oninput="onNameUpdate()"><br>
+      <div class="button" id="user-login" style="display:none;" onclick="onUserLogin()">Login</div>
+      <div class="button" id="user-create"  style="display:none;" onclick="onUserCreate()">Create user</div>
+    </div>
+  </div>
+  <div id="page-game-select" class="page">
+    <div class="button game-new" onclick="onNewGame()">New game</div>
+    <div id="game-invites">
+    </div>
+  </div>
+  <div id="page-game-wait" class="page">
+    <div>
+      <div>Waiting for player to join</div>
+      <div class="button" id="cancel-invite" onclick="onCancelInvite()">Cancel</div>
+    </div>
+  </div>
+  <div id="page-game" class="page">
+    <div id="game-area">
+      <div id="game-data">
+          <div id="game-turn"></div>
+          <div id="game-me"></div>
+          <div id="game-opponent"></div>
+      </div>
+      <table id="brick-table" class="">
+        <tr>
+          <td><div class="content" onclick="onBrick(0,0)"></div></td>
+          <td><div class="content brick-player1" onclick="onBrick(0,1)"></div></td>
+          <td><div class="content" onclick="onBrick(0,2)"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content" onclick="onBrick(1,0)"></div></td>
+          <td><div class="content brick-player1 brick-selected" onclick="onBrick(1,1)"></div></td>
+          <td><div class="content" onclick="onBrick(1,2)"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content brick-player2 other-turn" onclick="onBrick(2,0)"></div></td>
+          <td><div class="content" onclick="onBrick(2,1)"></div></td>
+          <td><div class="content brick-player2" onclick="onBrick(2,2)"></div></td>
+        </tr>
+      </table>
+      <div>
+        <div id="cancel-game" onclick="onCancelGame()">Cancel</div>
+      </div>
+    </div>      
+  </div>
+</body>
+</html>
