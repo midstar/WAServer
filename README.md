@@ -119,7 +119,7 @@ List all files inside directory. Returns following javascript object:
       "dirs" : ["dir1", "dir2", ...]
     }
 
-### Delete &lt;addr&gt;/data/&lt;directories&gt;/&lt;dirname&gt;/
+### DELETE &lt;addr&gt;/data/&lt;directories&gt;/&lt;dirname&gt;/
 
 **Note that dirname needs to end with /**
 
