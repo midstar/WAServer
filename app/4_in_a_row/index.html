@@ -57,6 +57,7 @@
 
   #game-data {
     font-size: 25px;
+    width: 20%;
   }
 
   #cancel-game {
@@ -198,7 +199,7 @@ async function updateGamePage(gameName = "") {
   else if (globGame["turn"] == globMe) {
     elemTurn.innerHTML = "My turn";
   } else {
-    elemTurn.innerHTML = "Wait for opponent";
+    elemTurn.innerHTML = "Wait...";
     setTimeout(updateGamePage, 1000); // Try again later
   }
   updateBoard();
