@@ -116,7 +116,12 @@ td .brick-selected {
 //////////////////////////////////////////////////////////////////////////////
 // Startup
 window.onload = async function() {
-  await wasInit("3_in_a_row", null, "2game", gameObjCallback);
+  await wasInit("3_in_a_row", appPageCallback, "2game", gameObjCallback);
+}
+
+function appPageCallback(gameName) {
+  wasPageShow("page-game");
+  updateGamePage(gameName);
 }
 
 function gameObjCallback(user, opponent) {
@@ -132,71 +137,6 @@ function gameObjCallback(user, opponent) {
               ],
     "wins" : [0, 0] // Same order as players
   };
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// Game wait page
-
-// Flag for waiting game to start
-var globWaitGameStarted = false;
-
-async function updateGameWaitPage() {
-  globWaitGameStarted = true;
-  waitGameStarted();
-}
-
-async function onCancelInvite() {
-  username = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/game-invites/${username}`;
-  const request = new Request(url, {
-    method: "DELETE",
-  });
-  try {
-    const response = await fetch(request);
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
-    globWaitGameStarted = false;
-    wasShowPageGameSelect();
-  } catch (error) {
-    console.error(error.message);
-  }
-}
-
-
-
-// Waits for game to start as long as globWaitGameStarted == true
-async function waitGameStarted() {
-  var gameStarted = await getGame();
-  if (gameStarted == null) {
-    if (globWaitGameStarted) {
-      setTimeout(waitGameStarted, 1000);
-    }
-    return
-  }
-  globWaitGameStarted = false;
-  wasPageShow("page-game");
-  updateGamePage(gameStarted);
-}
-
-// Returns game key (id) if game has started else null
-async function getGame() {
-  username = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/game/`;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
-    const json = await response.json();
-    for ([key, game] of Object.entries(json)) {
-      if (game["players"].includes(username)) {
-        return key
-      }
-    }
-  } catch (error) {
-  }
-  return null
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -457,12 +397,6 @@ async function onCancelGame() {
 
 </head>
 <body>
-  <div id="was-page-game-wait" class="was-page">
-    <div>
-      <div>Waiting for player to join</div>
-      <div class="was-button" id="cancel-invite" onclick="onCancelInvite()">Cancel</div>
-    </div>
-  </div>
   <div id="page-game" class="was-page">
     <div id="game-area">
       <div id="game-data">
@@ -473,18 +407,18 @@ async function onCancelGame() {
       <table id="brick-table" class="">
         <tr>
           <td><div class="content" onclick="onBrick(0,0)"></div></td>
-          <td><div class="content brick-player1" onclick="onBrick(0,1)"></div></td>
+          <td><div class="content" onclick="onBrick(0,1)"></div></td>
           <td><div class="content" onclick="onBrick(0,2)"></div></td>
         </tr>
         <tr>
           <td><div class="content" onclick="onBrick(1,0)"></div></td>
-          <td><div class="content brick-player1 brick-selected" onclick="onBrick(1,1)"></div></td>
+          <td><div class="content" onclick="onBrick(1,1)"></div></td>
           <td><div class="content" onclick="onBrick(1,2)"></div></td>
         </tr>
         <tr>
-          <td><div class="content brick-player2 other-turn" onclick="onBrick(2,0)"></div></td>
+          <td><div class="content" onclick="onBrick(2,0)"></div></td>
           <td><div class="content" onclick="onBrick(2,1)"></div></td>
-          <td><div class="content brick-player2" onclick="onBrick(2,2)"></div></td>
+          <td><div class="content" onclick="onBrick(2,2)"></div></td>
         </tr>
       </table>
       <div>

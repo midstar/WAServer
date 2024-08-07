@@ -12,12 +12,15 @@ var WAS_APP_URL = "";
 
 //////////////////////////////////////////////////////////////////////////////
 // Private globals
+var _wasAppPageCallback = null;
 var _wasGameObjCallback = null;
 
 
 //////////////////////////////////////////////////////////////////////////////
 // Initialization
-
+//
+// appPageCallback has one parameter. Game name, will be null if not needed.
+//
 // appType can be following:
 //  * user (Only user login)
 //  * 2game (2 player game)
@@ -29,11 +32,13 @@ var _wasGameObjCallback = null;
 // Set to null if not a game
 async function wasInit(appName, appPageCallback, appType, gameObjCallback) {
   WAS_APP_URL = `${window.location.protocol}//${window.location.host}/data/${appName}`
+  _wasAppPageCallback = appPageCallback;
   _wasGameObjCallback = gameObjCallback;
   _wasPageInit("was-page-name");
   _wasPageUserInit();
   if (appType == "2game") {
     _wasPageGameSelectInit();
+    _wasPageGameWaitInit();
   }
 }
 
@@ -162,10 +167,9 @@ async function wasShowPageGameSelect() {
   wasPageShow("was-page-game-select");
 
   // Check if we have a started game
-  var gameStarted = await getGame();
+  var gameStarted = await _wasGetGame();
   if (gameStarted != null) {
-    wasPageShow("page-game");
-    updateGamePage(gameStarted);
+    _wasAppPageCallback(gameStarted);
     return
   }
 
@@ -178,8 +182,7 @@ async function wasShowPageGameSelect() {
     return
   }
   // We already have a game invite
-  wasPageShow("was-page-game-wait");
-  updateGameWaitPage();
+  _wasShowPageGameWait();
 }
 
 async function _wasListGameInvites() {
@@ -244,6 +247,73 @@ async function _wasStartGame() {
     console.error(response.status);
     return
   }
+  
   wasPageShow("page-game");
   updateGamePage(opponent);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Wait game (after start invite) page handling
+
+var _wasWaitGameStartedFlag = false;
+
+async function _wasPageGameWaitInit() {
+  document.body.innerHTML += `
+  <div id="was-page-game-wait" class="was-page">
+    <div>
+      <div>Waiting for player to join</div>
+      <div class="was-button" id="cancel-invite" onclick="_wasOnCancelInvite()">Cancel</div>
+    </div>
+  </div>
+  `
+}
+
+async function _wasShowPageGameWait() {
+  wasPageShow("was-page-game-wait");
+  _wasWaitGameStartedFlag = true;
+  _wasWaitGameStarted();
+}
+
+async function _wasOnCancelInvite() {
+  username = wasGetUrlParam("user");
+  const request = new Request(`${WAS_APP_URL}/game-invites/${username}`, {
+    method: "DELETE",
+  });
+  const response = await fetch(request);
+  if (!response.ok) {
+    console.error(response.status);
+    return
+  }
+  _wasWaitGameStartedFlag = false;
+  wasShowPageGameSelect();
+}
+
+// Waits for game to start as long as _wasWaitGameStartedFlag == true
+async function _wasWaitGameStarted() {
+  var gameStarted = await _wasGetGame();
+  if (gameStarted == null) {
+    if (_wasWaitGameStartedFlag) {
+      setTimeout(_wasWaitGameStarted, 1000);
+    }
+    return
+  }
+  _wasWaitGameStartedFlag = false;
+  _wasAppPageCallback(gameStarted);
+}
+
+// Returns game key (id) if game has started else null
+async function _wasGetGame() {
+  username = wasGetUrlParam("user");
+  const response = await fetch(`${WAS_APP_URL}/game/`);
+  if (!response.ok) {
+    console.error(response.status);
+    return null
+  }
+  const json = await response.json();
+  for ([key, game] of Object.entries(json)) {
+    if (game["players"].includes(username)) {
+      return key
+    }
+  }
+  return null
 }
