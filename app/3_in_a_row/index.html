@@ -113,175 +113,18 @@ td .brick-selected {
 
 <script>
 
-const APP_URL = `${window.location.protocol}//${window.location.host}/data/3_in_a_row`
-
 //////////////////////////////////////////////////////////////////////////////
 // Startup
 window.onload = async function() {
-  wasInit("3_in_a_row");
-  username = getUrlParam("user");
-  if (username != null) {
-    const url = `${APP_URL}/user/${username}`;
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Response status: ${response.status}`);
-      }
-      userLogin(username);
-    } catch (error) {
-      document.getElementById("username").value = username;
-      onNameUpdate();
-    }
-  }
+  await wasInit("3_in_a_row", null, "2game", gameObjCallback);
 }
 
-//////////////////////////////////////////////////////////////////////////////
-// User login page
-
-async function onNameUpdate() {
-  username = document.getElementById("username").value;
-  const url = `${APP_URL}/user/${username}`;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
-    document.getElementById("user-login").style.display = "flex";
-    document.getElementById("user-create").style.display = "none";
-  } catch (error) {
-    document.getElementById("user-login").style.display = "none";
-    document.getElementById("user-create").style.display = "flex";
-  }
-}
-
-async function onUserCreate() {
-  username = document.getElementById("username").value;
-  const url = `${APP_URL}/user/${username}`;
-  const request = new Request(url, {
-    method: "POST",
-    body: JSON.stringify({ creationDate: new Date().toLocaleString() }),
-  });
-  try {
-    const response = await fetch(request);
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
-    userLogin(username);
-  } catch (error) {
-    console.error(error.message);
-  }
-}
-
-function onUserLogin() {
-  username = document.getElementById("username").value;
-  userLogin(username);
-}
-
-function userLogin(username) {
-  setUrlParam("user", username);
-  wasPageShow("page-game-select");
-  updateGameSelectPage()
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// Game select page
-
-async function updateGameSelectPage() {
-  // Check if we have a started game
-  var gameStarted = await getGame();
-  if (gameStarted != null) {
-    wasPageShow("page-game");
-    updateGamePage(gameStarted);
-    return
-  }
-
-  // Check if we have a game invite
-  username = getUrlParam("user");
-  const url = `${APP_URL}/game-invites/${username}`;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
-    // We already have a game invite
-    wasPageShow("was-page-game-wait");
-    updateGameWaitPage();
-  } catch (error) {
-    listGameInvites();
-  }
-}
-
-async function listGameInvites() {
-  elemGameInvites = document.getElementById("was-game-invites");
-  elemGameInvites.innerHTML = "";
-  const url = `${APP_URL}/game-invites/`;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
-    const json = await response.json();
-    for (name of Object.keys(json)) {
-      elemInvite = document.createElement("div");
-      elemInvite.classList.add("was-button");
-      elemInvite.setAttribute("onclick", `onJoinGame('${name}')`)
-      elemInvite.innerText=`Join ${name}`;
-      elemGameInvites.appendChild(elemInvite);
-    }
-  } catch (error) {
-    console.log(error.message);
-  }
-}
-
-async function onNewGame() {
-  username = getUrlParam("user");
-  const url = `${APP_URL}/game-invites/${username}`;
-  const request = new Request(url, {
-    method: "POST",
-    body: JSON.stringify({ creationDate: new Date().toLocaleString() }),
-  });
-  try {
-    const response = await fetch(request);
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
-    updateGameSelectPage();
-  } catch (error) {
-    console.error(error.message);
-  }
-}
-
-async function onJoinGame(opponent) {
-  username = getUrlParam("user");
-
-  // Remove game invite
-  const url = `${APP_URL}/game-invites/${opponent}`;
-  const request = new Request(url, {
-    method: "DELETE",
-  });
-  try {
-    const response = await fetch(request);
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
-    // Start game
-    setUrlParam("opponent", opponent);
-    startGame();
-    
-  } catch (error) {
-    console.error(error.message);
-  }
-}
-
-async function startGame() {
-  username = getUrlParam("user");
-  opponent = getUrlParam("opponent");
-  players = [opponent, username];
-  game = {
+function gameObjCallback(user, opponent) {
+  return {
     "creationDate": new Date().toLocaleString(), 
     "lastUpdate" : new Date().toLocaleString(),
-    "players" : players,
-    "turn" : Math.floor(Math.random()),
+    "players" : [user, opponent],
+    "turn" : Math.round(Math.random()),
     "board" : [
                 [-1,-1,-1],
                 [-1,-1,-1],
@@ -289,25 +132,7 @@ async function startGame() {
               ],
     "wins" : [0, 0] // Same order as players
   };
-  const url = `${APP_URL}/game/${opponent}`;
-  const request = new Request(url, {
-    method: "POST",
-    body: JSON.stringify(game),
-  });
-  try {
-    const response = await fetch(request);
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
-    wasPageShow("page-game");
-    updateGamePage(opponent);
-  } catch (error) {
-    console.error(error.message);
-  }
 }
-
-
-
 
 //////////////////////////////////////////////////////////////////////////////
 // Game wait page
@@ -321,8 +146,8 @@ async function updateGameWaitPage() {
 }
 
 async function onCancelInvite() {
-  username = getUrlParam("user");
-  const url = `${APP_URL}/game-invites/${username}`;
+  username = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/game-invites/${username}`;
   const request = new Request(url, {
     method: "DELETE",
   });
@@ -332,8 +157,7 @@ async function onCancelInvite() {
       throw new Error(`Response status: ${response.status}`);
     }
     globWaitGameStarted = false;
-    wasPageShow("page-game-select");
-    updateGameSelectPage();
+    wasShowPageGameSelect();
   } catch (error) {
     console.error(error.message);
   }
@@ -357,8 +181,8 @@ async function waitGameStarted() {
 
 // Returns game key (id) if game has started else null
 async function getGame() {
-  username = getUrlParam("user");
-  const url = `${APP_URL}/game/`;
+  username = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/game/`;
   try {
     const response = await fetch(url);
     if (!response.ok) {
@@ -385,12 +209,12 @@ var globSelCol = -1;
 
 async function updateGamePage(gameName = "") {
   if (gameName == "") {
-    gameName = getUrlParam("game");
+    gameName = wasGetUrlParam("game");
   } else {
-    setUrlParam("game", gameName);
+    wasSetUrlParam("game", gameName);
   }
-  username = getUrlParam("user");
-  const url = `${APP_URL}/game/${gameName}`;
+  username = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/game/${gameName}`;
   try {
     const response = await fetch(url);
     if (!response.ok) {
@@ -568,8 +392,8 @@ async function sendGameUpdate() {
   }
 
 
-  var game = getUrlParam("game");
-  const url = `${APP_URL}/game/${game}`;
+  var game = wasGetUrlParam("game");
+  const url = `${WAS_APP_URL}/game/${game}`;
   const request = new Request(url, {
     method: "POST",
     body: JSON.stringify(globGame),
@@ -597,8 +421,8 @@ async function resetGame() {
                 [-1,-1,-1],
                 [-1,-1,-1]
               ];
-  var game = getUrlParam("game");
-  const url = `${APP_URL}/game/${game}`;
+  var game = wasGetUrlParam("game");
+  const url = `${WAS_APP_URL}/game/${game}`;
   const request = new Request(url, {
     method: "POST",
     body: JSON.stringify(globGame),
@@ -616,52 +440,23 @@ async function resetGame() {
 }
 
 async function onCancelGame() {
-  const gameName = getUrlParam("game");
-  const url = `${APP_URL}/game/${gameName}`;
+  const gameName = wasGetUrlParam("game");
+  const url = `${WAS_APP_URL}/game/${gameName}`;
   const request = new Request(url, {
     method: "DELETE",
   });
   try {
     const response = await fetch(request);
-    wasPageShow("page-game-select");
-    updateGameSelectPage();
+    wasShowPageGameSelect();
   } catch (error) {
     console.error(error.message);
   }
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// Misc helpers
-
-function setUrlParam(param, value) {
-  const params = new URLSearchParams(window.location.search);
-  params.set(param, value);
-  history.pushState({},"","?" + params.toString());
-  //window.location.search = params.toString(); 
-}
-
-function getUrlParam(param) {
-  const params = new URLSearchParams(window.location.search);
-  return params.get(param); 
 }
 
 </script>
 
 </head>
 <body>
-  <div id="was-page-name" class="was-page">
-    <div id="was-page-name-form">
-      <label for="username">User name:</label><br>
-      <input type="text" id="username" name="user" oninput="onNameUpdate()"><br>
-      <div class="was-button" id="user-login" style="display:none;" onclick="onUserLogin()">Login</div>
-      <div class="was-button" id="user-create"  style="display:none;" onclick="onUserCreate()">Create user</div>
-    </div>
-  </div>
-  <div id="page-game-select" class="was-page">
-    <div class="was-button was-game-new" onclick="onNewGame()">New game</div>
-    <div id="was-game-invites">
-    </div>
-  </div>
   <div id="was-page-game-wait" class="was-page">
     <div>
       <div>Waiting for player to join</div>
