@@ -285,7 +285,43 @@ function hasWon(player) {
       }
     }
   }
-  // TODO Fix diagonal later
+  // Diagonal 
+  for (var startRow = 0; startRow < 6; startRow++) {
+    for (var startCol = 0; startCol < 7; startCol++) {
+      // Left to right
+      var row = startRow;
+      var col = startCol;
+      var sameDiag = 0;
+      while(row < 6 && col < 7) {
+        if(board[row][col] == player) {
+          sameDiag += 1;
+        } else {
+          sameDiag = 0;
+        }
+        if (sameDiag == 4) {
+          return true;
+        }
+        row++;
+        col++;
+      }
+      // Right to left
+      row = startRow;
+      col = startCol;
+      sameDiag = 0;
+      while(row < 6 && col >= 0) {
+        if(board[row][col] == player) {
+          sameDiag += 1;
+        } else {
+          sameDiag = 0;
+        }
+        if (sameDiag == 4) {
+          return true;
+        }
+        row++;
+        col--;
+      }
+    }
+  }
   return false;
 }
 
