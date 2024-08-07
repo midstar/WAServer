@@ -99,11 +99,11 @@ td .head-row {
   background: white;
 }
 
-td .brick-player1 {
+.brick-player1 {
   background: red;
 }
 
-td .brick-player2 {
+.brick-player2 {
   background: yellow;
 }
 
@@ -173,54 +173,51 @@ async function updateGamePage(gameName = "") {
   }
   username = wasGetUrlParam("user");
   const url = `${WAS_APP_URL}/game/${gameName}`;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
-    globGame = await response.json();
-    if (globGame["players"][0] == username) {
-      globMe = 0;
-      globOpponent = 1;
-    } else {
-      globMe = 1;
-      globOpponent = 0;
-    }
-    document.getElementById("game-me").innerHTML = globGame["players"][globMe] + ": " + 
-      globGame["wins"][globMe];
-    document.getElementById("game-opponent").innerHTML = globGame["players"][globOpponent] + ": " + 
-      globGame["wins"][globOpponent];
-    var elemTurn = document.getElementById("game-turn");
-    if (hasWon(globOpponent)) {
-      elemTurn.innerHTML = "You loose!";
-      setTimeout(updateGamePage, 1000); // Wait for opponent to reset
-    }
-    else if (globGame["turn"] == globMe) {
-      elemTurn.innerHTML = "My turn";
-    } else {
-      elemTurn.innerHTML = "Wait for opponent";
-      setTimeout(updateGamePage, 1000); // Try again later
-    }
-    updateBoard();
-  } catch (error) {
-    console.error(error);
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.error(response.status);
+    return
   }
+  globGame = await response.json();
+  if (globGame["players"][0] == username) {
+    globMe = 0;
+    globOpponent = 1;
+  } else {
+    globMe = 1;
+    globOpponent = 0;
+  }
+  document.getElementById("game-me").innerHTML = globGame["players"][globMe] + ": " + 
+    globGame["wins"][globMe];
+  document.getElementById("game-opponent").innerHTML = globGame["players"][globOpponent] + ": " + 
+    globGame["wins"][globOpponent];
+  var elemTurn = document.getElementById("game-turn");
+  if (hasWon(globOpponent)) {
+    elemTurn.innerHTML = "You loose!";
+    setTimeout(updateGamePage, 1000); // Wait for opponent to reset
+  }
+  else if (globGame["turn"] == globMe) {
+    elemTurn.innerHTML = "My turn";
+  } else {
+    elemTurn.innerHTML = "Wait for opponent";
+    setTimeout(updateGamePage, 1000); // Try again later
+  }
+  updateBoard();
+
 }
 
 
 
 function updateBoard() {
-  return
   var board = globGame["board"];
   if (globGame["turn"] != globMe) {
     document.getElementById("brick-table").setAttribute("class", "other-turn");
   } else {
     document.getElementById("brick-table").setAttribute("class", "");
   }
-  for (var row = 0; row < board.length; row++) {
-    for (var col = 0; col < board[row].length; col++) {
+  for (var row = 0; row < 6; row++) {
+    for (var col = 0; col < 7; col++) {
       var pos = board[row][col];
-      var cl = "content";
+      var cl = "brick";
       if (pos == 0) {
         cl += " brick-player1";
       } else if (pos == 1) {
@@ -237,21 +234,20 @@ function updateBoard() {
 
 function brickElem(row, col) {
   var elemBoard = document.getElementById("brick-table").children.item(0);
-  var elemRow = elemBoard.children.item(row);
-  return elemRow.children.item(col).children.item(0);
+  var elemRow = elemBoard.children.item(row + 1);
+  var elemCol = elemRow.children.item(col);
+  var elemContent = elemCol.children.item(0);
+  var elemBrick = elemContent.children.item(0);
+  return elemBrick;
 }
 
-function maxBricks() {
-  return globGame["board"].length;
-}
-
-function nbrBricks(player) {
-  var board = globGame["board"];
+function availableBricks() {
   var result = 0;
-  for (var row = 0; row < board.length; row++) {
-    for (var col = 0; col < board[row].length; col++) {
-      if(board[row][col] == player) {
-        result += 1;
+  var board = globGame["board"];
+  for (var row = 0; row < 6; row++) {
+    for (var col = 0; col < 7; col++) {
+      if (board[row][col] == -1) {
+        result++;
       }
     }
   }
@@ -261,81 +257,49 @@ function nbrBricks(player) {
 function hasWon(player) {
   var board = globGame["board"];
   // Check row
-  for (var row = 0; row < board.length; row++) {
+  for (var row = 0; row < 6; row++) {
     var sameRow = 0;
-    for (var col = 0; col < board[row].length; col++) {
+    for (var col = 0; col < 7; col++) {
       if(board[row][col] == player) {
         sameRow += 1;
+      } else {
+        sameRow = 0;
       }
-    }
-    if (sameRow == board[row].length) {
-      return true;
+      if (sameRow == 4) {
+        return true;
+      }
     }
   }
   // Check column
-  for (var col = 0; col < board.length; col++) {
+  for (var col = 0; col < 7; col++) {
     var sameCol = 0;
-    for (var row = 0; row < board.length; row++) {
+    for (var row = 0; row < 6; row++) {
       if(board[row][col] == player) {
         sameCol += 1;
+      } else {
+        sameCol = 0;
+      }
+      if (sameCol == 4) {
+        return true;
       }
     }
-    if (sameCol == board.length) {
-      return true;
-    }
   }
-  // Check diagonal - left - right
-  var col = 0;
-  var sameDiag = 0;
-  for (var row = 0; row < board.length; row++) {
-      if(board[row][col] == player) {
-        sameDiag += 1;
-      }
-      col += 1;
-  }
-  if (sameDiag == board.length) {
-    return true;
-  }
-  // Check diagonal - right - left
-  var col = board.length - 1;
-  var sameDiag = 0;
-  for (var row = 0; row < board.length; row++) {
-      if(board[row][col] == player) {
-        sameDiag += 1;
-      }
-      col -= 1;
-  }
-  if (sameDiag == board.length) {
-    return true;
-  }
+  // TODO Fix diagonal later
   return false;
 }
 
-function onBrick(row, col) {
+function onCol(col) {
   if (globGame["turn"] != globMe) {
     return // Not my turn
   }
   var board = globGame["board"];
-  if (board[row][col] == -1) {
-    if (nbrBricks(globMe) < maxBricks()) {
+  for (var row = 5; row >= 0; row--) {
+    if(board[row][col] == -1) {
       board[row][col] = globMe;
       sendGameUpdate();
-    } else if (globSelRow >= 0 && globSelCol >= 0) {
-      board[globSelRow][globSelCol] = -1;
-      brickElem(globSelRow,globSelCol).classList.remove("brick-selected");
-      globSelRow = -1;
-      globSelCol = -1;
-      board[row][col] = globMe;
-      sendGameUpdate();
+      updateBoard();
+      break;
     }
-    updateBoard();
-  } else if ((board[row][col] == globMe) && (nbrBricks(globMe) == maxBricks())) {
-    if (globSelRow >= 0 && globSelCol >= 0) {
-      brickElem(globSelRow,globSelCol).classList.remove("brick-selected");
-    } 
-    globSelRow = row;
-    globSelCol = col;
-    brickElem(row,col).classList.add("brick-selected");
   }
 }
 
