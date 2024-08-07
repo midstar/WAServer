@@ -1,0 +1,64 @@
+/**
+ * @file WEB Application Server common CSS library
+ * See {@link https://github.com/midstar/waserver/} for a full description.
+ * @copyright Joel Midstjärna 2024
+ * @license MIT
+ */
+
+/*************** General Styles ***************/
+
+.was-button {
+    font-size: 25px;
+    margin: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-width: 2px;
+    border-radius: 10px;
+    border-style: solid;
+    background-color: aqua;
+  }
+
+/********** PAGE Name (login) Styles **********/
+
+#was-page-name {
+  font-size: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+#was-page-name-form {
+  width: 50%;
+  height: 50%;
+}
+
+#was-page-name-form input {
+  width: 100%
+}
+
+#was-page-name-form input[type='text'] { 
+  font-size: 25px;
+}
+
+/********** PAGE Game Select Styles  **********/
+/* PAGE - GAME SELECT */
+
+.was-game-new {
+  background-color:chartreuse;
+}
+
+#was-game-invites {
+  margin-top: 30px;
+}
+
+
+/*********** PAGE Game Wait Styles  ***********/
+#was-page-game-wait {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 25px;
+}
