@@ -147,7 +147,11 @@ function _wasOnUserLogin() {
 
 function _wasUserLogin(username) {
   wasSetUrlParam("user", username);
-  wasShowPageGameSelect()
+  if (_wasGameObjCallback == null) {
+    _wasAppPageCallback(null);
+  } else {
+    wasShowPageGameSelect()
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////
