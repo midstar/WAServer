@@ -1,4 +1,4 @@
-![GitHub Logo](logo.jpeg|width=30)
+<img src="https://github.com/midstar/waserver/blob/feature/4_in_a_row/logo.jpeg" width="30%">
 
 # waserver - WEB Application Server
 ![waserver builder](https://github.com/midstar/waserver/actions/workflows/build.yml/badge.svg)
