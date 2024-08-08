@@ -57,6 +57,11 @@
 
   #game-data {
     font-size: 25px;
+    width: 20%;
+  }
+
+  #game-actions {
+    width: 20%;
   }
 
   #cancel-game {
@@ -421,7 +426,7 @@ async function onCancelGame() {
           <td><div class="content" onclick="onBrick(2,2)"></div></td>
         </tr>
       </table>
-      <div>
+      <div id="game-actions">
         <div id="cancel-game" onclick="onCancelGame()">Cancel</div>
       </div>
     </div>      

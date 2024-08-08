@@ -60,6 +60,10 @@
     width: 20%;
   }
 
+  #game-actions {
+    width: 20%;
+  }
+
   #cancel-game {
     text-align: center;
     font-size: 25px;
@@ -104,14 +108,16 @@ td .head-row {
   background: red;
 }
 
+.brick-player1-other {
+  background: rgb(245, 154, 154);
+}
+
 .brick-player2 {
   background: yellow;
 }
 
-td .brick-selected {
-  border-width: 4px;
-  border-style: solid;
-  border-color: black;
+.brick-player2-other {
+  background: rgb(244, 244, 177);
 }
 
 .other-turn {
@@ -196,6 +202,10 @@ async function updateGamePage(gameName = "") {
     elemTurn.innerHTML = "You loose!";
     setTimeout(updateGamePage, 1000); // Wait for opponent to reset
   }
+  else if (availableBricks() == 0) {
+    elemTurn.innerHTML = "Draw!";
+    setTimeout(updateGamePage, 1000); // Wait for opponent to reset
+  }
   else if (globGame["turn"] == globMe) {
     elemTurn.innerHTML = "My turn";
   } else {
@@ -220,12 +230,17 @@ function updateBoard() {
       var pos = board[row][col];
       var cl = "brick";
       if (pos == 0) {
-        cl += " brick-player1";
+        if (globMe == pos) {
+          cl += " brick-player1";
+        } else {
+          cl += " brick-player1-other";
+        }
       } else if (pos == 1) {
-        cl += " brick-player2";
-      }
-      if (pos >= 0 && pos != globMe) {
-        cl += " other-turn";
+        if (globMe == pos) {
+          cl += " brick-player2";
+        } else {
+          cl += " brick-player2-other";
+        }
       }
       elemBrick = brickElem(row, col);
       elemBrick.setAttribute("class", cl);
@@ -347,9 +362,12 @@ async function sendGameUpdate() {
   if (hasWon(globMe)) {
     document.getElementById("game-turn").innerHTML = "You Win!";
     globGame["wins"][globMe]++; 
+  } else if (availableBricks() == 0) {
+    document.getElementById("game-turn").innerHTML = "Draw!";
   } else {
-    globGame["turn"] = globOpponent;
+      globGame["turn"] = globOpponent;
   }
+
 
 
   var game = wasGetUrlParam("game");
@@ -363,11 +381,11 @@ async function sendGameUpdate() {
     if (!response.ok) {
       throw new Error(`Response status: ${response.status}`);
     }
-    if (!hasWon(globMe)) {
+    if (hasWon(globMe) || (availableBricks() == 0)) {
+      setTimeout(resetGame, 3000);
+    } else { 
       wasPageShow("page-game");
       updateGamePage(game);
-    } else {
-      setTimeout(resetGame, 3000); 
     }
   } catch (error) {
     console.error(error.message);
@@ -492,7 +510,7 @@ async function onCancelGame() {
           <td><div class="content" onclick="onCol(6)"><div class="brick"></div></div></td>
         </tr>
       </table>
-      <div>
+      <div id="game-actions">
         <div id="cancel-game" onclick="onCancelGame()">Cancel</div>
       </div>
     </div>      
