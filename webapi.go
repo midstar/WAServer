@@ -34,6 +34,7 @@ func CreateWebAPI(port int, appPath, dataPath string,
 		tlsKeyFile:  tlsKeyFile}
 	http.Handle("/app/", http.StripPrefix("/app/",
 		http.FileServer(http.Dir(appPath))))
+	http.Handle("/", http.RedirectHandler("/app/", http.StatusSeeOther))
 	http.HandleFunc("GET /data/", webAPI.handleDataGet)
 	http.HandleFunc("POST /data/", webAPI.handleDataPost)
 	http.HandleFunc("DELETE /data/", webAPI.handleDataDelete)

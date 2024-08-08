@@ -1,3 +1,5 @@
+![GitHub Logo](/templates/logo.jpeg)
+
 # waserver - WEB Application Server
 ![waserver builder](https://github.com/midstar/waserver/actions/workflows/build.yml/badge.svg)
 

@@ -2,6 +2,7 @@
 <html>
 <head>
 <title>WEB Application Server</title>
+<link rel="icon" type="image/x-icon" href="logo.ico">
 </head>
 <style>
 
@@ -22,7 +23,7 @@
   }
 }
 
-.app-container {
+#app-container {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -40,6 +41,7 @@
   border-color: rgb(55, 54, 54);
   border-radius: 10px;
   border-style: solid;
+  cursor: pointer;
 }
 
 .logo {
@@ -58,30 +60,36 @@ img {
   margin-bottom: 10px;
 }
 </style>
-<body>
-<div class="app-container">
-  <div class="app">
-    <div class="logo">
-      <img src="3_in_a_row/logo.ico">
-    </div>
-    <div class="name">3 in a row</div>
-  </div>
-  <div class="app">
-    <div class="logo">
-      <img src="4_in_a_row/logo.ico">
-    </div>
-    <div class="name">4 in a row</div>
-  </div>
-  <div class="app">
-    <div class="logo"></div>
-    <div class="name">Anoter app</div>
-  </div>
-  <div class="app">
-    <div class="logo">
 
-    </div>
-    <div class="name">App with a very long long name</div>
-  </div>
+<script>
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Startup
+  window.onload = async function() {
+    const url = `${window.location.protocol}//${window.location.host}/service/apps`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(response.status);
+      return
+    }
+    apps = await response.json();
+    const elemAppCont = document.getElementById("app-container");
+    for (const [key, value] of Object.entries(apps)) {
+      elemAppCont.innerHTML += `
+        <div class="app" onclick="location.href='${value['path']}/';">
+          <div class="logo">
+            <img src="${value['path']}/logo.ico">
+          </div>
+          <div class="name">${value['name']}</div>
+        </div>
+      `;
+    }
+  }
+
+</script>
+
+<body>
+<div id="app-container">
 </div>
 </body>
 </html>
