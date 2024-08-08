@@ -1,0 +1,87 @@
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<html>
+<head>
+<title>WEB Application Server</title>
+</head>
+<style>
+
+@media all and (orientation:portrait) {
+  .app {
+    width: 90%;
+    min-width: 90%;
+    max-width: 90%;
+  }
+}
+
+
+@media all and (orientation:landscape) {
+  .app {
+    width: 20%;
+    min-width: 20%;
+    max-width: 20%;
+  }
+}
+
+.app-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.app {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  font-size: 25px;
+  margin: 5px;
+  border-width: 2px;
+  border-color: rgb(55, 54, 54);
+  border-radius: 10px;
+  border-style: solid;
+}
+
+.logo {
+  width: 90%;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+img {
+  width: 100%;
+  object-fit: cover;
+}
+
+.name {
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+</style>
+<body>
+<div class="app-container">
+  <div class="app">
+    <div class="logo">
+      <img src="3_in_a_row/logo.ico">
+    </div>
+    <div class="name">3 in a row</div>
+  </div>
+  <div class="app">
+    <div class="logo">
+      <img src="4_in_a_row/logo.ico">
+    </div>
+    <div class="name">4 in a row</div>
+  </div>
+  <div class="app">
+    <div class="logo"></div>
+    <div class="name">Anoter app</div>
+  </div>
+  <div class="app">
+    <div class="logo">
+
+    </div>
+    <div class="name">App with a very long long name</div>
+  </div>
+</div>
+</body>
+</html>
