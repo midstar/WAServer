@@ -1,0 +1,95 @@
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<html>
+<head>
+<title>WEB Application Server</title>
+<link rel="icon" type="image/x-icon" href="logo.ico">
+</head>
+<style>
+
+@media all and (orientation:portrait) {
+  .app {
+    width: 90%;
+    min-width: 90%;
+    max-width: 90%;
+  }
+}
+
+
+@media all and (orientation:landscape) {
+  .app {
+    width: 20%;
+    min-width: 20%;
+    max-width: 20%;
+  }
+}
+
+#app-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.app {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  font-size: 25px;
+  margin: 5px;
+  border-width: 2px;
+  border-color: rgb(55, 54, 54);
+  border-radius: 10px;
+  border-style: solid;
+  cursor: pointer;
+}
+
+.logo {
+  width: 90%;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+img {
+  width: 100%;
+  object-fit: cover;
+}
+
+.name {
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+</style>
+
+<script>
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Startup
+  window.onload = async function() {
+    const url = `${window.location.protocol}//${window.location.host}/service/apps`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(response.status);
+      return
+    }
+    apps = await response.json();
+    const elemAppCont = document.getElementById("app-container");
+    for (const [key, value] of Object.entries(apps)) {
+      elemAppCont.innerHTML += `
+        <div class="app" onclick="location.href='${value['path']}/';">
+          <div class="logo">
+            <img src="${value['path']}/logo.ico">
+          </div>
+          <div class="name">${value['name']}</div>
+        </div>
+      `;
+    }
+  }
+
+</script>
+
+<body>
+<div id="app-container">
+</div>
+</body>
+</html>

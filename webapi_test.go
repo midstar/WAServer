@@ -280,6 +280,22 @@ func TestDataGet(t *testing.T) {
 
 }
 
+func TestAppGet(t *testing.T) {
+	startServer(t)
+	defer shutdownServer(t)
+
+	// GET directory
+	var m map[string]map[string]string
+	getObject(t, "service/apps", http.StatusOK, &m)
+	_, hasKey := m["3_in_a_row"]
+	assertTrue(t, "", hasKey)
+	assertEqualsStr(t, "", "3 in a row", m["3_in_a_row"]["name"])
+	assertEqualsStr(t, "", "3_in_a_row", m["3_in_a_row"]["path"])
+	_, hasKey = m["4_in_a_row"]
+	assertTrue(t, "", hasKey)
+
+}
+
 func TestTLS(t *testing.T) {
 	var baseHttpsURL = "https://localhost:8080"
 

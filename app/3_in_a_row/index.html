@@ -2,6 +2,7 @@
 <html>
 <head>
 <title>3 in a row</title>
+<link rel="icon" type="image/x-icon" href="logo.ico">
 <link rel="stylesheet" href="../was/was.css">
 <script src="../was/was.js"></script>
 <style>
@@ -57,6 +58,11 @@
 
   #game-data {
     font-size: 25px;
+    width: 20%;
+  }
+
+  #game-actions {
+    width: 20%;
   }
 
   #cancel-game {
@@ -78,6 +84,7 @@
 td {
   width: 33.33%;
   position: relative;
+  cursor: pointer;
 }
 td .content {
   aspect-ratio: 1 / 1 ;
@@ -421,7 +428,7 @@ async function onCancelGame() {
           <td><div class="content" onclick="onBrick(2,2)"></div></td>
         </tr>
       </table>
-      <div>
+      <div id="game-actions">
         <div id="cancel-game" onclick="onCancelGame()">Cancel</div>
       </div>
     </div>      

@@ -34,9 +34,11 @@ func CreateWebAPI(port int, appPath, dataPath string,
 		tlsKeyFile:  tlsKeyFile}
 	http.Handle("/app/", http.StripPrefix("/app/",
 		http.FileServer(http.Dir(appPath))))
+	http.Handle("/", http.RedirectHandler("/app/", http.StatusSeeOther))
 	http.HandleFunc("GET /data/", webAPI.handleDataGet)
 	http.HandleFunc("POST /data/", webAPI.handleDataPost)
 	http.HandleFunc("DELETE /data/", webAPI.handleDataDelete)
+	http.HandleFunc("GET /service/apps", webAPI.handleAppsGet)
 	http.HandleFunc("POST /service/shutdown", webAPI.handleShutdown)
 	return webAPI
 }
@@ -147,6 +149,27 @@ func (wa *WebAPI) handleDataDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	os.RemoveAll(fullPath)
 	messageResponse(w, http.StatusOK, "Deleted "+fullPath)
+}
+
+func (wa *WebAPI) handleAppsGet(w http.ResponseWriter, r *http.Request) {
+	filesMap, err := listFilesMap(wa.appPath)
+	if err != nil {
+		messageResponse(w, http.StatusNotFound, err.Error())
+		return
+	}
+	result := make(map[string]map[string]string)
+	for _, dir := range filesMap["dirs"] {
+		if dir != "was" {
+			name := strings.Replace(dir, "_", " ", -1)
+			app := map[string]string{
+				"path": dir,
+				"name": name,
+			}
+			result[dir] = app
+		}
+	}
+	filesJson, _ := json.Marshal(result)
+	writeResponseStr(w, http.StatusOK, string(filesJson))
 }
 
 func (wa *WebAPI) handleShutdown(w http.ResponseWriter, r *http.Request) {

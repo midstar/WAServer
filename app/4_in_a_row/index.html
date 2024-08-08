@@ -1,0 +1,521 @@
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<html>
+<head>
+<title>4 in a row</title>
+<link rel="icon" type="image/x-icon" href="logo.ico">
+<link rel="stylesheet" href="../was/was.css">
+<script src="../was/was.js"></script>
+<style>
+@media all and (orientation:portrait) {
+  #page-game {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+
+  #game-area {
+    width: 100%;
+  }
+
+  #game-data {
+    font-size: 25px;
+    margin-left: 5%;
+    margin-bottom: 2%;
+  }
+
+  #cancel-game {
+    text-align: center;
+    font-size: 25px;
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-top: 5%;
+    border-width: 2px;
+    border-radius: 10px;
+    border-style: solid;
+    background-color: aqua;
+  }
+
+  table {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media all and (orientation:landscape) {
+  #page-game {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+
+  #game-area {
+    display: flex;
+    width: 100%;
+  }
+
+  #game-data {
+    font-size: 25px;
+    width: 20%;
+  }
+
+  #game-actions {
+    width: 20%;
+  }
+
+  #cancel-game {
+    text-align: center;
+    font-size: 25px;
+    border-width: 2px;
+    border-radius: 10px;
+    border-style: solid;
+    background-color: aqua;
+  }
+
+  table {
+    width: 90vh;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+td {
+  width: 14.29%;
+  position: relative;
+  cursor: pointer;
+}
+td .content {
+  aspect-ratio: 1 / 1 ;
+  background: blue;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+td .head-row {
+  background: white;
+  font-size: 40px;
+}
+
+.brick {
+  width: 90%;
+  height: 90%;
+  border-radius: 50%;
+  background: white;
+}
+
+.brick-player1 {
+  background: red;
+}
+
+.brick-player1-other {
+  background: rgb(245, 154, 154);
+}
+
+.brick-player2 {
+  background: yellow;
+}
+
+.brick-player2-other {
+  background: rgb(244, 244, 177);
+}
+
+.other-turn {
+  opacity: 50%;
+}
+
+#game-turn {
+  font-size: 45px;
+  font-weight: bold;
+}
+
+
+
+</style>
+
+<script>
+
+//////////////////////////////////////////////////////////////////////////////
+// Startup
+window.onload = async function() {
+  await wasInit("4_in_a_row", appPageCallback, "2game", gameObjCallback);
+}
+
+function appPageCallback(gameName) {
+  wasPageShow("page-game");
+  updateGamePage(gameName);
+}
+
+function gameObjCallback(user, opponent) {
+  return {
+    "creationDate": new Date().toLocaleString(), 
+    "lastUpdate" : new Date().toLocaleString(),
+    "players" : [user, opponent],
+    "turn" : Math.round(Math.random()),
+    "board" : [
+                [-1,-1,-1,-1,-1,-1,-1],
+                [-1,-1,-1,-1,-1,-1,-1],
+                [-1,-1,-1,-1,-1,-1,-1],
+                [-1,-1,-1,-1,-1,-1,-1],
+                [-1,-1,-1,-1,-1,-1,-1],
+                [-1,-1,-1,-1,-1,-1,-1]
+              ],
+    "wins" : [0, 0] // Same order as players
+  };
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Game page
+var globGame = null;
+var globMe = 0;
+var globOpponent = 0;
+var globSelRow = -1;
+var globSelCol = -1;
+
+async function updateGamePage(gameName = "") {
+  if (gameName == "") {
+    gameName = wasGetUrlParam("game");
+  } else {
+    wasSetUrlParam("game", gameName);
+  }
+  username = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/game/${gameName}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.error(response.status);
+    return
+  }
+  globGame = await response.json();
+  if (globGame["players"][0] == username) {
+    globMe = 0;
+    globOpponent = 1;
+  } else {
+    globMe = 1;
+    globOpponent = 0;
+  }
+  document.getElementById("game-me").innerHTML = globGame["players"][globMe] + ": " + 
+    globGame["wins"][globMe];
+  document.getElementById("game-opponent").innerHTML = globGame["players"][globOpponent] + ": " + 
+    globGame["wins"][globOpponent];
+  var elemTurn = document.getElementById("game-turn");
+  if (hasWon(globOpponent)) {
+    elemTurn.innerHTML = "You loose!";
+    setTimeout(updateGamePage, 1000); // Wait for opponent to reset
+  }
+  else if (availableBricks() == 0) {
+    elemTurn.innerHTML = "Draw!";
+    setTimeout(updateGamePage, 1000); // Wait for opponent to reset
+  }
+  else if (globGame["turn"] == globMe) {
+    elemTurn.innerHTML = "My turn";
+  } else {
+    elemTurn.innerHTML = "Wait...";
+    setTimeout(updateGamePage, 1000); // Try again later
+  }
+  updateBoard();
+
+}
+
+
+
+function updateBoard() {
+  var board = globGame["board"];
+  if (globGame["turn"] != globMe) {
+    document.getElementById("brick-table").setAttribute("class", "other-turn");
+  } else {
+    document.getElementById("brick-table").setAttribute("class", "");
+  }
+  for (var row = 0; row < 6; row++) {
+    for (var col = 0; col < 7; col++) {
+      var pos = board[row][col];
+      var cl = "brick";
+      if (pos == 0) {
+        if (globMe == pos) {
+          cl += " brick-player1";
+        } else {
+          cl += " brick-player1-other";
+        }
+      } else if (pos == 1) {
+        if (globMe == pos) {
+          cl += " brick-player2";
+        } else {
+          cl += " brick-player2-other";
+        }
+      }
+      elemBrick = brickElem(row, col);
+      elemBrick.setAttribute("class", cl);
+    }
+  }
+}
+
+function brickElem(row, col) {
+  var elemBoard = document.getElementById("brick-table").children.item(0);
+  var elemRow = elemBoard.children.item(row + 1);
+  var elemCol = elemRow.children.item(col);
+  var elemContent = elemCol.children.item(0);
+  var elemBrick = elemContent.children.item(0);
+  return elemBrick;
+}
+
+function availableBricks() {
+  var result = 0;
+  var board = globGame["board"];
+  for (var row = 0; row < 6; row++) {
+    for (var col = 0; col < 7; col++) {
+      if (board[row][col] == -1) {
+        result++;
+      }
+    }
+  }
+  return result;
+}
+
+function hasWon(player) {
+  var board = globGame["board"];
+  // Check row
+  for (var row = 0; row < 6; row++) {
+    var sameRow = 0;
+    for (var col = 0; col < 7; col++) {
+      if(board[row][col] == player) {
+        sameRow += 1;
+      } else {
+        sameRow = 0;
+      }
+      if (sameRow == 4) {
+        return true;
+      }
+    }
+  }
+  // Check column
+  for (var col = 0; col < 7; col++) {
+    var sameCol = 0;
+    for (var row = 0; row < 6; row++) {
+      if(board[row][col] == player) {
+        sameCol += 1;
+      } else {
+        sameCol = 0;
+      }
+      if (sameCol == 4) {
+        return true;
+      }
+    }
+  }
+  // Diagonal 
+  for (var startRow = 0; startRow < 6; startRow++) {
+    for (var startCol = 0; startCol < 7; startCol++) {
+      // Left to right
+      var row = startRow;
+      var col = startCol;
+      var sameDiag = 0;
+      while(row < 6 && col < 7) {
+        if(board[row][col] == player) {
+          sameDiag += 1;
+        } else {
+          sameDiag = 0;
+        }
+        if (sameDiag == 4) {
+          return true;
+        }
+        row++;
+        col++;
+      }
+      // Right to left
+      row = startRow;
+      col = startCol;
+      sameDiag = 0;
+      while(row < 6 && col >= 0) {
+        if(board[row][col] == player) {
+          sameDiag += 1;
+        } else {
+          sameDiag = 0;
+        }
+        if (sameDiag == 4) {
+          return true;
+        }
+        row++;
+        col--;
+      }
+    }
+  }
+  return false;
+}
+
+function onCol(col) {
+  if (globGame["turn"] != globMe) {
+    return // Not my turn
+  }
+  var board = globGame["board"];
+  for (var row = 5; row >= 0; row--) {
+    if(board[row][col] == -1) {
+      board[row][col] = globMe;
+      sendGameUpdate();
+      updateBoard();
+      break;
+    }
+  }
+}
+
+async function sendGameUpdate() {
+  globGame["lastUpdate"] = new Date().toLocaleString();
+
+  // Check if I won
+  if (hasWon(globMe)) {
+    document.getElementById("game-turn").innerHTML = "You Win!";
+    globGame["wins"][globMe]++; 
+  } else if (availableBricks() == 0) {
+    document.getElementById("game-turn").innerHTML = "Draw!";
+  } else {
+      globGame["turn"] = globOpponent;
+  }
+
+
+
+  var game = wasGetUrlParam("game");
+  const url = `${WAS_APP_URL}/game/${game}`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify(globGame),
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    if (hasWon(globMe) || (availableBricks() == 0)) {
+      setTimeout(resetGame, 3000);
+    } else { 
+      wasPageShow("page-game");
+      updateGamePage(game);
+    }
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+async function resetGame() {
+  globGame["turn"] = globOpponent;
+  globGame["board"] = [
+                [-1,-1,-1,-1,-1,-1,-1],
+                [-1,-1,-1,-1,-1,-1,-1],
+                [-1,-1,-1,-1,-1,-1,-1],
+                [-1,-1,-1,-1,-1,-1,-1],
+                [-1,-1,-1,-1,-1,-1,-1],
+                [-1,-1,-1,-1,-1,-1,-1]
+              ];
+  var game = wasGetUrlParam("game");
+  const url = `${WAS_APP_URL}/game/${game}`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify(globGame),
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    wasPageShow("page-game");
+    updateGamePage(game);
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+async function onCancelGame() {
+  const gameName = wasGetUrlParam("game");
+  const url = `${WAS_APP_URL}/game/${gameName}`;
+  const request = new Request(url, {
+    method: "DELETE",
+  });
+  try {
+    const response = await fetch(request);
+    wasShowPageGameSelect();
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+</script>
+
+</head>
+<body>
+  <div id="page-game" class="was-page">
+    <div id="game-area">
+      <div id="game-data">
+          <div id="game-turn"></div>
+          <div id="game-me"></div>
+          <div id="game-opponent"></div>
+      </div>
+      <table id="brick-table" class="">
+        <tr>
+          <td><div class="content head-row" onclick="onCol(0)">&#8659;</div></td>
+          <td><div class="content head-row" onclick="onCol(1)">&#8659;</div></td>
+          <td><div class="content head-row" onclick="onCol(2)">&#8659;</div></td>
+          <td><div class="content head-row" onclick="onCol(3)">&#8659;</div></td>
+          <td><div class="content head-row" onclick="onCol(4)">&#8659;</div></td>
+          <td><div class="content head-row" onclick="onCol(5)">&#8659;</div></td>
+          <td><div class="content head-row" onclick="onCol(6)">&#8659;</div></td>
+        </tr>
+        <tr>
+          <td><div class="content" onclick="onCol(0)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(1)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(2)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(3)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(4)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(5)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(6)"><div class="brick"></div></div></td>
+        </tr>
+        <tr>
+          <td><div class="content" onclick="onCol(0)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(1)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(2)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(3)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(4)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(5)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(6)"><div class="brick"></div></div></td>
+        </tr>
+        <tr>
+          <td><div class="content" onclick="onCol(0)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(1)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(2)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(3)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(4)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(5)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(6)"><div class="brick"></div></div></td>
+        </tr>
+        <tr>
+          <td><div class="content" onclick="onCol(0)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(1)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(2)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(3)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(4)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(5)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(6)"><div class="brick"></div></div></td>
+        </tr>
+        <tr>
+          <td><div class="content" onclick="onCol(0)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(1)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(2)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(3)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(4)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(5)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(6)"><div class="brick"></div></div></td>
+        </tr>
+        <tr>
+          <td><div class="content" onclick="onCol(0)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(1)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(2)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(3)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(4)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(5)"><div class="brick"></div></div></td>
+          <td><div class="content" onclick="onCol(6)"><div class="brick"></div></div></td>
+        </tr>
+      </table>
+      <div id="game-actions">
+        <div id="cancel-game" onclick="onCancelGame()">Cancel</div>
+      </div>
+    </div>      
+  </div>
+</body>
+</html>
