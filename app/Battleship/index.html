@@ -16,6 +16,7 @@
 
   #game-area {
     width: 100%;
+    margin: 0;
   }
 
   #game-data {
@@ -54,6 +55,7 @@
   #game-area {
     display: flex;
     width: 100%;
+    margin: 0;
   }
 
   #game-data {
@@ -76,27 +78,45 @@
 
   table {
     width: 90vh;
+    margin-top: 0;
+    margin-bottom: 0;
     margin-left: auto;
     margin-right: auto;
   }
+}
+
+body {
+  margin: 0;
+}
+
+table {
+  border-collapse: collapse;
+  border:none;
 }
 
 td {
   width: 9.09%;
   position: relative;
   cursor: pointer;
+  border:none;
+  margin: 0px;
+  padding: 0px;
 }
 td .content {
   aspect-ratio: 1 / 1 ;
-  background: blue;
+  background: rgb(156, 174, 254);
   display: flex;
   align-items: center;
   justify-content: center;
+  border-width: 1px;
+  border-style: solid;
+  box-sizing: border-box;
 }
 
 td .header {
   background: white;
   font-size: 10px;
+  border:none;
 }
 
 .brick {
@@ -104,22 +124,6 @@ td .header {
   height: 90%;
   border-radius: 50%;
   background: white;
-}
-
-.brick-player1 {
-  background: red;
-}
-
-.brick-player1-other {
-  background: rgb(245, 154, 154);
-}
-
-.brick-player2 {
-  background: yellow;
-}
-
-.brick-player2-other {
-  background: rgb(244, 244, 177);
 }
 
 .other-turn {
@@ -164,7 +168,7 @@ window.onload = async function() {
 //////////////////////////////////////////////////////////////////////////////
 // Globals
 
-var ships = {
+var myShips = {
   "1A" : {
     "length" : 1,
     "orientation" : "h",
@@ -227,6 +231,8 @@ var ships = {
   },
 }
 
+var ships = myShips;
+
 //////////////////////////////////////////////////////////////////////////////
 // Functions
 
@@ -244,10 +250,11 @@ function placeShips() {
     brick4.right - brick1.left
   ];
 
+  var elemShips = document.getElementById("ships");
   for (const [shipId, ship] of Object.entries(ships)) {
     var elemShip = document.getElementById(shipId);
     if (elemShip == null) {
-      document.body.innerHTML += `
+      elemShips.innerHTML += `
       <div class="ship" id="${shipId}" 
         onmousedown="pickup(event)" 
         ontouchstart="pickup(event)"
@@ -563,9 +570,9 @@ function rotateShip(shipId) {
           <td><div class="content"></div></td>
         </tr>
       </table>
+      <div id="ships"></div>
       <div id="game-actions">
-        <!---<div id="cancel-game" onclick="onCancelGame()">Cancel</div>-->
-        <div id="cancel-game" onclick="placeShips()">Replace</div>
+        <div id="cancel-game" onclick="onCancelGame()">Cancel</div>
       </div>
     </div>      
   </div>
