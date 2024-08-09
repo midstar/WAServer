@@ -354,8 +354,11 @@ function move(event) {
 
 function drop(event) {
     if (movingElem) {
+      var brickWidth = brickElem(0,0).getBoundingClientRect().width;
       var bcr = movingElem.getBoundingClientRect(); 
-      var brickPos = getBrickPosAtWindowPos(bcr.left, bcr.top);
+      var brickPos = getBrickPosAtWindowPos(
+        Math.round(bcr.left + brickWidth/2), 
+        Math.round(bcr.top + brickWidth/2));
       if (brickPos != null) {
         var ship = ships[movingElem.id];
         if (isShipPosPossible(movingElem.id,ship.orientation,brickPos.row,brickPos.col)) {
