@@ -38,7 +38,7 @@
   }
 
   table {
-    width: 90%;
+    width: 95%;
     margin-left: auto;
     margin-right: auto;
   }
@@ -104,7 +104,7 @@ td {
 }
 td .content {
   aspect-ratio: 1 / 1 ;
-  background: rgb(156, 174, 254);
+  background: rgb(130, 153, 251);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -144,7 +144,7 @@ td .header {
   position: fixed;
   left: 600px;
   top: 200px;
-  background-color: darkgray;
+  background-color: yellow;
   z-index: 1;
 }
 
@@ -167,6 +167,8 @@ window.onload = async function() {
 
 //////////////////////////////////////////////////////////////////////////////
 // Globals
+
+var turn = "me"; // planning, other or me
 
 var myShips = {
   "1A" : {
@@ -233,6 +235,20 @@ var myShips = {
 
 var ships = myShips;
 
+var hitMap = [
+  [1,0,0,0,0,0,0,0,0,0],
+  [0,1,0,1,1,1,0,0,0,0],
+  [0,0,1,0,0,0,0,0,0,0],
+  [0,0,0,1,1,0,0,0,0,0],
+  [0,0,0,0,1,0,0,0,0,0],
+  [0,0,0,0,0,1,0,0,0,0],
+  [0,0,0,0,0,0,1,0,0,0],
+  [0,0,0,0,0,0,0,1,0,0],
+  [0,0,0,0,0,0,0,0,1,0],
+  [0,0,0,0,0,0,0,0,0,1]
+];
+
+
 //////////////////////////////////////////////////////////////////////////////
 // Functions
 
@@ -278,7 +294,68 @@ function placeShips() {
     elemPos = brickElem(ship.row,ship.col).getBoundingClientRect();
     elemShip.style.left = elemPos.left;
     elemShip.style.top = elemPos.top;
+    elemShip.style.borderWidth = "2px";
+    if (turn == "planning") {
+      elemShip.style.zIndex = 1;
+      elemShip.style.background = "yellow";
+    } else {
+      elemShip.style.zIndex = -1;
+      elemShip.style.background = "red";
+      if (turn == "me" && !isShipSink(shipId)) {
+        elemShip.style.borderWidth = "0px";
+      }
+    }
   }
+  // Set transparancy
+  for(var row = 0 ; row < 10; row++) {
+    for(var col = 0 ; col < 10; col++) {
+      if (turn == "planning") {
+        brickElem(row,col).style.display = "flex";
+        brickElem(row,col).style.backgroundColor = "rgb(130, 153, 251)";
+        brickElem(row,col).style.opacity = "100%";
+      } else {
+        brickElem(row,col).style.backgroundColor = "gray";
+        if (turn == "other"){
+          brickElem(row,col).style.opacity = "90%";
+        } else {
+          brickElem(row,col).style.opacity = "100%";
+        }
+        if (hitMap[row][col] == 1) {
+          if (isShipHit(row,col)) {
+            brickElem(row,col).style.display = "none";
+          } else {
+            brickElem(row,col).style.backgroundColor = "rgb(130, 153, 251)";
+            brickElem(row,col).style.opacity = "100%";
+          }
+        }
+      }
+    }
+  }
+}
+
+function isShipSink(shipId) {
+  ship = ships[shipId];
+  var positions = brickPositions(
+      ship.length, ship.orientation, ship.row, ship.col);
+  for (var pos of positions) {
+    if(hitMap[pos.row][pos.col] == 0) {
+      return false
+    }
+  }  
+  return true;
+}
+
+function isShipHit(row, col) {
+  for (const [shipId, ship] of Object.entries(ships)) {
+    var positions = brickPositions(
+      ship.length, ship.orientation, ship.row, ship.col);
+    for (var pos of positions) {
+      if (pos.row == row && pos.col == col) {
+        return true
+      }
+    }
+  }
+  return false;
 }
 
 function isShipPosPossible(id, orientation, row, col) {
