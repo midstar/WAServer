@@ -352,9 +352,9 @@ function pickup(event) {
 
 function move(event) {
     if (movingElem) {
-      isBetweenDragAndClick = true;
       if (event.clientX) {
             // mousemove
+            isBetweenDragAndClick = true;
             movingElem.style.left = event.clientX - movingElem.clientWidth/2;
             movingElem.style.top = event.clientY - movingElem.clientHeight/2;
         } else {
