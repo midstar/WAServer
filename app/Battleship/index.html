@@ -331,6 +331,7 @@ function brickElem(row, col) {
 
 let movingElem = null;
 let startBrick = null;
+let isBetweenDragAndClick = false;
 
 function pickup(event) {
     movingElem = event.target;
@@ -341,6 +342,7 @@ function pickup(event) {
 
 function move(event) {
     if (movingElem) {
+      isBetweenDragAndClick = true;
       if (event.clientX) {
             // mousemove
             movingElem.style.left = event.clientX - movingElem.clientWidth/2;
@@ -374,6 +376,10 @@ function drop(event) {
 }
 
 function rotateShip(shipId) {
+  if (isBetweenDragAndClick) {
+    isBetweenDragAndClick = false;
+    return
+  }
   var ship = ships[shipId];
   if (ship.length < 2) {
     return
