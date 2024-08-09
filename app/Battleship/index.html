@@ -1,0 +1,400 @@
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<html>
+<head>
+<title>Battleship</title>
+<link rel="icon" type="image/x-icon" href="logo.ico">
+<link rel="stylesheet" href="../was/was.css">
+<script src="../was/was.js"></script>
+<style>
+@media all and (orientation:portrait) {
+  #page-game {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+
+  #game-area {
+    width: 100%;
+  }
+
+  #game-data {
+    font-size: 25px;
+    margin-left: 5%;
+    margin-bottom: 2%;
+  }
+
+  #cancel-game {
+    text-align: center;
+    font-size: 25px;
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-top: 5%;
+    border-width: 2px;
+    border-radius: 10px;
+    border-style: solid;
+    background-color: aqua;
+  }
+
+  table {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media all and (orientation:landscape) {
+  #page-game {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+
+  #game-area {
+    display: flex;
+    width: 100%;
+  }
+
+  #game-data {
+    font-size: 25px;
+    width: 20%;
+  }
+
+  #game-actions {
+    width: 20%;
+  }
+
+  #cancel-game {
+    text-align: center;
+    font-size: 25px;
+    border-width: 2px;
+    border-radius: 10px;
+    border-style: solid;
+    background-color: aqua;
+  }
+
+  table {
+    width: 90vh;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+td {
+  width: 9.09%;
+  position: relative;
+  cursor: pointer;
+}
+td .content {
+  aspect-ratio: 1 / 1 ;
+  background: blue;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+td .header {
+  background: white;
+  font-size: 10px;
+}
+
+.brick {
+  width: 90%;
+  height: 90%;
+  border-radius: 50%;
+  background: white;
+}
+
+.brick-player1 {
+  background: red;
+}
+
+.brick-player1-other {
+  background: rgb(245, 154, 154);
+}
+
+.brick-player2 {
+  background: yellow;
+}
+
+.brick-player2-other {
+  background: rgb(244, 244, 177);
+}
+
+.other-turn {
+  opacity: 50%;
+}
+
+#game-turn {
+  font-size: 45px;
+  font-weight: bold;
+}
+
+.ship {
+  width: 100px;
+  height: 50px;
+  border-width: 2px;
+  border-style: solid;
+  box-sizing: border-box;
+  position: fixed;
+  left: 600px;
+  top: 200px;
+  background-color: blueviolet;
+  z-index: 1;
+}
+
+
+</style>
+
+<script>
+
+//////////////////////////////////////////////////////////////////////////////
+// Startup
+window.onload = async function() {
+  //await wasInit("4_in_a_row", appPageCallback, "2game", gameObjCallback);
+  var elemCell = document.getElementById("a-cell");
+  var r = elemCell.getBoundingClientRect();
+  var elemShip = document.getElementById("ship1");
+  elemShip.style.width = r.width;
+  elemShip.style.height = r.height;
+  elemShip.style.left = r.left;
+  elemShip.style.top = r.top;
+}
+
+
+
+// Returns null if outside of brick table
+function getBrickPosAtWindowPos(x, y) {
+  var elemTable = document.getElementById("brick-table");
+  var bcr = elemTable.getBoundingClientRect(); 
+  var brickSide = bcr.width / 11;
+  var xStart = bcr.left + brickSide;
+  var yStart = bcr.top + brickSide;
+  if (x < xStart || x > bcr.right || y < yStart || y > bcr.bottom) {
+    return null;
+  }
+  var row = Math.floor((y - yStart) / brickSide);
+  var col = Math.floor((x - xStart) / brickSide);
+  return {
+    "row" : row,
+    "col" : col
+  }
+}
+
+function brickElem(row, col) {
+  var elemBoard = document.getElementById("brick-table").children.item(0);
+  var elemRow = elemBoard.children.item(row + 1);
+  return elemRow.children.item(col + 1).children.item(0);
+}
+
+let movingElem = null;
+let startBrick = null;
+
+function pickup(event) {
+    movingElem = event.target;
+    var bcr = movingElem.getBoundingClientRect();
+    startBrick = getBrickPosAtWindowPos(bcr.left, bcr.top);
+}
+
+function move(event) {
+    if (movingElem) {
+      if (event.clientX) {
+            // mousemove
+            movingElem.style.left = event.clientX - movingElem.clientWidth/2;
+            movingElem.style.top = event.clientY - movingElem.clientHeight/2;
+        } else {
+            // touchmove - assuming a single touchpoint
+            movingElem.style.left = event.changedTouches[0].clientX - movingElem.clientWidth/2;
+            movingElem.style.top = event.changedTouches[0].clientY - movingElem.clientHeight/2;
+        }
+    }
+}
+
+function drop(event) {
+    if (movingElem) {
+        var bcr = movingElem.getBoundingClientRect(); 
+        var brickPos = getBrickPosAtWindowPos(bcr.left, bcr.top);
+        if (brickPos == null) {
+          brickPos = startBrick;
+        }
+        elemCell = brickElem(brickPos.row, brickPos.col);
+        var r = elemCell.getBoundingClientRect();
+        movingElem.style.left = r.left;
+        movingElem.style.top = r.top;
+        movingElem = null;
+    }
+}
+
+
+</script>
+
+</head>
+<body>
+  <div id="page-game" class="was-page">
+    <div id="game-area">
+      <div id="game-data">
+          <div id="game-turn"></div>
+          <div id="game-me"></div>
+          <div id="game-opponent"></div>
+      </div>
+      <div class="ship" id="ship1" 
+        onmousedown="pickup(event)" 
+        ontouchstart="pickup(event)"
+        onmousemove="move(event)" 
+        ontouchmove="move(event)"
+        onmouseup="drop(event)"
+        ontouchend="drop(event)"
+      ></div>
+      <table id="brick-table" class="">
+        <tr>
+          <td><div class="content header"></div></td>
+          <td><div class="content header">A</div></td>
+          <td><div class="content header">B</div></td>
+          <td><div class="content header">C</div></td>
+          <td><div class="content header">D</div></td>
+          <td><div class="content header">E</div></td>
+          <td><div class="content header">F</div></td>
+          <td><div class="content header">G</div></td>
+          <td><div class="content header">H</div></td>
+          <td><div class="content header">I</div></td>
+          <td><div class="content header">J</div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">1</div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">2</div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content" id="a-cell"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">3</div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">4</div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">5</div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">6</div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">7</div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">8</div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">9</div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">10</div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+          <td><div class="content"></div></td>
+        </tr>
+      </table>
+      <div id="game-actions">
+        <div id="cancel-game" onclick="onCancelGame()">Cancel</div>
+      </div>
+    </div>      
+  </div>
+</body>
+</html>
