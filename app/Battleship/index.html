@@ -154,6 +154,11 @@ td .header {
 window.onload = async function() {
   //await wasInit("4_in_a_row", appPageCallback, "2game", gameObjCallback);
   placeShips();
+
+  window.addEventListener('resize', function() {
+    placeShips();     
+  });
+
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -554,7 +559,8 @@ function rotateShip(shipId) {
         </tr>
       </table>
       <div id="game-actions">
-        <div id="cancel-game" onclick="onCancelGame()">Cancel</div>
+        <!---<div id="cancel-game" onclick="onCancelGame()">Cancel</div>-->
+        <div id="cancel-game" onclick="placeShips()">Replace</div>
       </div>
     </div>      
   </div>
