@@ -1,5 +1,5 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<html>
+<html scroll="no" style="overflow: hidden">
 <head>
 <title>Battleship</title>
 <link rel="icon" type="image/x-icon" href="logo.ico">
@@ -140,7 +140,7 @@ td .header {
   position: fixed;
   left: 600px;
   top: 200px;
-  background-color: blueviolet;
+  background-color: darkgray;
   z-index: 1;
 }
 
@@ -153,16 +153,133 @@ td .header {
 // Startup
 window.onload = async function() {
   //await wasInit("4_in_a_row", appPageCallback, "2game", gameObjCallback);
-  var elemCell = document.getElementById("a-cell");
-  var r = elemCell.getBoundingClientRect();
-  var elemShip = document.getElementById("ship1");
-  elemShip.style.width = r.width;
-  elemShip.style.height = r.height;
-  elemShip.style.left = r.left;
-  elemShip.style.top = r.top;
+  placeShips();
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Globals
 
+var ships = {
+  "1A" : {
+    "length" : 1,
+    "orientation" : "h",
+    "col" :1,
+    "row" :1
+  },
+  "1B" : {
+    "length" : 1,
+    "orientation" : "h",
+    "col" :3,
+    "row" :1
+  },
+  "1C" : {
+    "length" : 1,
+    "orientation" : "h",
+    "col" :5,
+    "row" :1
+  },
+  "1D" : {
+    "length" : 1,
+    "orientation" : "h",
+    "col" :7,
+    "row" :1
+  },
+  "2A" : {
+    "length" : 2,
+    "orientation" : "h",
+    "col" :1,
+    "row" :3
+  },
+  "2B" : {
+    "length" : 2,
+    "orientation" : "v",
+    "col" :4,
+    "row" :3
+  },
+  "2C" : {
+    "length" : 2,
+    "orientation" : "h",
+    "col" :7,
+    "row" :3
+  },
+  "3A" : {
+    "length" : 3,
+    "orientation" : "v",
+    "col" :1,
+    "row" :6
+  },
+  "3B" : {
+    "length" : 3,
+    "orientation" : "h",
+    "col" :4,
+    "row" :6
+  },
+  "4A" : {
+    "length" : 4,
+    "orientation" : "h",
+    "col" :4,
+    "row" :8
+  },
+}
+
+var board = [
+    ["","","","","","","","","",""],
+    ["","","","","","","","","",""],
+    ["","","","","","","","","",""],
+    ["","","","","","","","","",""],
+    ["","","","","","","","","",""],
+    ["","","","","","","","","",""],
+    ["","","","","","","","","",""],
+    ["","","","","","","","","",""],
+    ["","","","","","","","","",""],
+    ["","","","","","","","","",""]
+  ];
+
+//////////////////////////////////////////////////////////////////////////////
+// Functions
+
+function placeShips() {
+  // Figure out height and width of ships
+  var brick1 = brickElem(0,0).getBoundingClientRect();
+  var brick2 = brickElem(0,1).getBoundingClientRect();
+  var brick3 = brickElem(0,2).getBoundingClientRect();
+  var brick4 = brickElem(0,3).getBoundingClientRect();
+  var height = brick1.height;
+  var width = [
+    height,
+    brick2.right - brick1.left,
+    brick3.right - brick1.left,
+    brick4.right - brick1.left
+  ];
+
+  for (const [shipId, ship] of Object.entries(ships)) {
+    var elemShip = document.getElementById(shipId);
+    if (elemShip == null) {
+      document.body.innerHTML += `
+      <div class="ship" id="${shipId}" 
+        onmousedown="pickup(event)" 
+        ontouchstart="pickup(event)"
+        onmousemove="move(event)" 
+        ontouchmove="move(event)"
+        onmouseup="drop(event)"
+        ontouchend="drop(event)"
+      ></div>
+      `
+      elemShip = document.getElementById(shipId);
+    }
+    var h = height;
+    var w = width[ship.length - 1]
+    if (ship.orientation == "v") {
+      h = width[ship.length - 1];
+      w = height;
+    }
+    elemShip.style.height = h;
+    elemShip.style.width = w;
+    elemPos = brickElem(ship.row,ship.col).getBoundingClientRect();
+    elemShip.style.left = elemPos.left;
+    elemShip.style.top = elemPos.top;
+  }
+}
 
 // Returns null if outside of brick table
 function getBrickPosAtWindowPos(x, y) {
@@ -238,14 +355,6 @@ function drop(event) {
           <div id="game-me"></div>
           <div id="game-opponent"></div>
       </div>
-      <div class="ship" id="ship1" 
-        onmousedown="pickup(event)" 
-        ontouchstart="pickup(event)"
-        onmousemove="move(event)" 
-        ontouchmove="move(event)"
-        onmouseup="drop(event)"
-        ontouchend="drop(event)"
-      ></div>
       <table id="brick-table" class="">
         <tr>
           <td><div class="content header"></div></td>
@@ -277,7 +386,7 @@ function drop(event) {
           <td><div class="content header">2</div></td>
           <td><div class="content"></div></td>
           <td><div class="content"></div></td>
-          <td><div class="content" id="a-cell"></div></td>
+          <td><div class="content"></div></td>
           <td><div class="content"></div></td>
           <td><div class="content"></div></td>
           <td><div class="content"></div></td>
