@@ -250,6 +250,7 @@ function placeShips() {
         ontouchmove="move(event)"
         onmouseup="drop(event)"
         ontouchend="drop(event)"
+        onclick="rotateShip('${shipId}')"
       ></div>
       `
       elemShip = document.getElementById(shipId);
@@ -370,6 +371,23 @@ function drop(event) {
       movingElem.style.zIndex = 1;
       movingElem = null;
     }
+}
+
+function rotateShip(shipId) {
+  var ship = ships[shipId];
+  if (ship.length < 2) {
+    return
+  }
+  var orientation = "";
+  if (ship.orientation == "h") {
+    orientation = "v";
+  } else {
+    orientation = "h";
+  }
+  if (isShipPosPossible(shipId,orientation,ship.row,ship.col)) {
+    ship.orientation = orientation;
+    placeShips();
+  }
 }
 
 
