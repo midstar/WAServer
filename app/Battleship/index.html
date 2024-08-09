@@ -277,6 +277,11 @@ function placeShips() {
 function isShipPosPossible(id, orientation, row, col) {
   var wantedPositions = brickPositions(
     ships[id].length, orientation, row, col);
+  for (var wantedPos of wantedPositions) {
+      if (wantedPos.row > 9 || wantedPos.col > 9) {
+        return false
+      }
+    }
   for (const [shipId, ship] of Object.entries(ships)) {
     if (shipId == id) {
       continue;
