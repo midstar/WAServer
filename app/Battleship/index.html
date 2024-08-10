@@ -1,0 +1,913 @@
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<html scroll="no" style="overflow: hidden">
+<head>
+<title>Battleship</title>
+<link rel="icon" type="image/x-icon" href="logo.ico">
+<link rel="stylesheet" href="../was/was.css">
+<script src="../was/was.js"></script>
+<style>
+@media all and (orientation:portrait) {
+  #page-game {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+
+  #game-area {
+    width: 100%;
+    margin: 0;
+  }
+
+  #game-data {
+    font-size: 25px;
+    margin-left: 5%;
+    margin-bottom: 2%;
+  }
+
+  #game-actions {
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-top: 5%;
+  }
+
+  .game-button {
+    text-align: center;
+    font-size: 20px;
+    margin: 6px;
+    border-width: 2px;
+    border-radius: 10px;
+    border-style: solid;
+    background-color: aqua;
+  }
+
+  table {
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media all and (orientation:landscape) {
+  #page-game {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+
+  #game-area {
+    display: flex;
+    width: 100%;
+    margin: 0;
+  }
+
+  #game-data {
+    font-size: 25px;
+    width: 20%;
+    margin-left: 5px;
+  }
+
+  #game-actions {
+    width: 20%;
+  }
+
+  .game-button {
+    text-align: center;
+    font-size: 20px;
+    margin: 6px;
+    border-width: 2px;
+    border-radius: 10px;
+    border-style: solid;
+    background-color: aqua;
+  }
+
+  table {
+    width: 90vh;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+body {
+  margin: 0;
+}
+
+table {
+  border-collapse: collapse;
+  border:none;
+}
+
+td {
+  width: 9.09%;
+  position: relative;
+  cursor: pointer;
+  border:none;
+  margin: 0px;
+  padding: 0px;
+}
+td .content {
+  aspect-ratio: 1 / 1 ;
+  background: rgb(130, 153, 251);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 1px;
+  border-style: solid;
+  box-sizing: border-box;
+}
+
+td .header {
+  background: white;
+  font-size: 10px;
+  border:none;
+}
+
+.brick {
+  width: 90%;
+  height: 90%;
+  border-radius: 50%;
+  background: white;
+}
+
+.other-turn {
+  opacity: 50%;
+}
+
+#game-turn {
+  font-size: 25px;
+  font-weight: bold;
+  margin-left: 5px;
+}
+
+#game-cancel {
+  background: pink;
+}
+
+.ship {
+  width: 100px;
+  height: 50px;
+  border-width: 8px;
+  border-style: solid;
+  box-sizing: border-box;
+  position: fixed;
+  left: 600px;
+  top: 200px;
+  background-color: yellow;
+  z-index: 1;
+}
+
+
+</style>
+
+<script>
+
+//////////////////////////////////////////////////////////////////////////////
+// Startup
+window.onload = async function() {
+  await wasInit("Battleship", appPageCallback, "2game", gameObjCallback);
+}
+
+function appPageCallback(gameName) {
+  wasPageShow("page-game");
+  updateGamePage(gameName);
+}
+
+function gameObjCallback(user, opponent) {
+  return {
+    "creationDate": new Date().toLocaleString(), 
+    "lastUpdate" : new Date().toLocaleString(),
+    "players" : [user, opponent],
+    "turn" : Math.round(Math.random()),
+    "ships" : [null, null],
+    "hitMaps" : [[
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0]
+      ],[
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0]
+      ]],
+    "wins" : [0, 0] // Same order as players
+  };
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Globals
+
+var turn = "planning"; // planning, other or me
+
+var defaultShips = {
+  "1A" : {
+    "length" : 1,
+    "orientation" : "h",
+    "col" :1,
+    "row" :1
+  },
+  "1B" : {
+    "length" : 1,
+    "orientation" : "h",
+    "col" :3,
+    "row" :1
+  },
+  "1C" : {
+    "length" : 1,
+    "orientation" : "h",
+    "col" :5,
+    "row" :1
+  },
+  "1D" : {
+    "length" : 1,
+    "orientation" : "h",
+    "col" :7,
+    "row" :1
+  },
+  "2A" : {
+    "length" : 2,
+    "orientation" : "h",
+    "col" :1,
+    "row" :3
+  },
+  "2B" : {
+    "length" : 2,
+    "orientation" : "v",
+    "col" :4,
+    "row" :3
+  },
+  "2C" : {
+    "length" : 2,
+    "orientation" : "h",
+    "col" :7,
+    "row" :3
+  },
+  "3A" : {
+    "length" : 3,
+    "orientation" : "v",
+    "col" :1,
+    "row" :6
+  },
+  "3B" : {
+    "length" : 3,
+    "orientation" : "h",
+    "col" :4,
+    "row" :6
+  },
+  "4A" : {
+    "length" : 4,
+    "orientation" : "h",
+    "col" :4,
+    "row" :8
+  },
+}
+
+var ships = defaultShips;
+
+var myHitMap = [
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0]
+];
+
+var hitMap = myHitMap;
+
+//////////////////////////////////////////////////////////////////////////////
+// Game handling
+var globGame = null;
+var globMe = 0;
+var globOpponent = 0;
+
+async function updateGamePage(gameName = "") {
+  if (gameName == "") {
+    gameName = wasGetUrlParam("game");
+  } else {
+    wasSetUrlParam("game", gameName);
+  }
+  username = wasGetUrlParam("user");
+  await getGameUpdate();
+  if (globGame["players"][0] == username) {
+    globMe = 0;
+    globOpponent = 1;
+  } else {
+    globMe = 1;
+    globOpponent = 0;
+  }
+  document.getElementById("game-me").innerHTML = globGame["players"][globMe] + ": " + 
+    globGame["wins"][globMe];
+  document.getElementById("game-opponent").innerHTML = globGame["players"][globOpponent] + ": " + 
+    globGame["wins"][globOpponent];
+  var elemTurn = document.getElementById("game-turn");
+  document.getElementById("game-ready").style.display = "none";
+  document.getElementById("game-random").style.display = "none";
+  if (globGame["ships"][globMe] == null) {
+    document.getElementById("game-ready").style.display = "block";
+    document.getElementById("game-random").style.display = "block";
+    ships = defaultShips;
+    turn = "planning";
+    elemTurn.innerHTML = "Plan";
+  }
+  else if (globGame["ships"][globOpponent] == null) {
+    ships = globGame["ships"][globMe];
+    hitMap = globGame["hitMaps"][globOpponent];
+    turn = "other";
+    elemTurn.innerHTML = "Wait...";
+    setTimeout(updateGamePage, 1000); // Try again later
+  }
+  else if (globGame["turn"] == globMe) {
+    ships = globGame["ships"][globOpponent];
+    hitMap = globGame["hitMaps"][globMe];
+    turn = "me";
+    if (hasWon()) {
+      elemTurn.innerHTML = "You win!";
+    } else {
+      elemTurn.innerHTML = "My turn";
+    }
+  } else {
+    turn = "other";
+    ships = globGame["ships"][globMe];
+    hitMap = globGame["hitMaps"][globOpponent];
+    if (hasWon()) {
+      elemTurn.innerHTML = "You loose!";
+    } else {
+      elemTurn.innerHTML = "Wait...";
+    }
+    setTimeout(updateGamePage, 1000); // Try again later
+  }
+
+  placeShips();
+  window.addEventListener('resize', function() {
+    placeShips();     
+  });
+}
+
+function hasWon() {
+  for (const [shipId, ship] of Object.entries(ships)) {
+    if(!isShipSink(shipId)) {
+      return false
+    }
+  }
+  return true
+}
+
+async function onGameReady() {
+  await getGameUpdate();
+  globGame["ships"][globMe] = ships;
+  await sendGameUpdate();
+  wasPageShow("page-game");
+  updateGamePage();
+}
+
+async function onGameRandom() {
+  var shipIds = Object.keys(ships);
+  do {
+    var shipId = shipIds.pop()
+    var posPossible = false;
+    do {
+      var row = Math.floor(Math.random() * 10);
+      var col = Math.floor(Math.random() * 10);
+      var orientation = "v";
+      if (Math.random() < 0.5) {
+        orientation = "h";
+      }
+      posPossible = isShipPosPossible(shipId,orientation,row,col);
+    } while(posPossible == false);
+    ships[shipId].row = row;
+    ships[shipId].col = col;
+    ships[shipId].orientation = orientation;
+  } while(shipIds.length > 0);
+  placeShips();
+}
+
+async function onCancelGame() {
+  const gameName = wasGetUrlParam("game");
+  const url = `${WAS_APP_URL}/game/${gameName}`;
+  const request = new Request(url, {
+    method: "DELETE",
+  });
+  const response = await fetch(request);
+  wasShowPageGameSelect();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Generic
+
+function placeShips() {
+  // Figure out height and width of ships
+  var brick1 = brickElem(0,0).getBoundingClientRect();
+  var brick2 = brickElem(0,1).getBoundingClientRect();
+  var brick3 = brickElem(0,2).getBoundingClientRect();
+  var brick4 = brickElem(0,3).getBoundingClientRect();
+  var height = brick1.height;
+  var width = [
+    height,
+    brick2.right - brick1.left,
+    brick3.right - brick1.left,
+    brick4.right - brick1.left
+  ];
+
+  var elemShips = document.getElementById("ships");
+  for (const [shipId, ship] of Object.entries(ships)) {
+    var elemShip = document.getElementById(shipId);
+    if (elemShip == null) {
+      elemShips.innerHTML += `
+      <div class="ship" id="${shipId}" 
+        onmousedown="pickup(event)" 
+        ontouchstart="pickup(event)"
+        onmousemove="move(event)" 
+        ontouchmove="move(event)"
+        onmouseup="drop(event)"
+        ontouchend="drop(event)"
+        onclick="rotateShip('${shipId}')"
+      ></div>
+      `
+      elemShip = document.getElementById(shipId);
+    }
+    var h = height;
+    var w = width[ship.length - 1]
+    if (ship.orientation == "v") {
+      h = width[ship.length - 1];
+      w = height;
+    }
+    elemShip.style.height = h;
+    elemShip.style.width = w;
+    elemPos = brickElem(ship.row,ship.col).getBoundingClientRect();
+    elemShip.style.left = elemPos.left;
+    elemShip.style.top = elemPos.top;
+    elemShip.style.borderWidth = "4px";
+    if (turn == "planning") {
+      elemShip.style.zIndex = 1;
+      elemShip.style.background = "yellow";
+    } else {
+      elemShip.style.zIndex = -1;
+      elemShip.style.background = "red";
+      if (turn == "me" && !isShipSink(shipId)) {
+        elemShip.style.borderWidth = "0px";
+      }
+    }
+  }
+  // Set transparancy
+  for(var row = 0 ; row < 10; row++) {
+    for(var col = 0 ; col < 10; col++) {
+      if (turn == "planning") {
+        brickElem(row,col).style.backgroundColor = "rgb(130, 153, 251)";
+        brickElem(row,col).style.opacity = "100%";
+      } else {
+        brickElem(row,col).style.backgroundColor = "gray";
+        if (turn == "other"){
+          brickElem(row,col).style.opacity = "90%";
+        } else {
+          brickElem(row,col).style.opacity = "100%";
+        }
+        if (hitMap[row][col] == 1) {
+          if (isShipHit(row,col)) {
+            brickElem(row,col).style.opacity = "0%";
+          } else {
+            brickElem(row,col).style.backgroundColor = "rgb(130, 153, 251)";
+            brickElem(row,col).style.opacity = "100%";
+          }
+        }
+      }
+    }
+  }
+}
+
+var sizeFire = false;
+async function shoot(row, col) {
+  if (turn != "me" || sizeFire || hitMap[row][col] == 1) {
+    return;
+  }
+  hitMap[row][col] = 1;
+  if (!isShipHit(row, col)) {
+    sizeFire = true;
+  } else if (hasWon()) {
+    sizeFire = true;
+    document.getElementById("game-turn").innerHTML = "You win!";
+  } 
+  placeShips();
+  sendGameUpdate();
+
+  if (!isShipHit(row, col) || hasWon()) {
+    await sleep(1000);
+    globGame["turn"] = globOpponent;
+    if (hasWon()) {
+      globGame["wins"][globMe]++;
+      resetGame();
+    }
+    await sendGameUpdate();
+    updateGamePage();
+  }
+
+  sizeFire = false;
+}
+
+async function resetGame() {
+  globGame["ships"] = [null, null];
+  globGame["hitMaps"] = [[
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0]
+      ],[
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0]
+      ]];
+}
+
+async function getGameUpdate() {
+  var game = wasGetUrlParam("game");
+  const url = `${WAS_APP_URL}/game/${game}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.error(response.status);
+    return
+  }
+  globGame = await response.json();
+}
+
+async function sendGameUpdate() {
+  globGame["lastUpdate"] = new Date().toLocaleString();
+  var game = wasGetUrlParam("game");
+  const url = `${WAS_APP_URL}/game/${game}`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify(globGame),
+  });
+
+  const response = await fetch(request);
+  if (!response.ok) {
+    console.error(response.status);
+  }
+}
+
+function isShipSink(shipId) {
+  ship = ships[shipId];
+  var positions = brickPositions(
+      ship.length, ship.orientation, ship.row, ship.col);
+  for (var pos of positions) {
+    if(hitMap[pos.row][pos.col] == 0) {
+      return false
+    }
+  }  
+  return true;
+}
+
+function isShipHit(row, col) {
+  for (const [shipId, ship] of Object.entries(ships)) {
+    var positions = brickPositions(
+      ship.length, ship.orientation, ship.row, ship.col);
+    for (var pos of positions) {
+      if (pos.row == row && pos.col == col) {
+        return true
+      }
+    }
+  }
+  return false;
+}
+
+function isShipPosPossible(id, orientation, row, col) {
+  var wantedPositions = brickPositions(
+    ships[id].length, orientation, row, col);
+  for (var wantedPos of wantedPositions) {
+      if (wantedPos.row > 9 || wantedPos.col > 9) {
+        return false
+      }
+    }
+  for (const [shipId, ship] of Object.entries(ships)) {
+    if (shipId == id) {
+      continue;
+    }
+    var positions = brickPositions(
+      ship.length, ship.orientation, ship.row, ship.col);
+    for (var pos of positions) {
+      for (var wantedPos of wantedPositions) {
+        if (pos.row == wantedPos.row && pos.col == wantedPos.col) {
+          return false
+        }
+      }
+    }
+  }
+  return true
+}
+
+function brickPositions(length, orientation, row, col) {
+  positions = []
+  for (var i = 0 ; i < length ; i++) {
+    positions.push({
+      "row" : row,
+      "col" : col
+    });
+    if (orientation == "h") {
+      col++;
+    } else {
+      row++;
+    }
+  }
+  return positions;
+}
+
+// Returns null if outside of brick table
+function getBrickPosAtWindowPos(x, y) {
+  var elemTable = document.getElementById("brick-table");
+  var bcr = elemTable.getBoundingClientRect(); 
+  var brickSide = bcr.width / 11;
+  var xStart = bcr.left + brickSide;
+  var yStart = bcr.top + brickSide;
+  if (x < xStart || x > bcr.right || y < yStart || y > bcr.bottom) {
+    return null;
+  }
+  var row = Math.floor((y - yStart) / brickSide);
+  var col = Math.floor((x - xStart) / brickSide);
+  return {
+    "row" : row,
+    "col" : col
+  }
+}
+
+function brickElem(row, col) {
+  var elemBoard = document.getElementById("brick-table").children.item(0);
+  var elemRow = elemBoard.children.item(row + 1);
+  return elemRow.children.item(col + 1).children.item(0);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Drag and drop handling (during planning)
+
+let movingElem = null;
+let startBrick = null;
+let isBetweenDragAndClick = false;
+
+function pickup(event) {
+    movingElem = event.target;
+    movingElem.style.zIndex = 2;
+    var bcr = movingElem.getBoundingClientRect();
+    startBrick = getBrickPosAtWindowPos(bcr.left, bcr.top);
+}
+
+function move(event) {
+    if (movingElem) {
+      if (event.clientX) {
+            // mousemove
+            isBetweenDragAndClick = true;
+            movingElem.style.left = event.clientX - movingElem.clientWidth/2;
+            movingElem.style.top = event.clientY - movingElem.clientHeight/2;
+        } else {
+            // touchmove - assuming a single touchpoint
+            movingElem.style.left = event.changedTouches[0].clientX - movingElem.clientWidth/2;
+            movingElem.style.top = event.changedTouches[0].clientY - movingElem.clientHeight/2;
+        }
+    }
+}
+
+function drop(event) {
+    if (movingElem) {
+      var brickWidth = brickElem(0,0).getBoundingClientRect().width;
+      var bcr = movingElem.getBoundingClientRect(); 
+      var brickPos = getBrickPosAtWindowPos(
+        Math.round(bcr.left + brickWidth/2), 
+        Math.round(bcr.top + brickWidth/2));
+      if (brickPos != null) {
+        var ship = ships[movingElem.id];
+        if (isShipPosPossible(movingElem.id,ship.orientation,brickPos.row,brickPos.col)) {
+          ship.row = brickPos.row;
+          ship.col = brickPos.col;
+        }
+      }
+      placeShips();
+      movingElem.style.zIndex = 1;
+      movingElem = null;
+    }
+}
+
+function rotateShip(shipId) {
+  if (isBetweenDragAndClick) {
+    isBetweenDragAndClick = false;
+    return
+  }
+  var ship = ships[shipId];
+  if (ship.length < 2) {
+    return
+  }
+  var orientation = "";
+  if (ship.orientation == "h") {
+    orientation = "v";
+  } else {
+    orientation = "h";
+  }
+  if (isShipPosPossible(shipId,orientation,ship.row,ship.col)) {
+    ship.orientation = orientation;
+    placeShips();
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Misc help functions
+
+// sleep time expects milliseconds
+function sleep (time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+
+</script>
+
+</head>
+<body>
+  <div id="page-game" class="was-page">
+    <div id="game-area">
+      <div id="game-data">
+          <div id="game-turn">Plan</div>
+          <div id="game-me"></div>
+          <div id="game-opponent"></div>
+      </div>
+      <table id="brick-table" class="">
+        <tr>
+          <td><div class="content header"></div></td>
+          <td><div class="content header">A</div></td>
+          <td><div class="content header">B</div></td>
+          <td><div class="content header">C</div></td>
+          <td><div class="content header">D</div></td>
+          <td><div class="content header">E</div></td>
+          <td><div class="content header">F</div></td>
+          <td><div class="content header">G</div></td>
+          <td><div class="content header">H</div></td>
+          <td><div class="content header">I</div></td>
+          <td><div class="content header">J</div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">1</div></td>
+          <td><div class="content" onclick="shoot(0,0)"></div></td>
+          <td><div class="content" onclick="shoot(0,1)"></div></td>
+          <td><div class="content" onclick="shoot(0,2)"></div></td>
+          <td><div class="content" onclick="shoot(0,3)"></div></td>
+          <td><div class="content" onclick="shoot(0,4)"></div></td>
+          <td><div class="content" onclick="shoot(0,5)"></div></td>
+          <td><div class="content" onclick="shoot(0,6)"></div></td>
+          <td><div class="content" onclick="shoot(0,7)"></div></td>
+          <td><div class="content" onclick="shoot(0,8)"></div></td>
+          <td><div class="content" onclick="shoot(0,9)"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">2</div></td>
+          <td><div class="content" onclick="shoot(1,0)"></div></td>
+          <td><div class="content" onclick="shoot(1,1)"></div></td>
+          <td><div class="content" onclick="shoot(1,2)"></div></td>
+          <td><div class="content" onclick="shoot(1,3)"></div></td>
+          <td><div class="content" onclick="shoot(1,4)"></div></td>
+          <td><div class="content" onclick="shoot(1,5)"></div></td>
+          <td><div class="content" onclick="shoot(1,6)"></div></td>
+          <td><div class="content" onclick="shoot(1,7)"></div></td>
+          <td><div class="content" onclick="shoot(1,8)"></div></td>
+          <td><div class="content" onclick="shoot(1,9)"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">3</div></td>
+          <td><div class="content" onclick="shoot(2,0)"></div></td>
+          <td><div class="content" onclick="shoot(2,1)"></div></td>
+          <td><div class="content" onclick="shoot(2,2)"></div></td>
+          <td><div class="content" onclick="shoot(2,3)"></div></td>
+          <td><div class="content" onclick="shoot(2,4)"></div></td>
+          <td><div class="content" onclick="shoot(2,5)"></div></td>
+          <td><div class="content" onclick="shoot(2,6)"></div></td>
+          <td><div class="content" onclick="shoot(2,7)"></div></td>
+          <td><div class="content" onclick="shoot(2,8)"></div></td>
+          <td><div class="content" onclick="shoot(2,9)"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">4</div></td>
+          <td><div class="content" onclick="shoot(3,0)"></div></td>
+          <td><div class="content" onclick="shoot(3,1)"></div></td>
+          <td><div class="content" onclick="shoot(3,2)"></div></td>
+          <td><div class="content" onclick="shoot(3,3)"></div></td>
+          <td><div class="content" onclick="shoot(3,4)"></div></td>
+          <td><div class="content" onclick="shoot(3,5)"></div></td>
+          <td><div class="content" onclick="shoot(3,6)"></div></td>
+          <td><div class="content" onclick="shoot(3,7)"></div></td>
+          <td><div class="content" onclick="shoot(3,8)"></div></td>
+          <td><div class="content" onclick="shoot(3,9)"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">5</div></td>
+          <td><div class="content" onclick="shoot(4,0)"></div></td>
+          <td><div class="content" onclick="shoot(4,1)"></div></td>
+          <td><div class="content" onclick="shoot(4,2)"></div></td>
+          <td><div class="content" onclick="shoot(4,3)"></div></td>
+          <td><div class="content" onclick="shoot(4,4)"></div></td>
+          <td><div class="content" onclick="shoot(4,5)"></div></td>
+          <td><div class="content" onclick="shoot(4,6)"></div></td>
+          <td><div class="content" onclick="shoot(4,7)"></div></td>
+          <td><div class="content" onclick="shoot(4,8)"></div></td>
+          <td><div class="content" onclick="shoot(4,9)"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">6</div></td>
+          <td><div class="content" onclick="shoot(5,0)"></div></td>
+          <td><div class="content" onclick="shoot(5,1)"></div></td>
+          <td><div class="content" onclick="shoot(5,2)"></div></td>
+          <td><div class="content" onclick="shoot(5,3)"></div></td>
+          <td><div class="content" onclick="shoot(5,4)"></div></td>
+          <td><div class="content" onclick="shoot(5,5)"></div></td>
+          <td><div class="content" onclick="shoot(5,6)"></div></td>
+          <td><div class="content" onclick="shoot(5,7)"></div></td>
+          <td><div class="content" onclick="shoot(5,8)"></div></td>
+          <td><div class="content" onclick="shoot(5,9)"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">7</div></td>
+          <td><div class="content" onclick="shoot(6,0)"></div></td>
+          <td><div class="content" onclick="shoot(6,1)"></div></td>
+          <td><div class="content" onclick="shoot(6,2)"></div></td>
+          <td><div class="content" onclick="shoot(6,3)"></div></td>
+          <td><div class="content" onclick="shoot(6,4)"></div></td>
+          <td><div class="content" onclick="shoot(6,5)"></div></td>
+          <td><div class="content" onclick="shoot(6,6)"></div></td>
+          <td><div class="content" onclick="shoot(6,7)"></div></td>
+          <td><div class="content" onclick="shoot(6,8)"></div></td>
+          <td><div class="content" onclick="shoot(6,9)"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">8</div></td>
+          <td><div class="content" onclick="shoot(7,0)"></div></td>
+          <td><div class="content" onclick="shoot(7,1)"></div></td>
+          <td><div class="content" onclick="shoot(7,2)"></div></td>
+          <td><div class="content" onclick="shoot(7,3)"></div></td>
+          <td><div class="content" onclick="shoot(7,4)"></div></td>
+          <td><div class="content" onclick="shoot(7,5)"></div></td>
+          <td><div class="content" onclick="shoot(7,6)"></div></td>
+          <td><div class="content" onclick="shoot(7,7)"></div></td>
+          <td><div class="content" onclick="shoot(7,8)"></div></td>
+          <td><div class="content" onclick="shoot(7,9)"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">9</div></td>
+          <td><div class="content" onclick="shoot(8,0)"></div></td>
+          <td><div class="content" onclick="shoot(8,1)"></div></td>
+          <td><div class="content" onclick="shoot(8,2)"></div></td>
+          <td><div class="content" onclick="shoot(8,3)"></div></td>
+          <td><div class="content" onclick="shoot(8,4)"></div></td>
+          <td><div class="content" onclick="shoot(8,5)"></div></td>
+          <td><div class="content" onclick="shoot(8,6)"></div></td>
+          <td><div class="content" onclick="shoot(8,7)"></div></td>
+          <td><div class="content" onclick="shoot(8,8)"></div></td>
+          <td><div class="content" onclick="shoot(8,9)"></div></td>
+        </tr>
+        <tr>
+          <td><div class="content header">10</div></td>
+          <td><div class="content" onclick="shoot(9,0)"></div></td>
+          <td><div class="content" onclick="shoot(9,1)"></div></td>
+          <td><div class="content" onclick="shoot(9,2)"></div></td>
+          <td><div class="content" onclick="shoot(9,3)"></div></td>
+          <td><div class="content" onclick="shoot(9,4)"></div></td>
+          <td><div class="content" onclick="shoot(9,5)"></div></td>
+          <td><div class="content" onclick="shoot(9,6)"></div></td>
+          <td><div class="content" onclick="shoot(9,7)"></div></td>
+          <td><div class="content" onclick="shoot(9,8)"></div></td>
+          <td><div class="content" onclick="shoot(9,9)"></div></td>
+        </tr>
+      </table>
+      <div id="ships"></div>
+      <div id="game-actions">
+        <div class="game-button" id="game-random" onclick="onGameRandom()">Randomize</div>
+        <div class="game-button" id="game-ready" onclick="onGameReady()">Ready</div>
+        <div class="game-button" id="game-cancel" onclick="onCancelGame()">Cancel</div>
+      </div>
+    </div>      
+  </div>
+</body>
+</html>
