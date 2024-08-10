@@ -323,11 +323,7 @@ async function updateGamePage(gameName = "") {
     globGame["wins"][globOpponent];
   var elemTurn = document.getElementById("game-turn");
   document.getElementById("game-ready").style.display = "none";
-  if (hasWon(globOpponent)) {
-    elemTurn.innerHTML = "You loose!";
-    setTimeout(updateGamePage, 1000); // Wait for opponent to reset
-  }
-  else if (globGame["ships"][globMe] == null) {
+  if (globGame["ships"][globMe] == null) {
     document.getElementById("game-ready").style.display = "block";
     ships = defaultShips;
     turn = "planning";
@@ -344,12 +340,20 @@ async function updateGamePage(gameName = "") {
     ships = globGame["ships"][globOpponent];
     hitMap = globGame["hitMaps"][globMe];
     turn = "me";
-    elemTurn.innerHTML = "My turn";
+    if (hasWon()) {
+      elemTurn.innerHTML = "You win!";
+    } else {
+      elemTurn.innerHTML = "My turn";
+    }
   } else {
     turn = "other";
     ships = globGame["ships"][globMe];
     hitMap = globGame["hitMaps"][globOpponent];
-    elemTurn.innerHTML = "Wait...";
+    if (hasWon()) {
+      elemTurn.innerHTML = "You loose!";
+    } else {
+      elemTurn.innerHTML = "Wait...";
+    }
     setTimeout(updateGamePage, 1000); // Try again later
   }
 
@@ -359,26 +363,18 @@ async function updateGamePage(gameName = "") {
   });
 }
 
-function hasWon(user) {
-  // @TODO fix
-  return false;
+function hasWon() {
+  for (const [shipId, ship] of Object.entries(ships)) {
+    if(!isShipSink(shipId)) {
+      return false
+    }
+  }
+  return true
 }
 
 async function onGameReady() {
-  globGame["lastUpdate"] = new Date().toLocaleString();
   globGame["ships"][globMe] = ships;
-
-  var game = wasGetUrlParam("game");
-  const url = `${WAS_APP_URL}/game/${game}`;
-  const request = new Request(url, {
-    method: "POST",
-    body: JSON.stringify(globGame),
-  });
-    const response = await fetch(request);
-    if (!response.ok) {
-      console.error(response.status);
-      return
-    }
+  await sendGameUpdate();
   wasPageShow("page-game");
   updateGamePage(game);
 }
@@ -483,14 +479,21 @@ async function shoot(row, col) {
   }
   if (!isShipHit(row, col)) {
     sizeFire = true;
+  } else if (hasWon()) {
+    sizeFire = true;
+    document.getElementById("game-turn").innerHTML = "You win!";
   }
   hitMap[row][col] = 1; 
   placeShips();
   sendGameUpdate();
 
-  if (!isShipHit(row, col)) {
+  if (!isShipHit(row, col) || hasWon()) {
     await sleep(1000);
     globGame["turn"] = globOpponent;
+    if (hasWon()) {
+      globGame["wins"][globMe]++;
+      resetGame();
+    }
     await sendGameUpdate();
     updateGamePage();
   }
@@ -498,7 +501,35 @@ async function shoot(row, col) {
   sizeFire = false;
 }
 
+async function resetGame() {
+  globGame["ships"] = [null, null];
+  globGame["hitMaps"] = [[
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0]
+      ],[
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0]
+      ]];
+}
+
 async function sendGameUpdate() {
+  globGame["lastUpdate"] = new Date().toLocaleString();
   var game = wasGetUrlParam("game");
   const url = `${WAS_APP_URL}/game/${game}`;
   const request = new Request(url, {
