@@ -252,8 +252,7 @@ async function _wasStartGame() {
     return
   }
   
-  wasPageShow("page-game");
-  updateGamePage(opponent);
+  _wasAppPageCallback(opponent);
 }
 
 //////////////////////////////////////////////////////////////////////////////
