@@ -25,12 +25,16 @@
     margin-bottom: 2%;
   }
 
-  #cancel-game {
-    text-align: center;
-    font-size: 25px;
+  #game-actions {
     margin-left: 5%;
     margin-right: 5%;
     margin-top: 5%;
+  }
+
+  .game-button {
+    text-align: center;
+    font-size: 25px;
+    margin: 4px;
     border-width: 2px;
     border-radius: 10px;
     border-style: solid;
@@ -67,9 +71,10 @@
     width: 20%;
   }
 
-  #cancel-game {
+  .game-button {
     text-align: center;
     font-size: 25px;
+    margin: 4px;
     border-width: 2px;
     border-radius: 10px;
     border-style: solid;
@@ -131,8 +136,9 @@ td .header {
 }
 
 #game-turn {
-  font-size: 45px;
+  font-size: 25px;
   font-weight: bold;
+  margin-left: 5px;
 }
 
 .ship {
@@ -168,7 +174,7 @@ window.onload = async function() {
 //////////////////////////////////////////////////////////////////////////////
 // Globals
 
-var turn = "me"; // planning, other or me
+var turn = "other"; // planning, other or me
 
 var myShips = {
   "1A" : {
@@ -235,7 +241,7 @@ var myShips = {
 
 var ships = myShips;
 
-var hitMap = [
+var myHitMap = [
   [1,0,0,0,0,0,0,0,0,0],
   [0,1,0,1,1,1,0,0,0,0],
   [0,0,1,0,0,0,0,0,0,0],
@@ -248,9 +254,11 @@ var hitMap = [
   [0,0,0,0,0,0,0,0,0,1]
 ];
 
+var hitMap = myHitMap;
+
 
 //////////////////////////////////////////////////////////////////////////////
-// Functions
+// Generic
 
 function placeShips() {
   // Figure out height and width of ships
@@ -310,7 +318,6 @@ function placeShips() {
   for(var row = 0 ; row < 10; row++) {
     for(var col = 0 ; col < 10; col++) {
       if (turn == "planning") {
-        brickElem(row,col).style.display = "flex";
         brickElem(row,col).style.backgroundColor = "rgb(130, 153, 251)";
         brickElem(row,col).style.opacity = "100%";
       } else {
@@ -322,7 +329,7 @@ function placeShips() {
         }
         if (hitMap[row][col] == 1) {
           if (isShipHit(row,col)) {
-            brickElem(row,col).style.display = "none";
+            brickElem(row,col).style.opacity = "0%";
           } else {
             brickElem(row,col).style.backgroundColor = "rgb(130, 153, 251)";
             brickElem(row,col).style.opacity = "100%";
@@ -423,6 +430,9 @@ function brickElem(row, col) {
   return elemRow.children.item(col + 1).children.item(0);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Drag and drop handling (during planning)
+
 let movingElem = null;
 let startBrick = null;
 let isBetweenDragAndClick = false;
@@ -498,7 +508,7 @@ function rotateShip(shipId) {
   <div id="page-game" class="was-page">
     <div id="game-area">
       <div id="game-data">
-          <div id="game-turn"></div>
+          <div id="game-turn">Plan</div>
           <div id="game-me"></div>
           <div id="game-opponent"></div>
       </div>
@@ -649,7 +659,8 @@ function rotateShip(shipId) {
       </table>
       <div id="ships"></div>
       <div id="game-actions">
-        <div id="cancel-game" onclick="onCancelGame()">Cancel</div>
+        <div class="game-button" id="game-ready" onclick="onCancelGame()">Ready</div>
+        <div class="game-button" id="game-cancel" onclick="onCancelGame()">Cancel</div>
       </div>
     </div>      
   </div>
