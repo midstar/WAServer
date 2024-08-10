@@ -476,6 +476,42 @@ function placeShips() {
   }
 }
 
+var sizeFire = false;
+async function shoot(row, col) {
+  if (turn != "me" || sizeFire || hitMap[row][col] == 1) {
+    return;
+  }
+  if (!isShipHit(row, col)) {
+    sizeFire = true;
+  }
+  hitMap[row][col] = 1; 
+  placeShips();
+  sendGameUpdate();
+
+  if (!isShipHit(row, col)) {
+    await sleep(1000);
+    globGame["turn"] = globOpponent;
+    await sendGameUpdate();
+    updateGamePage();
+  }
+
+  sizeFire = false;
+}
+
+async function sendGameUpdate() {
+  var game = wasGetUrlParam("game");
+  const url = `${WAS_APP_URL}/game/${game}`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify(globGame),
+  });
+
+  const response = await fetch(request);
+  if (!response.ok) {
+    console.error(response.status);
+  }
+}
+
 function isShipSink(shipId) {
   ship = ships[shipId];
   var positions = brickPositions(
@@ -636,6 +672,14 @@ function rotateShip(shipId) {
   }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Misc help functions
+
+// sleep time expects milliseconds
+function sleep (time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
 
 </script>
 
@@ -664,133 +708,133 @@ function rotateShip(shipId) {
         </tr>
         <tr>
           <td><div class="content header">1</div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
+          <td><div class="content" onclick="shoot(0,0)"></div></td>
+          <td><div class="content" onclick="shoot(0,1)"></div></td>
+          <td><div class="content" onclick="shoot(0,2)"></div></td>
+          <td><div class="content" onclick="shoot(0,3)"></div></td>
+          <td><div class="content" onclick="shoot(0,4)"></div></td>
+          <td><div class="content" onclick="shoot(0,5)"></div></td>
+          <td><div class="content" onclick="shoot(0,6)"></div></td>
+          <td><div class="content" onclick="shoot(0,7)"></div></td>
+          <td><div class="content" onclick="shoot(0,8)"></div></td>
+          <td><div class="content" onclick="shoot(0,9)"></div></td>
         </tr>
         <tr>
           <td><div class="content header">2</div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
+          <td><div class="content" onclick="shoot(1,0)"></div></td>
+          <td><div class="content" onclick="shoot(1,1)"></div></td>
+          <td><div class="content" onclick="shoot(1,2)"></div></td>
+          <td><div class="content" onclick="shoot(1,3)"></div></td>
+          <td><div class="content" onclick="shoot(1,4)"></div></td>
+          <td><div class="content" onclick="shoot(1,5)"></div></td>
+          <td><div class="content" onclick="shoot(1,6)"></div></td>
+          <td><div class="content" onclick="shoot(1,7)"></div></td>
+          <td><div class="content" onclick="shoot(1,8)"></div></td>
+          <td><div class="content" onclick="shoot(1,9)"></div></td>
         </tr>
         <tr>
           <td><div class="content header">3</div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
+          <td><div class="content" onclick="shoot(2,0)"></div></td>
+          <td><div class="content" onclick="shoot(2,1)"></div></td>
+          <td><div class="content" onclick="shoot(2,2)"></div></td>
+          <td><div class="content" onclick="shoot(2,3)"></div></td>
+          <td><div class="content" onclick="shoot(2,4)"></div></td>
+          <td><div class="content" onclick="shoot(2,5)"></div></td>
+          <td><div class="content" onclick="shoot(2,6)"></div></td>
+          <td><div class="content" onclick="shoot(2,7)"></div></td>
+          <td><div class="content" onclick="shoot(2,8)"></div></td>
+          <td><div class="content" onclick="shoot(2,9)"></div></td>
         </tr>
         <tr>
           <td><div class="content header">4</div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
+          <td><div class="content" onclick="shoot(3,0)"></div></td>
+          <td><div class="content" onclick="shoot(3,1)"></div></td>
+          <td><div class="content" onclick="shoot(3,2)"></div></td>
+          <td><div class="content" onclick="shoot(3,3)"></div></td>
+          <td><div class="content" onclick="shoot(3,4)"></div></td>
+          <td><div class="content" onclick="shoot(3,5)"></div></td>
+          <td><div class="content" onclick="shoot(3,6)"></div></td>
+          <td><div class="content" onclick="shoot(3,7)"></div></td>
+          <td><div class="content" onclick="shoot(3,8)"></div></td>
+          <td><div class="content" onclick="shoot(3,9)"></div></td>
         </tr>
         <tr>
           <td><div class="content header">5</div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
+          <td><div class="content" onclick="shoot(4,0)"></div></td>
+          <td><div class="content" onclick="shoot(4,1)"></div></td>
+          <td><div class="content" onclick="shoot(4,2)"></div></td>
+          <td><div class="content" onclick="shoot(4,3)"></div></td>
+          <td><div class="content" onclick="shoot(4,4)"></div></td>
+          <td><div class="content" onclick="shoot(4,5)"></div></td>
+          <td><div class="content" onclick="shoot(4,6)"></div></td>
+          <td><div class="content" onclick="shoot(4,7)"></div></td>
+          <td><div class="content" onclick="shoot(4,8)"></div></td>
+          <td><div class="content" onclick="shoot(4,9)"></div></td>
         </tr>
         <tr>
           <td><div class="content header">6</div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
+          <td><div class="content" onclick="shoot(5,0)"></div></td>
+          <td><div class="content" onclick="shoot(5,1)"></div></td>
+          <td><div class="content" onclick="shoot(5,2)"></div></td>
+          <td><div class="content" onclick="shoot(5,3)"></div></td>
+          <td><div class="content" onclick="shoot(5,4)"></div></td>
+          <td><div class="content" onclick="shoot(5,5)"></div></td>
+          <td><div class="content" onclick="shoot(5,6)"></div></td>
+          <td><div class="content" onclick="shoot(5,7)"></div></td>
+          <td><div class="content" onclick="shoot(5,8)"></div></td>
+          <td><div class="content" onclick="shoot(5,9)"></div></td>
         </tr>
         <tr>
           <td><div class="content header">7</div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
+          <td><div class="content" onclick="shoot(6,0)"></div></td>
+          <td><div class="content" onclick="shoot(6,1)"></div></td>
+          <td><div class="content" onclick="shoot(6,2)"></div></td>
+          <td><div class="content" onclick="shoot(6,3)"></div></td>
+          <td><div class="content" onclick="shoot(6,4)"></div></td>
+          <td><div class="content" onclick="shoot(6,5)"></div></td>
+          <td><div class="content" onclick="shoot(6,6)"></div></td>
+          <td><div class="content" onclick="shoot(6,7)"></div></td>
+          <td><div class="content" onclick="shoot(6,8)"></div></td>
+          <td><div class="content" onclick="shoot(6,9)"></div></td>
         </tr>
         <tr>
           <td><div class="content header">8</div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
+          <td><div class="content" onclick="shoot(7,0)"></div></td>
+          <td><div class="content" onclick="shoot(7,1)"></div></td>
+          <td><div class="content" onclick="shoot(7,2)"></div></td>
+          <td><div class="content" onclick="shoot(7,3)"></div></td>
+          <td><div class="content" onclick="shoot(7,4)"></div></td>
+          <td><div class="content" onclick="shoot(7,5)"></div></td>
+          <td><div class="content" onclick="shoot(7,6)"></div></td>
+          <td><div class="content" onclick="shoot(7,7)"></div></td>
+          <td><div class="content" onclick="shoot(7,8)"></div></td>
+          <td><div class="content" onclick="shoot(7,9)"></div></td>
         </tr>
         <tr>
           <td><div class="content header">9</div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
+          <td><div class="content" onclick="shoot(8,0)"></div></td>
+          <td><div class="content" onclick="shoot(8,1)"></div></td>
+          <td><div class="content" onclick="shoot(8,2)"></div></td>
+          <td><div class="content" onclick="shoot(8,3)"></div></td>
+          <td><div class="content" onclick="shoot(8,4)"></div></td>
+          <td><div class="content" onclick="shoot(8,5)"></div></td>
+          <td><div class="content" onclick="shoot(8,6)"></div></td>
+          <td><div class="content" onclick="shoot(8,7)"></div></td>
+          <td><div class="content" onclick="shoot(8,8)"></div></td>
+          <td><div class="content" onclick="shoot(8,9)"></div></td>
         </tr>
         <tr>
           <td><div class="content header">10</div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
-          <td><div class="content"></div></td>
+          <td><div class="content" onclick="shoot(9,0)"></div></td>
+          <td><div class="content" onclick="shoot(9,1)"></div></td>
+          <td><div class="content" onclick="shoot(9,2)"></div></td>
+          <td><div class="content" onclick="shoot(9,3)"></div></td>
+          <td><div class="content" onclick="shoot(9,4)"></div></td>
+          <td><div class="content" onclick="shoot(9,5)"></div></td>
+          <td><div class="content" onclick="shoot(9,6)"></div></td>
+          <td><div class="content" onclick="shoot(9,7)"></div></td>
+          <td><div class="content" onclick="shoot(9,8)"></div></td>
+          <td><div class="content" onclick="shoot(9,9)"></div></td>
         </tr>
       </table>
       <div id="ships"></div>
