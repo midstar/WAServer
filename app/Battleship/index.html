@@ -177,17 +177,31 @@ function gameObjCallback(user, opponent) {
     "players" : [user, opponent],
     "turn" : Math.round(Math.random()),
     "ships" : [null, null],
-    "hitMaps" : [null, null],
+    "hitMaps" : [[
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0]
+      ],[
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0]
+      ]],
     "wins" : [0, 0] // Same order as players
   };
-}
-
-function updateGamePage(gameName) {
-  placeShips();
-
-  window.addEventListener('resize', function() {
-    placeShips();     
-  });
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -195,7 +209,7 @@ function updateGamePage(gameName) {
 
 var turn = "planning"; // planning, other or me
 
-var myShips = {
+var defaultShips = {
   "1A" : {
     "length" : 1,
     "orientation" : "h",
@@ -258,23 +272,126 @@ var myShips = {
   },
 }
 
-var ships = myShips;
+var ships = defaultShips;
 
 var myHitMap = [
-  [1,0,0,0,0,0,0,0,0,0],
-  [0,1,0,1,1,1,0,0,0,0],
-  [0,0,1,0,0,0,0,0,0,0],
-  [0,0,0,1,1,0,0,0,0,0],
-  [0,0,0,0,1,0,0,0,0,0],
-  [0,0,0,0,0,1,0,0,0,0],
-  [0,0,0,0,0,0,1,0,0,0],
-  [0,0,0,0,0,0,0,1,0,0],
-  [0,0,0,0,0,0,0,0,1,0],
-  [0,0,0,0,0,0,0,0,0,1]
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0]
 ];
 
 var hitMap = myHitMap;
 
+//////////////////////////////////////////////////////////////////////////////
+// Game handling
+var globGame = null;
+var globMe = 0;
+var globOpponent = 0;
+
+async function updateGamePage(gameName = "") {
+  if (gameName == "") {
+    gameName = wasGetUrlParam("game");
+  } else {
+    wasSetUrlParam("game", gameName);
+  }
+  username = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/game/${gameName}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.error(response.status);
+    return
+  }
+
+  globGame = await response.json();
+  if (globGame["players"][0] == username) {
+    globMe = 0;
+    globOpponent = 1;
+  } else {
+    globMe = 1;
+    globOpponent = 0;
+  }
+  document.getElementById("game-me").innerHTML = globGame["players"][globMe] + ": " + 
+    globGame["wins"][globMe];
+  document.getElementById("game-opponent").innerHTML = globGame["players"][globOpponent] + ": " + 
+    globGame["wins"][globOpponent];
+  var elemTurn = document.getElementById("game-turn");
+  document.getElementById("game-ready").style.display = "none";
+  if (hasWon(globOpponent)) {
+    elemTurn.innerHTML = "You loose!";
+    setTimeout(updateGamePage, 1000); // Wait for opponent to reset
+  }
+  else if (globGame["ships"][globMe] == null) {
+    document.getElementById("game-ready").style.display = "block";
+    ships = defaultShips;
+    turn = "planning";
+    elemTurn.innerHTML = "Plan";
+  }
+  else if (globGame["ships"][globOpponent] == null) {
+    ships = globGame["ships"][globMe];
+    hitMap = globGame["hitMaps"][globOpponent];
+    turn = "other";
+    elemTurn.innerHTML = "Wait...";
+    setTimeout(updateGamePage, 1000); // Try again later
+  }
+  else if (globGame["turn"] == globMe) {
+    ships = globGame["ships"][globOpponent];
+    hitMap = globGame["hitMaps"][globMe];
+    turn = "me";
+    elemTurn.innerHTML = "My turn";
+  } else {
+    turn = "other";
+    ships = globGame["ships"][globMe];
+    hitMap = globGame["hitMaps"][globOpponent];
+    elemTurn.innerHTML = "Wait...";
+    setTimeout(updateGamePage, 1000); // Try again later
+  }
+
+  placeShips();
+  window.addEventListener('resize', function() {
+    placeShips();     
+  });
+}
+
+function hasWon(user) {
+  // @TODO fix
+  return false;
+}
+
+async function onGameReady() {
+  globGame["lastUpdate"] = new Date().toLocaleString();
+  globGame["ships"][globMe] = ships;
+
+  var game = wasGetUrlParam("game");
+  const url = `${WAS_APP_URL}/game/${game}`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify(globGame),
+  });
+    const response = await fetch(request);
+    if (!response.ok) {
+      console.error(response.status);
+      return
+    }
+  wasPageShow("page-game");
+  updateGamePage(game);
+}
+
+async function onCancelGame() {
+  const gameName = wasGetUrlParam("game");
+  const url = `${WAS_APP_URL}/game/${gameName}`;
+  const request = new Request(url, {
+    method: "DELETE",
+  });
+  const response = await fetch(request);
+  wasShowPageGameSelect();
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // Generic
@@ -678,7 +795,7 @@ function rotateShip(shipId) {
       </table>
       <div id="ships"></div>
       <div id="game-actions">
-        <div class="game-button" id="game-ready" onclick="onCancelGame()">Ready</div>
+        <div class="game-button" id="game-ready" onclick="onGameReady()">Ready</div>
         <div class="game-button" id="game-cancel" onclick="onCancelGame()">Cancel</div>
       </div>
     </div>      
