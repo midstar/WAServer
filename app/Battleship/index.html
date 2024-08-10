@@ -471,13 +471,13 @@ async function shoot(row, col) {
   if (turn != "me" || sizeFire || hitMap[row][col] == 1) {
     return;
   }
+  hitMap[row][col] = 1;
   if (!isShipHit(row, col)) {
     sizeFire = true;
   } else if (hasWon()) {
     sizeFire = true;
     document.getElementById("game-turn").innerHTML = "You win!";
-  }
-  hitMap[row][col] = 1; 
+  } 
   placeShips();
   sendGameUpdate();
 
