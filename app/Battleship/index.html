@@ -65,6 +65,7 @@
   #game-data {
     font-size: 25px;
     width: 20%;
+    margin-left: 5px;
   }
 
   #game-actions {
@@ -141,10 +142,14 @@ td .header {
   margin-left: 5px;
 }
 
+#game-cancel {
+  background: pink;
+}
+
 .ship {
   width: 100px;
   height: 50px;
-  border-width: 2px;
+  border-width: 8px;
   border-style: solid;
   box-sizing: border-box;
   position: fixed;
@@ -316,8 +321,10 @@ async function updateGamePage(gameName = "") {
     globGame["wins"][globOpponent];
   var elemTurn = document.getElementById("game-turn");
   document.getElementById("game-ready").style.display = "none";
+  document.getElementById("game-random").style.display = "none";
   if (globGame["ships"][globMe] == null) {
     document.getElementById("game-ready").style.display = "block";
+    document.getElementById("game-random").style.display = "block";
     ships = defaultShips;
     turn = "planning";
     elemTurn.innerHTML = "Plan";
@@ -371,6 +378,27 @@ async function onGameReady() {
   await sendGameUpdate();
   wasPageShow("page-game");
   updateGamePage();
+}
+
+async function onGameRandom() {
+  var shipIds = Object.keys(ships);
+  do {
+    var shipId = shipIds.pop()
+    var posPossible = false;
+    do {
+      var row = Math.floor(Math.random() * 10);
+      var col = Math.floor(Math.random() * 10);
+      var orientation = "v";
+      if (Math.random() < 0.5) {
+        orientation = "h";
+      }
+      posPossible = isShipPosPossible(shipId,orientation,row,col);
+    } while(posPossible == false);
+    ships[shipId].row = row;
+    ships[shipId].col = col;
+    ships[shipId].orientation = orientation;
+  } while(shipIds.length > 0);
+  placeShips();
 }
 
 async function onCancelGame() {
@@ -428,7 +456,7 @@ function placeShips() {
     elemPos = brickElem(ship.row,ship.col).getBoundingClientRect();
     elemShip.style.left = elemPos.left;
     elemShip.style.top = elemPos.top;
-    elemShip.style.borderWidth = "2px";
+    elemShip.style.borderWidth = "4px";
     if (turn == "planning") {
       elemShip.style.zIndex = 1;
       elemShip.style.background = "yellow";
@@ -875,6 +903,7 @@ function sleep (time) {
       </table>
       <div id="ships"></div>
       <div id="game-actions">
+        <div class="game-button" id="game-random" onclick="onGameRandom()">Randomize</div>
         <div class="game-button" id="game-ready" onclick="onGameReady()">Ready</div>
         <div class="game-button" id="game-cancel" onclick="onCancelGame()">Cancel</div>
       </div>
