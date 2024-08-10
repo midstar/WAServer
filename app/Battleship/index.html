@@ -302,14 +302,7 @@ async function updateGamePage(gameName = "") {
     wasSetUrlParam("game", gameName);
   }
   username = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/game/${gameName}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    console.error(response.status);
-    return
-  }
-
-  globGame = await response.json();
+  await getGameUpdate();
   if (globGame["players"][0] == username) {
     globMe = 0;
     globOpponent = 1;
@@ -373,10 +366,11 @@ function hasWon() {
 }
 
 async function onGameReady() {
+  await getGameUpdate();
   globGame["ships"][globMe] = ships;
   await sendGameUpdate();
   wasPageShow("page-game");
-  updateGamePage(game);
+  updateGamePage();
 }
 
 async function onCancelGame() {
@@ -526,6 +520,17 @@ async function resetGame() {
         [0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0]
       ]];
+}
+
+async function getGameUpdate() {
+  var game = wasGetUrlParam("game");
+  const url = `${WAS_APP_URL}/game/${game}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.error(response.status);
+    return
+  }
+  globGame = await response.json();
 }
 
 async function sendGameUpdate() {
