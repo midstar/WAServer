@@ -114,7 +114,7 @@ td .content {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-width: 2px;
+  border-width: 1px;
   border-style: solid;
   box-sizing: border-box;
 }
@@ -457,6 +457,7 @@ function placeShips() {
     elemShip.style.left = elemPos.left;
     elemShip.style.top = elemPos.top;
     elemShip.style.borderWidth = "4px";
+    elemShip.style.display = "block";
     if (turn == "planning") {
       elemShip.style.zIndex = 1;
       elemShip.style.background = "yellow";
@@ -464,29 +465,36 @@ function placeShips() {
       elemShip.style.zIndex = -1;
       elemShip.style.background = "red";
       if (turn == "me" && !isShipSink(shipId)) {
-        elemShip.style.borderWidth = "0px";
+        elemShip.style.display = "none";
+        //elemShip.style.borderWidth = "0px";
       }
     }
   }
-  // Set transparancy
+  // Set brick colors and transparancy
   for(var row = 0 ; row < 10; row++) {
     for(var col = 0 ; col < 10; col++) {
+      var elemBrick = brickElem(row,col);
       if (turn == "planning") {
-        brickElem(row,col).style.backgroundColor = "rgb(130, 153, 251)";
-        brickElem(row,col).style.opacity = "100%";
+        elemBrick.style.backgroundColor = "rgb(130, 153, 251)";
+        elemBrick.style.opacity = "100%";
       } else {
-        brickElem(row,col).style.backgroundColor = "gray";
+        elemBrick.style.backgroundColor = "gray";
         if (turn == "other"){
-          brickElem(row,col).style.opacity = "90%";
+          elemBrick.style.opacity = "90%";
         } else {
-          brickElem(row,col).style.opacity = "100%";
+          elemBrick.style.opacity = "100%";
         }
         if (hitMap[row][col] == 1) {
           if (isShipHit(row,col)) {
-            brickElem(row,col).style.opacity = "0%";
+            if (isShipAtPosSink(row,col)) {
+              elemBrick.style.opacity = "0%";
+            } else {
+              elemBrick.style.backgroundColor = "red";
+              elemBrick.style.opacity = "100%";
+            }
           } else {
-            brickElem(row,col).style.backgroundColor = "rgb(130, 153, 251)";
-            brickElem(row,col).style.opacity = "100%";
+            elemBrick.style.backgroundColor = "rgb(130, 153, 251)";
+            elemBrick.style.opacity = "100%";
           }
         }
       }
@@ -586,6 +594,19 @@ function isShipSink(shipId) {
     }
   }  
   return true;
+}
+
+function isShipAtPosSink(row, col) {
+  for (const [shipId, ship] of Object.entries(ships)) {
+    var positions = brickPositions(
+      ship.length, ship.orientation, ship.row, ship.col);
+    for (var pos of positions) {
+      if (pos.row == row && pos.col == col) {
+        return isShipSink(shipId);
+      }
+    }
+  }
+  return false;
 }
 
 function isShipHit(row, col) {
