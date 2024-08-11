@@ -33,7 +33,7 @@ environment variable.
     -k string
             TLS key file (default "key.pem")
     -p int
-            Network port to listen to (default 8080)
+            Network port to listen to (default 9835)
     -s    Use secure connection (TLS/HTTPS)
     -v    Display version
 
@@ -76,7 +76,7 @@ directory (default data).
 **&lt;directories&gt;** are optional and any number of directories can be
 added such as:
 
-    192.168.1.104:8080/data/this/is/a/deep/dir/structure/myobj
+    192.168.1.104:9835/data/this/is/a/deep/dir/structure/myobj
 
 Directories are created by wasserver if they do not exist.
 

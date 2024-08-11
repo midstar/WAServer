@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-const baseURL = "http://localhost:8080"
+const baseURL = "http://localhost:9835"
 const dataPath = ".test/data"
 
 func startServer(t *testing.T) {
@@ -297,7 +297,7 @@ func TestAppGet(t *testing.T) {
 }
 
 func TestTLS(t *testing.T) {
-	var baseHttpsURL = "https://localhost:8080"
+	var baseHttpsURL = "https://localhost:9835"
 
 	// Reset flags
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)

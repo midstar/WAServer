@@ -30,7 +30,7 @@ func printUsage() {
 func main() {
 	flag.Usage = printUsage
 	var version = flag.Bool("v", false, "Display version")
-	var port = flag.Int("p", 8080, "Network port to listen to")
+	var port = flag.Int("p", 9835, "Network port to listen to")
 	var debugEnable = flag.Bool("d", false, "Enable debugging logs")
 	var tlsEnable = flag.Bool("s", false, "Use secure connection (TLS/HTTPS)")
 	var tlsCertFile = flag.String("c", "cert.pem", "TLS certificate file")
