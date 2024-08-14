@@ -367,14 +367,60 @@ function toRad(Value)
 
 //////////////////////////////////////////////////////////////////////////
 // Statistics
-function showStatistics() {
+async function showStatistics() {
   wasSetUrlParam("page", "page-statistics");
   wasPageShow("page-statistics");
+
+  var table = `
+    <table class="club-dist-table">
+      <tr><th>Club</th><th>Min</th><th>Median</th><th>Max</th></tr>`;
+  for (const club of data["club"]) {
+    const dist = await getDistances(club);
+    var min = "-";
+    var median = "-";
+    var max = "-";
+    if (dist.length > 0) {
+      min = dist[0];
+      max = dist[dist.length - 1];
+      if (dist.length == 1) {
+        median = dist[0];
+      } else {
+        const middleIndex = Math.floor(dist.length / 2);
+        if (dist.length % 2 === 0) {
+            return (dist[middleIndex - 1] + dist[middleIndex]) / 2;
+        } else {
+            return dist[middleIndex];
+        }
+      }
+    }
+    table += `<tr><td>${club}</td><td>${min}</td><td>${median}</td><td>${max}</td></tr>`;
+  }
+  table += `
+    </table>`;
+  
+  document.getElementById("body-container-stat").innerHTML = table;
 }
 
 function showApp() {
   wasSetUrlParam("page", "page-app");
   wasPageShow("page-app");
+}
+
+async function getDistances(club) {
+  var user = wasGetUrlParam("user");
+  const result = [];
+  const url = `${WAS_APP_URL}/dist/${user}/${club}/`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.log(response.status);
+    return result
+  }
+  const json = await response.json();
+  for (const stroke of Object.values(json)) {
+    const dist = calcDist(stroke["start"], stroke["end"]);
+    result.push(dist);
+  }
+  return result.sort(function (a, b) {  return a - b;  });
 }
 
 
@@ -415,24 +461,7 @@ function showApp() {
   </div>
   <div id="page-statistics" class="was-page">
     <div class="header-container"></div>
-    <div class="body-container">
-      <table class="club-dist-table">
-        <tr><th>Club</th><th>Min</th><th>Median</th><th>Max</th></tr>
-        <tr><td>LW</td><td>60</td><td>83</td><td>90</td></tr>
-        <tr><td>SW</td><td>-</td><td>-</td><td>-</td></tr>
-        <tr><td>GW</td><td>-</td><td>-</td><td>-</td></tr>
-        <tr><td>PW</td><td>-</td><td>-</td><td>-</td></tr>
-        <tr><td>9</td><td>-</td><td>-</td><td>-</td></tr>
-        <tr><td>8</td><td>-</td><td>-</td><td>-</td></tr>
-        <tr><td>7</td><td>110</td><td>125</td><td>143</td></tr>
-        <tr><td>6</td><td>-</td><td>-</td><td>-</td></tr>
-        <tr><td>5</td><td>-</td><td>-</td><td>-</td></tr>
-        <tr><td>5-H</td><td>-</td><td>-</td><td>-</td></tr>
-        <tr><td>4-H</td><td>-</td><td>-</td><td>-</td></tr>
-        <tr><td>3-H</td><td>-</td><td>-</td><td>-</td></tr>
-        <tr><td>2-H</td><td>-</td><td>-</td><td>-</td></tr>
-        <tr><td>DRW</td><td>-</td><td>-</td><td>-</td></tr>
-      </table>
+    <div class="body-container" id="body-container-stat">
     </div>
     <div class="footer-container">
       <div id="stats-button" class="button" onclick="showApp()">Back</div>
