@@ -7,117 +7,117 @@
 <link rel="stylesheet" href="../was/was.css">
 <script src="../was/was.js"></script>
 <style>
-    body {
-        margin: 0px;
-        padding: 0px;
-    }
-    #header-container {
-        font-size: 20px;
-        position:fixed;
-        width: 96%;
-        margin: 2%;
-    }
-    #body-container {
-        width: 100%;
-        position:fixed;
-        top:105px;
-        bottom: 70px;
-    }
-    #footer-container {
-        width:100%;
-        position:fixed;
-        bottom:0;
-        height:70px;
-    }
-    .button {
-        font-size: 25px;
-        margin: 5px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-width: 2px;
-        border-radius: 10px;
-        border-style: solid;
-    }
+body {
+  margin: 0px;
+  padding: 0px;
+}
+#header-container {
+  font-size: 20px;
+  position:fixed;
+  width: 96%;
+  margin: 2%;
+}
+#body-container {
+  width: 100%;
+  position:fixed;
+  top:105px;
+  bottom: 70px;
+}
+#footer-container {
+  width:100%;
+  position:fixed;
+  bottom:0;
+  height:70px;
+}
+.button {
+  font-size: 25px;
+  margin: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 2px;
+  border-radius: 10px;
+  border-style: solid;
+}
 
-    /********** Header styles **********/
-    #course-container {
-        padding-bottom: 10px;
-        display: flex;
-    }
-    #course-container select {
-        font-size: 20px;
-        flex-grow: 1;
-    }
-    #hole-ref-distance-container {
-        display: flex;
-        align-items: center;
-    }
-    #hole-container select {
-        width: 70px;
-        font-size: 35px;
-        text-align: center;
-    }
-    #ref-distance {
-        flex-grow: 1;
-        font-size: 40px;
-        text-align: center;
-    }
-    label {
-        padding-right: 5px;
-    }
+/********** Header styles **********/
+#course-container {
+  padding-bottom: 10px;
+  display: flex;
+}
+#course-container select {
+  font-size: 20px;
+  flex-grow: 1;
+}
+#hole-ref-distance-container {
+  display: flex;
+  align-items: center;
+}
+#hole-container select {
+  width: 70px;
+  font-size: 35px;
+  text-align: center;
+}
+#ref-distance {
+  flex-grow: 1;
+  font-size: 40px;
+  text-align: center;
+}
+label {
+  padding-right: 5px;
+}
 
-    /********** Body club styles **********/
-    #club-container {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        width: 100%;
-        height: 100%;
-    }
-    .club {
-        font-size: 20px;
-        width: 75px;
-        height: 75px;
-    }
-    /********** Body club tracker styles **********/
-    #club-tracker-container {
-        width: 100%;
-        height: 100%;
-    }
-    #club-selected {
-        flex-grow: 1;
-        font-size: 50px;
-        text-align: center;
-        margin-top: 40px;
-    }
-    #club-distance {
-        flex-grow: 1;
-        font-size: 70px;
-        text-align: center;
-        margin-top: 30px;
-    }
-    #club-distance sub {
-        font-size: 30px;
-    }
-    #club-distance sup {
-        font-size: 30px;
-    }
-    #store-distance-button {
-        height: 100px;
-        font-size: 40px;
-        margin-top: 30px;
-    }
-    #cancel-back-button {
-        height: 80px;
-        font-size: 30px;
-        margin-top: 20px;
-    }
+/********** Body club styles **********/
+#club-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+  height: 100%;
+}
+.club {
+  font-size: 20px;
+  width: 75px;
+  height: 75px;
+}
+/********** Body club tracker styles **********/
+#club-tracker-container {
+  width: 100%;
+  height: 100%;
+}
+#club-selected {
+  flex-grow: 1;
+  font-size: 50px;
+  text-align: center;
+  margin-top: 40px;
+}
+#club-distance {
+  flex-grow: 1;
+  font-size: 70px;
+  text-align: center;
+  margin-top: 30px;
+}
+#club-distance sub {
+  font-size: 30px;
+}
+#club-distance sup {
+  font-size: 30px;
+}
+#store-distance-button {
+  height: 100px;
+  font-size: 40px;
+  margin-top: 30px;
+}
+#cancel-back-button {
+  height: 80px;
+  font-size: 30px;
+  margin-top: 20px;
+}
 
-    /********** Footer styles **********/
-    #stats-button {
-        height: 55px;
-    }
+/********** Footer styles **********/
+#stats-button {
+height: 55px;
+}
 </style>
 <script src="data.js"></script>
 <script>
@@ -138,202 +138,234 @@ function appPageCallback(gameName) {
 // App config
 
 const GLOB_REF = { lat : undefined, long : undefined};
-const GLOB_START = { club : undefined, timestamp : undefined,
-                        lat : undefined, long : undefined, altitude : undefined};
+const GLOB_START = { club : undefined, timestamp : undefined, swing: undefined,
+                     lat : undefined, long : undefined, altitude : undefined};
 const GLOB_CURRENT = {lat : undefined, long : undefined, altitude : undefined};
+const GLOB_STROKES = []; // Backup in case of offline
 
 function updateAppPage() {
-    // Hide club tracker
-    document.getElementById("club-tracker-container").style.display = "none";
-
-    // Fill in courses
-    const elemCourse = document.getElementById("course");
-    for (const course of Object.keys(data["course"])) {
-        const elemOpt = document.createElement("option");
-        elemOpt.setAttribute("value", course);
-        elemOpt.innerText = course;
-        elemCourse.appendChild(elemOpt);
-    }
-
-    // Fill in clubs
-    const elemClub = document.getElementById("club-container");
-    for (const club of data["club"]) {
-        const elemDiv = document.createElement("div");
-        elemDiv.setAttribute("class", "club button");
-        elemDiv.setAttribute("onclick", `markStart("${club}")`);
-        elemDiv.innerText = club;
-        elemClub.appendChild(elemDiv);
-    }
-
-    // Configure and start geolocation tracking
-    options = {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-    };
-    navigator.geolocation.watchPosition(posUpdate, posError, options);
+  // Hide club tracker
+  document.getElementById("club-tracker-container").style.display = "none";
+  
+  // Fill in courses
+  const elemCourse = document.getElementById("course");
+  for (const course of Object.keys(data["course"])) {
+    const elemOpt = document.createElement("option");
+    elemOpt.setAttribute("value", course);
+    elemOpt.innerText = course;
+    elemCourse.appendChild(elemOpt);
+  }
+  
+  // Fill in clubs
+  const elemClub = document.getElementById("club-container");
+  for (const club of data["club"]) {
+    const elemDiv = document.createElement("div");
+    elemDiv.setAttribute("class", "club button");
+    elemDiv.setAttribute("onclick", `markStart("${club}")`);
+    elemDiv.innerText = club;
+    elemClub.appendChild(elemDiv);
+  }
+  
+  // Configure and start geolocation tracking
+  options = {
+    enableHighAccuracy: true,
+    timeout: 5000,
+    maximumAge: 0
+  };
+  navigator.geolocation.watchPosition(posUpdate, posError, options);
 };
 
-    function changeCourse() {
-        const course = document.getElementById("course").value;
-
-        // Remove all holes
-        const elemHole = document.getElementById("hole");
-        elemHole.innerHTML = "";
-
-        if (course in data["course"]) {
-            // Fill in holes
-            for (const hole of Object.keys(data["course"][course])) {
-                const elemOpt = document.createElement("option");
-                elemOpt.setAttribute("value", hole);
-                elemOpt.innerText = hole;
-                elemHole.appendChild(elemOpt);
-            }
-        }
-
-        // Update reference position
-        updateRef();
+function changeCourse() {
+  const course = document.getElementById("course").value;
+  
+  // Remove all holes
+  const elemHole = document.getElementById("hole");
+  elemHole.innerHTML = "";
+  
+  if (course in data["course"]) {
+    // Fill in holes
+    for (const hole of Object.keys(data["course"][course])) {
+      const elemOpt = document.createElement("option");
+      elemOpt.setAttribute("value", hole);
+      elemOpt.innerText = hole;
+      elemHole.appendChild(elemOpt);
     }
+  }
+  
+  // Update reference position
+  updateRef();
+}
 
-    function updateRef() {
-        const course = document.getElementById("course").value;
+function updateRef() {
+  const course = document.getElementById("course").value;
+  
+  if (course in data["course"]) {
+    const hole = document.getElementById("hole").value;
+    GLOB_REF.lat  = data["course"][course][hole][0];
+    GLOB_REF.long = data["course"][course][hole][1];
+  }
+  
+  updateDistances();
+}
 
-        if (course in data["course"]) {
-            const hole = document.getElementById("hole").value;
-            GLOB_REF.lat  = data["course"][course][hole][0];
-            GLOB_REF.long = data["course"][course][hole][1];
-        }
+function markStart(club) {
+  if (GLOB_CURRENT.lat != undefined) {
+    document.getElementById("club-container").style.display = "none";
+    document.getElementById("club-tracker-container").style.display = "block";
+    document.getElementById("club-selected").innerHTML = club;
+    GLOB_START.timestamp = Date.now();
+    GLOB_START.club = club;
+    GLOB_START.swing = "full"; // @TODO allow other swings
+    GLOB_START.lat = GLOB_CURRENT.lat;
+    GLOB_START.long = GLOB_CURRENT.long;
+    GLOB_START.altitude = GLOB_CURRENT.altitude;
+    updateDistances();
+  }
+}
 
-        updateDistances();
+async function markEnd() {
+  var user = wasGetUrlParam("user");
+
+  const stroke = {
+    "start": GLOB_START,
+    "end" : GLOB_CURRENT,
+    "course": document.getElementById("course").value,
+    "hole" : document.getElementById("hole").value
+  };
+
+  GLOB_STROKES.push(stroke);
+
+  for(var s of GLOB_STROKES) {
+    const url = `${WAS_APP_URL}/dist/${user}/${GLOB_START.club}/${GLOB_START.timestamp}`;
+    const request = new Request(url, {
+      method: "POST",
+      body: JSON.stringify(s),
+    });
+    try {
+      const response = await fetch(request);
+      if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error(error.message);
+      // @TODO - add info about network error
     }
+  }
+  
+  document.getElementById("club-container").style.display = "flex";
+  document.getElementById("club-tracker-container").style.display = "none";
+}
 
-    function markStart(club) {
-        if (GLOB_CURRENT.lat != undefined) {
-            document.getElementById("club-container").style.display = "none";
-            document.getElementById("club-tracker-container").style.display = "block";
-            document.getElementById("club-selected").innerHTML = club;
-            GLOB_START.lat = GLOB_CURRENT.lat;
-            GLOB_START.long = GLOB_CURRENT.long;
-            GLOB_START.altitude = GLOB_CURRENT.altitude;
-            updateDistances();
-        }
+function markCancel() {
+  document.getElementById("club-container").style.display = "flex";
+  document.getElementById("club-tracker-container").style.display = "none";
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Geolocation stuff
+function posUpdate(pos) {
+  const crd = pos.coords;
+  GLOB_CURRENT.lat = crd.latitude;
+  GLOB_CURRENT.long = crd.longitude;
+  GLOB_CURRENT.altitude = crd.altitude;
+  
+  updateDistances();
+}
+
+function posError(err) {
+  document.getElementById("ref-distance").innerHTML = "ERR";
+  document.getElementById("club-distance").innerHTML = "ERR";
+  GLOB_CURRENT.lat = undefined;
+  GLOB_CURRENT.long = undefined;
+  GLOB_CURRENT.altitude = undefined;
+  console.log(err);
+}
+
+function updateDistances() {
+  if (GLOB_CURRENT.lat != undefined) {
+    if (GLOB_REF.lat != undefined) {
+      // Update distance to reference
+      const refDist = calcDist(GLOB_CURRENT, GLOB_REF);
+      document.getElementById("ref-distance").innerHTML = `${refDist} m`;
     }
-
-    function markEnd() {
-        document.getElementById("club-container").style.display = "flex";
-        document.getElementById("club-tracker-container").style.display = "none";
+    if (GLOB_START.lat != undefined) {
+      // Update distance club start position
+      const altDiff = Math.round(GLOB_CURRENT.altitude - GLOB_START.altitude);
+      var altText = "";
+      if (altDiff < 0) {
+        altText = `<sub>&#8595;${Math.abs(altDiff)} m</sub>`
+      } else {
+        altText = `<sup>&#8593;${altDiff} m</sup>`
+        
+      }
+      const clubDist = calcDist(GLOB_CURRENT, GLOB_START);
+      document.getElementById("club-distance").innerHTML = `${clubDist} m ${altText}`;
+      
     }
+  }
+}
 
-    function markCancel() {
-        document.getElementById("club-container").style.display = "flex";
-        document.getElementById("club-tracker-container").style.display = "none";
-    }
+function calcDist(pos1, pos2) {
+  return calcCrow(pos1.lat, pos1.long, pos2.lat, pos2.long);
+}
 
-    //////////////////////////////////////////////////////////////////////////
-    // Geolocation stuff
-    function posUpdate(pos) {
-        const crd = pos.coords;
-        GLOB_CURRENT.lat = crd.latitude;
-        GLOB_CURRENT.long = crd.longitude;
-        GLOB_CURRENT.altitude = crd.altitude;
+//This function takes in latitude and longitude of two location and returns the distance between them as the crow flies (in m)
+function calcCrow(lat1, lon1, lat2, lon2) 
+{
+  var R = 6371000; // m
+  var dLat = toRad(lat2-lat1);
+  var dLon = toRad(lon2-lon1);
+  var lat1 = toRad(lat1);
+  var lat2 = toRad(lat2);
+  
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+  Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  var d = R * c;
+  return Math.round(d);
+}
 
-        updateDistances();
-    }
-
-    function posError(err) {
-        document.getElementById("ref-distance").innerHTML = "ERR";
-        document.getElementById("club-distance").innerHTML = "ERR";
-        GLOB_CURRENT.lat = undefined;
-        GLOB_CURRENT.long = undefined;
-        GLOB_CURRENT.altitude = undefined;
-        console.log(err);
-    }
-
-    function updateDistances() {
-        if (GLOB_CURRENT.lat != undefined) {
-            if (GLOB_REF.lat != undefined) {
-                // Update distance to reference
-                const refDist = calcDist(GLOB_CURRENT, GLOB_REF);
-                document.getElementById("ref-distance").innerHTML = `${refDist} m`;
-            }
-            if (GLOB_START.lat != undefined) {
-                // Update distance club start position
-                const altDiff = Math.round(GLOB_CURRENT.altitude - GLOB_START.altitude);
-                var altText = "";
-                if (altDiff < 0) {
-                    altText = `<sub>&#8595;${Math.abs(altDiff)} m</sub>`
-                } else {
-                    altText = `<sup>&#8593;${altDiff} m</sup>`
-
-                }
-                const clubDist = calcDist(GLOB_CURRENT, GLOB_START);
-                document.getElementById("club-distance").innerHTML = `${clubDist} m ${altText}`;
-
-            }
-        }
-    }
-
-    function calcDist(pos1, pos2) {
-        return calcCrow(pos1.lat, pos1.long, pos2.lat, pos2.long);
-    }
-
-    //This function takes in latitude and longitude of two location and returns the distance between them as the crow flies (in m)
-    function calcCrow(lat1, lon1, lat2, lon2) 
-    {
-      var R = 6371000; // m
-      var dLat = toRad(lat2-lat1);
-      var dLon = toRad(lon2-lon1);
-      var lat1 = toRad(lat1);
-      var lat2 = toRad(lat2);
-
-      var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
-      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-      var d = R * c;
-      return Math.round(d);
-    }
-
-    // Converts numeric degrees to radians
-    function toRad(Value) 
-    {
-        return Value * Math.PI / 180;
-    }
+// Converts numeric degrees to radians
+function toRad(Value) 
+{
+  return Value * Math.PI / 180;
+}
 
 
 </script>
 </head>
 <body>
-<div id="page-app" class="was-page">
+  <div id="page-app" class="was-page">
     <div id="header-container">
-        <div id="course-container">
-            <label for="course">Course:</label>
-            <select name="course" id="course" onchange="changeCourse()">
-                <option value="none"></option>
-            </select>
+      <div id="course-container">
+        <label for="course">Course:</label>
+        <select name="course" id="course" onchange="changeCourse()">
+          <option value="none"></option>
+        </select>
+      </div>
+      <div id="hole-ref-distance-container">
+        <div id="hole-container">
+          <label for="hole">Hole:</label>
+          <select name="hole" id="hole"  onchange="updateRef()">
+          </select>
         </div>
-        <div id="hole-ref-distance-container">
-            <div id="hole-container">
-                <label for="hole">Hole:</label>
-                <select name="hole" id="hole"  onchange="updateRef()">
-                </select>
-            </div>
-            <div id="ref-distance">- m</div>
-        </div>
-        <hr>
+        <div id="ref-distance">- m</div>
+      </div>
+      <hr>
     </div>
     <div id="body-container">
-        <div id="club-container">
-        </div>
-        <div id="club-tracker-container">
-            <div id="club-selected">?</div>
-            <div id="club-distance">- m</div>
-            <div id="store-distance-button" class="button" onclick="markEnd()">Store distance</div>
-            <div id="cancel-back-button" class="button" onclick="markCancel()">Cancel / Back</div>
-        </div>
+      <div id="club-container">
+      </div>
+      <div id="club-tracker-container">
+        <div id="club-selected">?</div>
+        <div id="club-distance">- m</div>
+        <div id="store-distance-button" class="button" onclick="markEnd()">Store distance</div>
+        <div id="cancel-back-button" class="button" onclick="markCancel()">Cancel / Back</div>
+      </div>
     </div>
     <div id="footer-container">
-        <div id="stats-button" class="button">Statistics</div>
+      <div id="stats-button" class="button">Statistics</div>
     </div>
-</div>
+  </div>
 </body>
 </html>
