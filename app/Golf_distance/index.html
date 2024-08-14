@@ -3,6 +3,9 @@
 <html>
 <head>
 <title>Club distance</title>
+<link rel="icon" type="image/x-icon" href="logo.ico">
+<link rel="stylesheet" href="../was/was.css">
+<script src="../was/was.js"></script>
 <style>
     body {
         margin: 0px;
@@ -118,42 +121,58 @@
 </style>
 <script src="data.js"></script>
 <script>
-    const GLOB_REF = { lat : undefined, long : undefined};
-    const GLOB_START = { club : undefined, timestamp : undefined,
-                         lat : undefined, long : undefined, altitude : undefined};
-    const GLOB_CURRENT = {lat : undefined, long : undefined, altitude : undefined};
 
-    window.onload = function() {
-        // Hide club tracker
-        document.getElementById("club-tracker-container").style.display = "none";
+//////////////////////////////////////////////////////////////////////////////
+// Startup
 
-        // Fill in courses
-        const elemCourse = document.getElementById("course");
-        for (const course of Object.keys(data["course"])) {
-            const elemOpt = document.createElement("option");
-            elemOpt.setAttribute("value", course);
-            elemOpt.innerText = course;
-            elemCourse.appendChild(elemOpt);
-        }
+window.onload = async function() {
+  await wasInit("Golf_distance", appPageCallback, "user", null);
+}
 
-        // Fill in clubs
-        const elemClub = document.getElementById("club-container");
-        for (const club of data["club"]) {
-            const elemDiv = document.createElement("div");
-            elemDiv.setAttribute("class", "club button");
-            elemDiv.setAttribute("onclick", `markStart("${club}")`);
-            elemDiv.innerText = club;
-            elemClub.appendChild(elemDiv);
-        }
+function appPageCallback(gameName) {
+  wasPageShow("page-app");
+  updateAppPage();
+}
 
-        // Configure and start geolocation tracking
-        options = {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
-        };
-        navigator.geolocation.watchPosition(posUpdate, posError, options);
+//////////////////////////////////////////////////////////////////////////////
+// App config
+
+const GLOB_REF = { lat : undefined, long : undefined};
+const GLOB_START = { club : undefined, timestamp : undefined,
+                        lat : undefined, long : undefined, altitude : undefined};
+const GLOB_CURRENT = {lat : undefined, long : undefined, altitude : undefined};
+
+function updateAppPage() {
+    // Hide club tracker
+    document.getElementById("club-tracker-container").style.display = "none";
+
+    // Fill in courses
+    const elemCourse = document.getElementById("course");
+    for (const course of Object.keys(data["course"])) {
+        const elemOpt = document.createElement("option");
+        elemOpt.setAttribute("value", course);
+        elemOpt.innerText = course;
+        elemCourse.appendChild(elemOpt);
+    }
+
+    // Fill in clubs
+    const elemClub = document.getElementById("club-container");
+    for (const club of data["club"]) {
+        const elemDiv = document.createElement("div");
+        elemDiv.setAttribute("class", "club button");
+        elemDiv.setAttribute("onclick", `markStart("${club}")`);
+        elemDiv.innerText = club;
+        elemClub.appendChild(elemDiv);
+    }
+
+    // Configure and start geolocation tracking
+    options = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
     };
+    navigator.geolocation.watchPosition(posUpdate, posError, options);
+};
 
     function changeCourse() {
         const course = document.getElementById("course").value;
@@ -284,6 +303,7 @@
 </script>
 </head>
 <body>
+<div id="page-app" class="was-page">
     <div id="header-container">
         <div id="course-container">
             <label for="course">Course:</label>
@@ -314,5 +334,6 @@
     <div id="footer-container">
         <div id="stats-button" class="button">Statistics</div>
     </div>
+</div>
 </body>
 </html>
