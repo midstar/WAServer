@@ -7,46 +7,34 @@
 <link rel="stylesheet" href="../was/was.css">
 <script src="../was/was.js"></script>
 <style>
+
 body {
   margin: 0px;
   padding: 0px;
 }
+
+/********** Main page styles **********/
+
 #page-app {
   display: flex;
   flex-flow: column;
   height: 100%;
 }
-#header-container {
+
+.header-container {
   font-size: 20px;
   margin: 2%;
   flex: 0 1 auto;
 }
-#body-container {
+
+.body-container {
   flex: 1 1 auto;
 }
-#footer-container {
+
+.footer-container {
   flex: 0 1 70px;
 }
-/*
-#header-container {
-  font-size: 20px;
-  position:fixed;
-  width: 96%;
-  margin: 2%;
-}
-#body-container {
-  width: 100%;
-  position:fixed;
-  top:105px;
-  bottom: 70px;
-}
-#footer-container {
-  width:100%;
-  position:fixed;
-  bottom:0;
-  height:70px;
-}
-*/
+
 .button {
   font-size: 25px;
   margin: 5px;
@@ -56,6 +44,29 @@ body {
   border-width: 2px;
   border-radius: 10px;
   border-style: solid;
+}
+
+
+/********** Statictics page styles **********/
+
+#page-statistics {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+table {
+  margin: auto;
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid black;
+  padding-left: 5px;
+  padding-right: 5px;
+  font-size: 25px;
+  text-align: center;
 }
 
 /********** Header styles **********/
@@ -191,6 +202,11 @@ function updateAppPage() {
     maximumAge: 0
   };
   navigator.geolocation.watchPosition(posUpdate, posError, options);
+
+  // Check if stat page is selected
+  if (wasGetUrlParam("page") == "page-statistics") {
+    showStatistics();
+  }
 };
 
 function changeCourse() {
@@ -349,12 +365,24 @@ function toRad(Value)
   return Value * Math.PI / 180;
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Statistics
+function showStatistics() {
+  wasSetUrlParam("page", "page-statistics");
+  wasPageShow("page-statistics");
+}
+
+function showApp() {
+  wasSetUrlParam("page", "page-app");
+  wasPageShow("page-app");
+}
+
 
 </script>
 </head>
 <body>
   <div id="page-app" class="was-page">
-    <div id="header-container">
+    <div class="header-container">
       <div id="course-container">
         <label for="course">Course:</label>
         <select name="course" id="course" onchange="changeCourse()">
@@ -371,7 +399,7 @@ function toRad(Value)
       </div>
       <hr>
     </div>
-    <div id="body-container">
+    <div class="body-container">
       <div id="club-container">
       </div>
       <div id="club-tracker-container">
@@ -381,8 +409,33 @@ function toRad(Value)
         <div id="cancel-back-button" class="button" onclick="markCancel()">Cancel / Back</div>
       </div>
     </div>
-    <div id="footer-container">
-      <div id="stats-button" class="button">Statistics</div>
+    <div class="footer-container">
+      <div id="stats-button" class="button" onclick="showStatistics()">Statistics</div>
+    </div>
+  </div>
+  <div id="page-statistics" class="was-page">
+    <div class="header-container"></div>
+    <div class="body-container">
+      <table class="club-dist-table">
+        <tr><th>Club</th><th>Min</th><th>Median</th><th>Max</th></tr>
+        <tr><td>LW</td><td>60</td><td>83</td><td>90</td></tr>
+        <tr><td>SW</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>GW</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>PW</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>9</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>8</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>7</td><td>110</td><td>125</td><td>143</td></tr>
+        <tr><td>6</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>5</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>5-H</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>4-H</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>3-H</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>2-H</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>DRW</td><td>-</td><td>-</td><td>-</td></tr>
+      </table>
+    </div>
+    <div class="footer-container">
+      <div id="stats-button" class="button" onclick="showApp()">Back</div>
     </div>
   </div>
 </body>
