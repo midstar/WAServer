@@ -387,9 +387,9 @@ async function showStatistics() {
       } else {
         const middleIndex = Math.floor(dist.length / 2);
         if (dist.length % 2 === 0) {
-            return (dist[middleIndex - 1] + dist[middleIndex]) / 2;
+            median = (dist[middleIndex - 1] + dist[middleIndex]) / 2;
         } else {
-            return dist[middleIndex];
+            median =  dist[middleIndex];
         }
       }
     }
