@@ -117,11 +117,12 @@ label {
 }
 
 #club-and-type {
-  margin-top: 40px;
   flex-grow: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  user-select: none;
+  cursor: pointer;
 }
 
 #club-distance {
@@ -153,11 +154,24 @@ label {
   height: 55px;
 }
 
-/********** Swing dialog styles **********/
+/********** General dialog styles **********/
 
-#dialog-swing-type {
-  display: none;
+.dialog {
+  z-index: 1;
+  width: 90%;
+  height:auto;
+  /*height: 70%;*/
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-width: 4px;
+  border-radius: 10px;
+  border-style: solid;
 }
+
+/********** Swing dialog styles **********/
 
 #swing-type-container {
   display: flex;
@@ -179,18 +193,7 @@ label {
 }
 
 #dialog-swing-type {
-  z-index: 1;
-  width: 90%;
-  height:auto;
-  /*height: 70%;*/
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  background: white;
-  border-width: 4px;
-  border-radius: 10px;
-  border-style: solid;
+  display: none;
 }
 
 img {
@@ -221,6 +224,28 @@ img {
 
 #close-button {
   height: 55px;
+}
+
+/********** Manual input dialog styles **********/
+
+#dialog-manual-input {
+  display: none;
+}
+
+#manual-distance-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+input {
+  width: 90%
+}
+
+input[type='number'] { 
+  font-size: 40px;
 }
 
 </style>
@@ -335,9 +360,13 @@ function markStart(club) {
   }
 }
 
-async function markEnd() {
+async function markEnd(manualDist = 0) {
   var user = wasGetUrlParam("user");
-  GLOB_CURRENT.dist = calcDist(GLOB_CURRENT, GLOB_START);
+  if (manualDist > 0) {
+    GLOB_CURRENT.dist = manualDist;
+  } else {
+    GLOB_CURRENT.dist = calcDist(GLOB_CURRENT, GLOB_START);
+  }
   const stroke = {
     "start": GLOB_START,
     "end" : GLOB_CURRENT,
@@ -542,6 +571,29 @@ function selectSwingPower(swingPower) {
   GLOB_START.swing = swingPower; 
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Swing dialog
+
+function storeManualDialog() {
+  var manualDist = parseInt(document.getElementById("manual-distance").value);
+  if (manualDist > 0) {
+    closeManualDialog();
+    markEnd(manualDist);
+  }
+}
+
+function closeManualDialog() {
+  document.getElementById("dialog-manual-input").style.display = "none";
+}
+
+function openManualDialog() {
+  document.getElementById("dialog-manual-input").style.display = "flex";
+  document.getElementById("manual-distance").value = "";
+  document.getElementById("manual-distance").focus();
+}
+
+
+
 
 </script>
 </head>
@@ -568,12 +620,12 @@ function selectSwingPower(swingPower) {
       <div id="club-container">
       </div>
       <div id="club-tracker-container">
-        <div id="club-and-type">
+        <div id="club-and-type" onclick="showSwingDialog()">
           <img id="swing-power-img" src="100.png"></img>
           <div id="club-selected">
           </div>
         </div>
-        <div id="club-distance">- m</div>
+        <div id="club-distance" onclick="openManualDialog()">- m</div>
         <div id="store-distance-button" class="button" onclick="markEnd()">Store distance</div>
         <div id="cancel-back-button" class="button" onclick="markCancel()">Cancel / Back</div>
       </div>
@@ -590,7 +642,7 @@ function selectSwingPower(swingPower) {
       <div id="stats-button" class="button" onclick="showApp()">Back</div>
     </div>
   </div>
-  <div id="dialog-swing-type" class="head-content-footer">
+  <div id="dialog-swing-type" class="head-content-footer dialog">
     <div class="header-container">
       <div id="swing-type-container">
         <div id="normal-swing" class="club button selected-type" onclick="selectSwingType('normal')">Normal</div>
@@ -619,6 +671,17 @@ function selectSwingPower(swingPower) {
     </div>
     <div class="footer-container">
       <div id="close-button" class="button" onclick="closeSwingDialog()">Ok</div>
+    </div>
+  </div>
+  <div id="dialog-manual-input" class="head-content-footer dialog">
+    <div class="header-container">
+    </div>
+    <div class="body-container" id="manual-distance-container">
+      <input type="number" id="manual-distance" name="distance" onchange="storeManualDialog()">
+    </div>
+    <div class="footer-container">
+      <div id="close-button" class="button" onclick="storeManualDialog()">Store</div>
+      <div id="close-button" class="button" onclick="closeManualDialog()">Cancel</div>
     </div>
   </div>
 </body>
