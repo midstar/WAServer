@@ -51,6 +51,19 @@ body {
 
 /********** Statictics page styles **********/
 
+#statistics-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 5px;
+}
+
+#statistics-view {
+  width: 90%;
+  font-size: 25px;
+  text-align: center; 
+}
+
 table {
   margin: auto;
   border: 1px solid black;
@@ -474,38 +487,47 @@ function toRad(Value)
 
 //////////////////////////////////////////////////////////////////////////
 // Statistics
+
 async function showStatistics() {
   wasSetUrlParam("page", "page-statistics");
   wasPageShow("page-statistics");
 
-  var table = `
-    <table class="club-dist-table">
-      <tr><th>Club</th><th>Min</th><th>Median</th><th>Max</th></tr>`;
-  for (const club of data["club"]) {
-    const dist = await getDistances(club);
-    var min = "-";
-    var median = "-";
-    var max = "-";
-    if (dist.length > 0) {
-      min = dist[0];
-      max = dist[dist.length - 1];
-      if (dist.length == 1) {
-        median = dist[0];
-      } else {
-        const middleIndex = Math.floor(dist.length / 2);
-        if (dist.length % 2 === 0) {
-            median = Math.round((dist[middleIndex - 1] + dist[middleIndex]) / 2);
+  var view = document.getElementById("statistics-view").value;
+
+  if (view == "normal" || view == "chip") {
+    var table = `
+      <table class="club-dist-table">
+        <tr><th>Club</th><th>Min</th><th>Median</th><th>Max</th></tr>`;
+    for (const club of data["club"]) {
+      /*const dist = await getDistances(club);*/
+      const strokes = await getStrokes(club);
+      const dist = filterDistances(strokes,view,null)
+      var min = "-";
+      var median = "-";
+      var max = "-";
+      if (dist.length > 0) {
+        min = dist[0];
+        max = dist[dist.length - 1];
+        if (dist.length == 1) {
+          median = dist[0];
         } else {
-            median =  dist[middleIndex];
+          const middleIndex = Math.floor(dist.length / 2);
+          if (dist.length % 2 === 0) {
+              median = Math.round((dist[middleIndex - 1] + dist[middleIndex]) / 2);
+          } else {
+              median =  dist[middleIndex];
+          }
         }
       }
+      table += `<tr><td>${club}</td><td>${min}</td><td>${median}</td><td>${max}</td></tr>`;
     }
-    table += `<tr><td>${club}</td><td>${min}</td><td>${median}</td><td>${max}</td></tr>`;
+    table += `
+      </table>`;
+    
+    document.getElementById("body-container-stat").innerHTML = table;
+  } else {
+    document.getElementById("body-container-stat").innerHTML = view;
   }
-  table += `
-    </table>`;
-  
-  document.getElementById("body-container-stat").innerHTML = table;
 }
 
 function showApp() {
@@ -513,20 +535,31 @@ function showApp() {
   wasPageShow("page-app");
 }
 
-async function getDistances(club) {
+async function getStrokes(club) {
   var user = wasGetUrlParam("user");
   const result = [];
   const url = `${WAS_APP_URL}/dist/${user}/${club}/`;
   const response = await fetch(url);
   if (!response.ok) {
     console.log(response.status);
-    return result
+    return null;
   }
   const json = await response.json();
-  for (const stroke of Object.values(json)) {
-    result.push(stroke["end"].dist);
+  return json;
+}
+
+// Distances are sorted from smallest to largest
+function filterDistances(strokes, swingType, swingPower) {
+  const result = [];
+  if (strokes != null) {
+    for (const stroke of Object.values(strokes)) {
+      if ((swingType == null || swingType == stroke["start"].type) &&
+          (swingPower == null || swingPower == stroke["start"].swing)) {
+        result.push(stroke["end"].dist);
+      }
+    }
   }
-  return result.sort(function (a, b) {  return a - b;  });
+  return result.sort(function (a, b) {  return a - b;  });  
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -635,7 +668,14 @@ function openManualDialog() {
     </div>
   </div>
   <div id="page-statistics" class="was-page head-content-footer">
-    <div class="header-container"></div>
+    <div class="header-container" id="statistics-header">
+      <select name="statistics-view" id="statistics-view" onchange="showStatistics()">
+        <option value="normal">Normal min/med/max</option>
+        <option value="normal-power">Normal power</option>
+        <option value="chip">Chip min/med/max</option>
+        <option value="chip-power">Chip power</option>
+      </select>
+    </div>
     <div class="body-container" id="body-container-stat">
     </div>
     <div class="footer-container">
