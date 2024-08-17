@@ -544,6 +544,20 @@ async function showStatistics() {
     document.getElementById("body-container-stat").innerHTML = `
     <div id="close-button" class="button" onclick="exportCSV()">Export CSV</div>
     `;
+  } else if (view == "history") {
+    var table = `
+      <table class="club-dist-table">
+        <tr><th>Date</th><th>Club</th><th>Dist</th></tr>`;
+
+    var allStrokes = await getAllStrokes();
+    for (ts of Object.keys(allStrokes).sort().reverse()) {
+      var stroke = allStrokes[ts];
+      table += `<tr><td>${dateFormat(parseInt(ts))}</td><td>${stroke["start"].club}</td><td>${stroke["end"].dist}</td></tr>`;
+    }
+    
+    table += `
+      </table>`;
+    document.getElementById("body-container-stat").innerHTML = table;
   }
 }
 
@@ -593,6 +607,19 @@ function filterDistances(strokes, swingType, swingPower) {
     }
   }
   return result.sort(function (a, b) {  return a - b;  });  
+}
+
+async function getAllStrokes() {
+  var result = {};
+  for (const club of data["club"]) {
+    const strokes = await getStrokes(club);
+    if (strokes == null) {
+      // No strokes availabe for club
+      continue;
+    }
+    result = {...result, ...strokes};
+  }
+  return result;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -750,6 +777,7 @@ function openManualDialog() {
         <option value="normal-power">Normal power</option>
         <option value="chip">Chip min/med/max</option>
         <option value="chip-power">Chip power</option>
+        <option value="history">History</option>
         <option value="export">Export</option>
       </select>
     </div>
