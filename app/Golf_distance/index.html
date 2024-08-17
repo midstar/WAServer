@@ -78,6 +78,10 @@ th, td {
   text-align: center;
 }
 
+.small-table th, .small-table td {
+  font-size: 15px;
+}
+
 /********** Header styles **********/
 #course-container {
   padding-bottom: 10px;
@@ -546,13 +550,13 @@ async function showStatistics() {
     `;
   } else if (view == "history") {
     var table = `
-      <table class="club-dist-table">
-        <tr><th>Date</th><th>Club</th><th>Dist</th></tr>`;
+      <table class="club-dist-table small-table">
+        <tr><th>Date</th><th>Course</th><th>Hole</th><th>Club</th><th>Dist</th></tr>`;
 
     var allStrokes = await getAllStrokes();
     for (ts of Object.keys(allStrokes).sort().reverse()) {
       var stroke = allStrokes[ts];
-      table += `<tr><td>${dateFormat(parseInt(ts))}</td><td>${stroke["start"].club}</td><td>${stroke["end"].dist}</td></tr>`;
+      table += `<tr><td>${dateFormat(parseInt(ts))}</td><td>${stroke["course"]}</td><td>${stroke["hole"]}</td><td>${stroke["start"].club}</td><td>${stroke["end"].dist}</td></tr>`;
     }
     
     table += `
