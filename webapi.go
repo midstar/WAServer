@@ -71,6 +71,7 @@ func (wa *WebAPI) Stop() {
 }
 
 func (wa *WebAPI) handleDataGet(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("GET " + r.URL.Path)
 	dir, file, _ := dirAndJsonFile(r.URL.Path)
 	// Tests shows that Golang server don't allow invalid paths, thus
 	// no error needs to be handled
@@ -109,6 +110,7 @@ func (wa *WebAPI) handleDataGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (wa *WebAPI) handleDataPost(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("POST " + r.URL.Path)
 	dir, file, _ := dirAndJsonFile(r.URL.Path)
 	// Tests shows that Golang server don't allow invalid paths, thus
 	// no error needs to be handled
@@ -129,6 +131,7 @@ func (wa *WebAPI) handleDataPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (wa *WebAPI) handleDataDelete(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("DELETE " + r.URL.Path)
 	dir, file, _ := dirAndJsonFile(r.URL.Path)
 	// Tests shows that Golang server don't allow invalid paths, thus
 	// no error needs to be handled
@@ -152,6 +155,7 @@ func (wa *WebAPI) handleDataDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (wa *WebAPI) handleAppsGet(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("GET APPS")
 	filesMap, err := listFilesMap(wa.appPath)
 	if err != nil {
 		messageResponse(w, http.StatusNotFound, err.Error())
@@ -173,6 +177,7 @@ func (wa *WebAPI) handleAppsGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (wa *WebAPI) handleShutdown(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("SHUTDOWN")
 	wa.Stop()
 }
 

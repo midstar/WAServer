@@ -48,6 +48,16 @@ body {
   cursor: pointer;
 }
 
+.half-button {
+  width: 45%;
+}
+
+.button-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 
 /********** Statictics page styles **********/
 
@@ -83,11 +93,11 @@ th, td {
 }
 
 /********** Header styles **********/
-#course-container {
+.course-container {
   padding-bottom: 10px;
   display: flex;
 }
-#course-container select {
+.course-container select {
   font-size: 20px;
   flex-grow: 1;
 }
@@ -95,7 +105,7 @@ th, td {
   display: flex;
   align-items: center;
 }
-#hole-container select {
+.hole-container select {
   width: 70px;
   font-size: 35px;
   text-align: center;
@@ -239,7 +249,7 @@ img {
   background-color: rgb(207, 248, 195);
 }
 
-#close-button {
+.close-button {
   height: 55px;
 }
 
@@ -264,6 +274,43 @@ input {
 input[type='number'] { 
   font-size: 40px;
 }
+
+/********** Modify stroke dialog **********/
+
+#dialog-modify-stroke {
+  display: none;
+}
+
+#club-to-modify {
+  font-size: 40px;
+  font-weight: bold;
+  width: 100%;
+  text-align: center;
+}
+
+.manual-modify-distance-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.modify-containers {
+  font-size: 20px;
+  display:flex;
+  flex-wrap: wrap;
+  margin: 10px;
+}
+
+.modify-container {
+  margin: 5px;
+}
+
+.modify-container select {
+  font-size: 20px;
+}
+
 
 </style>
 <script src="data.js"></script>
@@ -546,7 +593,7 @@ async function showStatistics() {
     document.getElementById("body-container-stat").innerHTML = table;
   } else if (view == "export") {
     document.getElementById("body-container-stat").innerHTML = `
-    <div id="close-button" class="button" onclick="exportCSV()">Export CSV</div>
+    <div class="close-button button" onclick="exportCSV()">Export CSV</div>
     `;
   } else if (view == "history") {
     var table = `
@@ -556,7 +603,8 @@ async function showStatistics() {
     var allStrokes = await getAllStrokes();
     for (ts of Object.keys(allStrokes).sort().reverse()) {
       var stroke = allStrokes[ts];
-      table += `<tr><td>${dateFormat(parseInt(ts))}</td><td>${stroke["course"]}</td><td>${stroke["hole"]}</td><td>${stroke["start"].club}</td><td>${stroke["end"].dist}</td></tr>`;
+      var tsI = parseInt(ts);
+      table += `<tr onclick="openStrokeDialog('${stroke["start"].club}',${tsI})"><td>${dateFormat(tsI)}</td><td>${stroke["course"]}</td><td>${stroke["hole"]}</td><td>${stroke["start"].club}</td><td>${stroke["end"].dist}</td></tr>`;
     }
     
     table += `
@@ -591,6 +639,17 @@ function showApp() {
 async function getStrokes(club) {
   var user = wasGetUrlParam("user");
   const url = `${WAS_APP_URL}/dist/${user}/${club}/`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    return null;
+  }
+  const json = await response.json();
+  return json;
+}
+
+async function getStroke(club, timestamp) {
+  var user = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/dist/${user}/${club}/${timestamp}`;
   const response = await fetch(url);
   if (!response.ok) {
     return null;
@@ -732,6 +791,121 @@ function openManualDialog() {
   document.getElementById("manual-distance").focus();
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Modify stroke dialog
+
+var GLOB_STROKE_TS = null;
+var GLOB_STROKE = null;
+
+function storeStrokeDialog() {/*
+  var manualDist = parseInt(document.getElementById("manual-distance").value);
+  if (manualDist > 0) {
+    closeManualDialog();
+    markEnd(manualDist);
+  }*/
+  showStatistics(); // Refresh statistics
+  closeStrokeDialog();
+}
+
+function closeStrokeDialog() {
+  document.getElementById("dialog-modify-stroke").style.display = "none";
+}
+
+async function openStrokeDialog(club, timestamp) {
+  // Get stroke
+  var stroke = await getStroke(club, timestamp);
+  if (stroke == null) {
+    return;
+  }
+  GLOB_STROKE_TS = timestamp;
+  GLOB_STROKE = stroke;
+
+  document.getElementById("club-to-modify").innerHTML = club;
+  document.getElementById("manual-modify-distance").value = stroke["end"].dist;
+
+  // Fill in courses
+  const elemCourse = document.getElementById("modify-course");
+  elemCourse.innerHTML = "";
+  const elemOptBlank = document.createElement("option");
+  elemOptBlank.setAttribute("value", "None");  
+  elemOptBlank.setAttribute("selected", "");
+  elemCourse.appendChild(elemOptBlank);
+  for (const course of Object.keys(data["course"])) {
+    const elemOpt = document.createElement("option");
+    elemOpt.setAttribute("value", course);
+    if (course == stroke["course"]) {
+      elemOpt.setAttribute("selected", "");
+    }
+    elemOpt.innerText = course;
+    elemCourse.appendChild(elemOpt);
+  }
+  changeModifyCourse(parseInt(stroke["hole"]));
+
+  // Fill swing type
+  const elemSwingType = document.getElementById("modify-swing-type");
+  elemSwingType.innerHTML = "";
+  for (const swingType of ["normal", "chip"]) {
+    const elemOpt = document.createElement("option");
+    elemOpt.setAttribute("value", swingType);
+    if (swingType == stroke["start"].type) {
+      elemOpt.setAttribute("selected", "");
+    }
+    elemOpt.innerText = swingType;
+    elemSwingType.appendChild(elemOpt);
+  }
+
+  // Fill swing power
+  const elemSwingPow = document.getElementById("modify-swing-power");
+  elemSwingPow.innerHTML = "";
+  for (const power of [100, 75, 50, 25]) {
+    const elemOpt = document.createElement("option");
+    elemOpt.setAttribute("value", power);
+    if (power == stroke["start"].swing) {
+      elemOpt.setAttribute("selected", "");
+    }
+    elemOpt.innerText = power + "%";
+    elemSwingPow.appendChild(elemOpt);
+  }
+
+  document.getElementById("dialog-modify-stroke").style.display = "flex";
+}
+
+function changeModifyCourse(selectedHole = 1) {
+  const course = document.getElementById("modify-course").value;
+  
+  // Remove all holes
+  const elemHole = document.getElementById("modify-hole");
+  elemHole.innerHTML = "";
+  
+  if (course in data["course"]) {
+    // Fill in holes
+    for (const hole of Object.keys(data["course"][course])) {
+      const elemOpt = document.createElement("option");
+      elemOpt.setAttribute("value", hole);
+      if (hole == selectedHole) {
+        elemOpt.setAttribute("selected", "");
+      }
+      elemOpt.innerText = hole;
+      elemHole.appendChild(elemOpt);
+    }
+  }
+}
+
+async function deleteStrokeDialog() {
+  var user = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/dist/${user}/${GLOB_STROKE["start"].club}/${GLOB_STROKE_TS}`;
+  // Remove stroke
+  const request = new Request(url, {
+    method: "DELETE",
+  });
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.log("Delete failed" + response);
+  }
+  showStatistics(); // Refresh statistics
+  closeStrokeDialog();
+}
+
 
 
 
@@ -740,14 +914,14 @@ function openManualDialog() {
 <body>
   <div id="page-app" class="was-page head-content-footer">
     <div class="header-container">
-      <div id="course-container">
+      <div class="course-container">
         <label for="course">Course:</label>
         <select name="course" id="course" onchange="changeCourse()">
           <option value="none"></option>
         </select>
       </div>
       <div id="hole-ref-distance-container">
-        <div id="hole-container">
+        <div class="hole-container">
           <label for="hole">Hole:</label>
           <select name="hole" id="hole"  onchange="updateRef()">
           </select>
@@ -819,7 +993,7 @@ function openManualDialog() {
       </div>
     </div>
     <div class="footer-container">
-      <div id="close-button" class="button" onclick="closeSwingDialog()">Ok</div>
+      <div class="close-button button" onclick="closeSwingDialog()">Ok</div>
     </div>
   </div>
   <div id="dialog-manual-input" class="head-content-footer dialog">
@@ -829,8 +1003,49 @@ function openManualDialog() {
       <input type="number" id="manual-distance" name="distance" onchange="storeManualDialog()">
     </div>
     <div class="footer-container">
-      <div id="close-button" class="button" onclick="storeManualDialog()">Store</div>
-      <div id="close-button" class="button" onclick="closeManualDialog()">Cancel</div>
+      <div class="close-button button" onclick="storeManualDialog()">Store</div>
+      <div class="close-button button" onclick="closeManualDialog()">Cancel</div>
+    </div>
+  </div>
+  <div id="dialog-modify-stroke" class="head-content-footer dialog">
+    <div id="club-to-modify">
+    </div>
+    <div class="header-container">
+      <div class="course-container">
+        <label for="course">Course:</label>
+        <select name="course" id="modify-course" onchange="changeModifyCourse()">
+        </select>
+      </div>
+    </div>
+    <div class="body-container" id="modify-distance-container">
+      <div class="modify-containers">
+        <div class="modify-container">
+          <label for="hole">Hole:</label>
+          <select name="hole" id="modify-hole"">
+          </select>
+        </div>
+        <div class="modify-container">
+          <label for="type">Type:</label>
+          <select name="type" id="modify-swing-type">
+          </select>
+        </div>
+        <div class="modify-container">
+          <label for="type">Power:</label>
+          <select name="power" id="modify-swing-power">
+          </select>
+        </div>
+        <div class="manual-modify-distance-container">
+          <label for="number">Distance:</label>
+          <input type="number" id="manual-modify-distance" name="distance">
+      </div>
+    </div>
+    </div>
+    <div class="footer-container">
+      <div class="button-group">
+        <div class="close-button button half-button" onclick="storeStrokeDialog()">Store</div>
+        <div class="close-button button half-button" onclick="deleteStrokeDialog()">Delete</div>
+      </div>
+      <div class="close-button button" onclick="closeStrokeDialog()">Cancel</div>
     </div>
   </div>
 </body>
