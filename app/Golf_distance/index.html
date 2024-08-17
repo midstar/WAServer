@@ -425,7 +425,6 @@ function markStart(club) {
 }
 
 async function markEnd(manualDist = 0) {
-  var user = wasGetUrlParam("user");
   if (manualDist > 0) {
     GLOB_CURRENT.dist = manualDist;
   } else {
@@ -441,20 +440,7 @@ async function markEnd(manualDist = 0) {
   GLOB_STROKES.push(stroke);
 
   for(var s of GLOB_STROKES) {
-    const url = `${WAS_APP_URL}/dist/${user}/${GLOB_START.club}/${GLOB_START.timestamp}`;
-    const request = new Request(url, {
-      method: "POST",
-      body: JSON.stringify(s),
-    });
-    try {
-      const response = await fetch(request);
-      if (!response.ok) {
-        throw new Error(`Response status: ${response.status}`);
-      }
-    } catch (error) {
-      console.error(error.message);
-      // @TODO - add info about network error
-    }
+    postStroke(s);
   }
   
   document.getElementById("club-container").style.display = "flex";
@@ -636,27 +622,6 @@ function showApp() {
   wasPageShow("page-app");
 }
 
-async function getStrokes(club) {
-  var user = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/dist/${user}/${club}/`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    return null;
-  }
-  const json = await response.json();
-  return json;
-}
-
-async function getStroke(club, timestamp) {
-  var user = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/dist/${user}/${club}/${timestamp}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    return null;
-  }
-  const json = await response.json();
-  return json;
-}
 
 // Distances are sorted from smallest to largest
 function filterDistances(strokes, swingType, swingPower) {
@@ -794,15 +759,17 @@ function openManualDialog() {
 //////////////////////////////////////////////////////////////////////////////
 // Modify stroke dialog
 
-var GLOB_STROKE_TS = null;
 var GLOB_STROKE = null;
 
-function storeStrokeDialog() {/*
-  var manualDist = parseInt(document.getElementById("manual-distance").value);
-  if (manualDist > 0) {
-    closeManualDialog();
-    markEnd(manualDist);
-  }*/
+function storeStrokeDialog() {
+  GLOB_STROKE["course"] = document.getElementById("modify-course").value;
+  GLOB_STROKE["hole"] = document.getElementById("modify-hole").value;
+  GLOB_STROKE["start"].type = document.getElementById("modify-swing-type").value;
+  GLOB_STROKE["start"].swing = document.getElementById("modify-swing-power").value;
+  GLOB_STROKE["end"].dist = document.getElementById("manual-modify-distance").value;
+
+  postStroke(GLOB_STROKE);
+
   showStatistics(); // Refresh statistics
   closeStrokeDialog();
 }
@@ -817,7 +784,6 @@ async function openStrokeDialog(club, timestamp) {
   if (stroke == null) {
     return;
   }
-  GLOB_STROKE_TS = timestamp;
   GLOB_STROKE = stroke;
 
   document.getElementById("club-to-modify").innerHTML = club;
@@ -827,7 +793,7 @@ async function openStrokeDialog(club, timestamp) {
   const elemCourse = document.getElementById("modify-course");
   elemCourse.innerHTML = "";
   const elemOptBlank = document.createElement("option");
-  elemOptBlank.setAttribute("value", "None");  
+  elemOptBlank.setAttribute("value", "");  
   elemOptBlank.setAttribute("selected", "");
   elemCourse.appendChild(elemOptBlank);
   for (const course of Object.keys(data["course"])) {
@@ -892,21 +858,66 @@ function changeModifyCourse(selectedHole = 1) {
 }
 
 async function deleteStrokeDialog() {
-  var user = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/dist/${user}/${GLOB_STROKE["start"].club}/${GLOB_STROKE_TS}`;
-  // Remove stroke
-  const request = new Request(url, {
-    method: "DELETE",
-  });
-  const response = await fetch(url);
-  if (!response.ok) {
-    console.log("Delete failed" + response);
-  }
+  deleteStroke(GLOB_STROKE);
   showStatistics(); // Refresh statistics
   closeStrokeDialog();
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Server communication
 
+async function getStrokes(club) {
+  var user = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/dist/${user}/${club}/`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    return null;
+  }
+  const json = await response.json();
+  return json;
+}
+
+async function getStroke(club, timestamp) {
+  var user = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/dist/${user}/${club}/${timestamp}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    return null;
+  }
+  const json = await response.json();
+  return json;
+}
+
+async function postStroke(stroke) {
+  var user = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/dist/${user}/${stroke["start"].club}/${stroke["start"].timestamp}`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify(stroke),
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error(error.message);
+    // @TODO - add info about network error
+  }
+}
+
+async function deleteStroke(stroke) {
+  var user = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/dist/${user}/${stroke["start"].club}/${stroke["start"].timestamp}`;
+  // Remove stroke
+  const request = new Request(url, {
+    method: "DELETE",
+  });
+  const response = await fetch(request);
+  if (!response.ok) {
+    console.log("Delete failed" + response);
+  }
+}
 
 
 </script>
