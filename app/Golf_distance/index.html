@@ -822,8 +822,8 @@ function storeStrokeDialog() {
   GLOB_STROKE_MODIF.course = document.getElementById("modify-course").value;
   GLOB_STROKE_MODIF.hole = document.getElementById("modify-hole").value;
   GLOB_STROKE_MODIF.type = document.getElementById("modify-swing-type").value;
-  GLOB_STROKE_MODIF.power = document.getElementById("modify-swing-power").value;
-  GLOB_STROKE_MODIF.dist = document.getElementById("manual-modify-distance").value;
+  GLOB_STROKE_MODIF.power = parseInt(document.getElementById("modify-swing-power").value);
+  GLOB_STROKE_MODIF.dist = parseInt(document.getElementById("manual-modify-distance").value);
 
   postStroke(GLOB_STROKE_MODIF);
 
