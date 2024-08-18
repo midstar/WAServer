@@ -311,6 +311,43 @@ input[type='number'] {
   font-size: 20px;
 }
 
+/********** Manual input dialog styles **********/
+#no-network {
+  display: none;
+  z-index: 2;
+  font-size: 25px;
+  text-align:center;
+  z-index: 2;
+  width: 80%;
+  height:auto;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-width: 4px;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: red;
+}
+
+#no-network-head {
+  font-weight: bold;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+#no-network-icon {
+  font-size: 30px;
+  color: red;
+}
+
+#no-network-reason {
+  margin-bottom: 10px;
+}
+
+
+
 
 </style>
 <script src="data.js"></script>
@@ -869,23 +906,34 @@ async function deleteStrokeDialog() {
 async function getStrokes(club) {
   var user = wasGetUrlParam("user");
   const url = `${WAS_APP_URL}/dist/${user}/${club}/`;
-  const response = await fetch(url);
-  if (!response.ok) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      return null;
+    }
+    const json = await response.json();
+    return json;
+  } catch (error) {
+    openNoNetwork(error.message);
     return null;
   }
-  const json = await response.json();
-  return json;
+
 }
 
 async function getStroke(club, timestamp) {
   var user = wasGetUrlParam("user");
   const url = `${WAS_APP_URL}/dist/${user}/${club}/${timestamp}`;
-  const response = await fetch(url);
-  if (!response.ok) {
+  try { 
+    const response = await fetch(url);
+    if (!response.ok) {
+      return null;
+    }
+    const json = await response.json();
+    return json;
+  } catch (error) {
+    openNoNetwork(error.message);
     return null;
   }
-  const json = await response.json();
-  return json;
 }
 
 async function postStroke(stroke) {
@@ -901,8 +949,7 @@ async function postStroke(stroke) {
       throw new Error(`Response status: ${response.status}`);
     }
   } catch (error) {
-    console.error(error.message);
-    // @TODO - add info about network error
+    openNoNetwork(error.message);
   }
 }
 
@@ -913,10 +960,29 @@ async function deleteStroke(stroke) {
   const request = new Request(url, {
     method: "DELETE",
   });
-  const response = await fetch(request);
-  if (!response.ok) {
-    console.log("Delete failed" + response);
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      console.log("Delete failed" + response);
+      alert("Delete failed");
+      return
+    }
+    alert("Delete success");
+  } catch (error) {
+    openNoNetwork(error.message);
   }
+}
+
+//////////////////////////////////////////////////////////////////////////
+// No network dialog
+function openNoNetwork(reason) {
+  document.getElementById("no-network").style.display = "block";
+  document.getElementById("no-network-reason").innerHTML = reason;
+  setTimeout(closeNoNetwork, 3000);
+}
+
+function closeNoNetwork() {
+  document.getElementById("no-network").style.display = "none";
 }
 
 
@@ -1058,6 +1124,12 @@ async function deleteStroke(stroke) {
       </div>
       <div class="close-button button" onclick="closeStrokeDialog()">Cancel</div>
     </div>
+  </div>
+  <div id="no-network">
+    <div id="no-network-head">No network!</div>
+    <div id="no-network-icon">&#128423;</div>
+    <div id="no-network-reason">Unknown reason</div>
+
   </div>
 </body>
 </html>
