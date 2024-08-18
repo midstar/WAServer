@@ -909,7 +909,7 @@ async function getStrokes(club) {
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      return null;
+      return null; // This is ok and expected
     }
     const json = await response.json();
     return json;
@@ -926,7 +926,7 @@ async function getStroke(club, timestamp) {
   try { 
     const response = await fetch(url);
     if (!response.ok) {
-      return null;
+      return null; // This is ok and expected
     }
     const json = await response.json();
     return json;
@@ -963,11 +963,8 @@ async function deleteStroke(stroke) {
   try {
     const response = await fetch(request);
     if (!response.ok) {
-      console.log("Delete failed" + response);
-      alert("Delete failed");
-      return
+      throw new Error(`Response status: ${response.status}`);
     }
-    alert("Delete success");
   } catch (error) {
     openNoNetwork(error.message);
   }
