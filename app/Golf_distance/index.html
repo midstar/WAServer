@@ -2,7 +2,7 @@
 <meta charset="utf-8"/>
 <html>
 <head>
-<title>Club distance</title>
+<title>Golf distance</title>
 <link rel="icon" type="image/x-icon" href="logo.ico">
 <link rel="stylesheet" href="../was/was.css">
 <script src="../was/was.js"></script>
@@ -372,13 +372,17 @@ function appPageCallback(gameName) {
 //////////////////////////////////////////////////////////////////////////////
 // App config
 
+// Current position (continous GPS update)
+const GLOB_CURRENT = {lat : undefined, long : undefined, alt : undefined};
+
+// Position of current selected course / hole
 const GLOB_REF = { lat : undefined, long : undefined};
-const GLOB_START = { timestamp : undefined, club : undefined,  
-                     type: undefined, swing: undefined,
-                     lat : undefined, long : undefined, altitude : undefined};
-const GLOB_CURRENT = {lat : undefined, long : undefined, altitude : undefined,
-                      dist: undefined};
-const GLOB_STROKES = []; // Backup in case of offline
+
+// The stroke we are building
+var GLOB_STROKE = undefined; // Redefined for every new stroke
+
+// Backup of previous non sent strokes in case of offline
+const GLOB_STROKES = []; 
 
 function updateAppPage() {
   // Hide club tracker
@@ -453,11 +457,18 @@ function updateRef() {
 function markStart(club) {
   if (GLOB_CURRENT.lat != undefined) {
     document.getElementById("club-selected").innerHTML = club;
-    GLOB_START.timestamp = Date.now();
-    GLOB_START.club = club;
-    GLOB_START.lat = GLOB_CURRENT.lat;
-    GLOB_START.long = GLOB_CURRENT.long;
-    GLOB_START.altitude = GLOB_CURRENT.altitude;
+
+    GLOB_STROKE = {
+      timestamp : Date.now(),
+      club: club,
+      type: "normal", // normal or chip
+      power: 100, // 25, 50, 75 or 100 (= full swing)
+      course: undefined,
+      hole: undefined,
+      start : {lat : GLOB_CURRENT.lat, long : GLOB_CURRENT.long, alt : GLOB_CURRENT.alt},
+      end : {lat : undefined, long : undefined, alt : undefined},
+      dist : undefined // Calculated from start end or manually entered
+    };
     updateDistances();
     selectSwingPower(100);
     selectSwingType("normal");
@@ -466,23 +477,28 @@ function markStart(club) {
 }
 
 async function markEnd(manualDist = 0) {
+
+  GLOB_STROKE.course = document.getElementById("course").value;
+  GLOB_STROKE.hole = document.getElementById("hole").value;
+  GLOB_STROKE.end.lat = GLOB_CURRENT.lat;
+  GLOB_STROKE.end.long = GLOB_CURRENT.long;
+  GLOB_STROKE.end.alt = GLOB_CURRENT.alt;
   if (manualDist > 0) {
-    GLOB_CURRENT.dist = manualDist;
+    GLOB_STROKE.dist = manualDist;
   } else {
-    GLOB_CURRENT.dist = calcDist(GLOB_CURRENT, GLOB_START);
+    GLOB_STROKE.dist = calcDist(GLOB_STROKE.end, GLOB_STROKE.start);
   }
-  const stroke = {
-    "start": GLOB_START,
-    "end" : GLOB_CURRENT,
-    "course": document.getElementById("course").value,
-    "hole" : document.getElementById("hole").value
-  };
 
-  GLOB_STROKES.push(stroke);
+  // Store "unsent" strokes in GLOB_STROKES in case
+  // network is down to avoid "loosing" strokes
+  GLOB_STROKES.push(GLOB_STROKE);
+  do {
+    if (postStroke(GLOB_STROKES[0]) == false) {
+      break; // Probably no network connection (try again later)
+    }
+    GLOB_STROKES.pop();
 
-  for(var s of GLOB_STROKES) {
-    postStroke(s);
-  }
+  } while(GLOB_STROKES.length > 0);
   
   document.getElementById("club-container").style.display = "flex";
   document.getElementById("club-tracker-container").style.display = "none";
@@ -499,7 +515,7 @@ function posUpdate(pos) {
   const crd = pos.coords;
   GLOB_CURRENT.lat = crd.latitude;
   GLOB_CURRENT.long = crd.longitude;
-  GLOB_CURRENT.altitude = crd.altitude;
+  GLOB_CURRENT.alt = crd.altitude;
   
   updateDistances();
 }
@@ -509,7 +525,7 @@ function posError(err) {
   document.getElementById("club-distance").innerHTML = "ERR";
   GLOB_CURRENT.lat = undefined;
   GLOB_CURRENT.long = undefined;
-  GLOB_CURRENT.altitude = undefined;
+  GLOB_CURRENT.alt = undefined;
   console.log(err);
 }
 
@@ -520,9 +536,9 @@ function updateDistances() {
       const refDist = calcDist(GLOB_CURRENT, GLOB_REF);
       document.getElementById("ref-distance").innerHTML = `${refDist} m`;
     }
-    if (GLOB_START.lat != undefined) {
+    if (GLOB_STROKE != undefined && GLOB_STROKE.start.lat != undefined) {
       // Update distance club start position
-      const altDiff = Math.round(GLOB_CURRENT.altitude - GLOB_START.altitude);
+      const altDiff = Math.round(GLOB_CURRENT.alt - GLOB_STROKE.start.alt);
       var altText = "";
       if (altDiff < 0) {
         altText = `<sub>&#8595;${Math.abs(altDiff)} m</sub>`
@@ -530,7 +546,7 @@ function updateDistances() {
         altText = `<sup>&#8593;${altDiff} m</sup>`
         
       }
-      const clubDist = calcDist(GLOB_CURRENT, GLOB_START);
+      const clubDist = calcDist(GLOB_CURRENT, GLOB_STROKE.start);
       document.getElementById("club-distance").innerHTML = `${clubDist} m ${altText}`;
       
     }
@@ -631,7 +647,7 @@ async function showStatistics() {
     for (ts of Object.keys(allStrokes).sort().reverse()) {
       var stroke = allStrokes[ts];
       var tsI = parseInt(ts);
-      table += `<tr onclick="openStrokeDialog('${stroke["start"].club}',${tsI})"><td>${dateFormat(tsI)}</td><td>${stroke["course"]}</td><td>${stroke["hole"]}</td><td>${stroke["start"].club}</td><td>${stroke["end"].dist}</td></tr>`;
+      table += `<tr onclick="openStrokeDialog('${stroke.club}',${tsI})"><td>${dateFormat(tsI)}</td><td>${stroke.course}</td><td>${stroke.hole}</td><td>${stroke.club}</td><td>${stroke.dist}</td></tr>`;
     }
     
     table += `
@@ -669,9 +685,9 @@ function filterDistances(strokes, swingType, swingPower) {
   const result = [];
   if (strokes != null) {
     for (const stroke of Object.values(strokes)) {
-      if ((swingType == null || swingType == stroke["start"].type) &&
-          (swingPower == null || swingPower == stroke["start"].swing)) {
-        result.push(stroke["end"].dist);
+      if ((swingType == null || swingType == stroke.type) &&
+          (swingPower == null || swingPower == stroke.power)) {
+        result.push(stroke.dist);
       }
     }
   }
@@ -702,7 +718,7 @@ async function exportCSV() {
       continue;
     }
     for (const [ts, s] of Object.entries(strokes)) {
-      t.push(`${s["start"].club},${dateFormat(parseInt(ts))},${s["course"]},${s["hole"]},${s["start"].type},${s["start"].swing},${s["start"].lat},${s["start"].long},${s["start"].altitude},${s["end"].lat},${s["end"].long},${s["end"].altitude},${s["end"].dist}`);
+      t.push(`${s.club},${dateFormat(parseInt(ts))},${s.course},${s.hole},${s.type},${s.power},${s.start.lat},${s.start.long},${s.start.alt},${s.end.lat},${s.end.long},${s.end.alt},${s.dist}`);
     }
   }
   download(`golfdist ${dateFormat(parseInt(Date.now()))}.csv`, t.join("\n"), "text/csv");
@@ -760,7 +776,7 @@ function selectSwingType(swingType) {
       child.classList.remove("selected-type");
     }
   }
-  GLOB_START.type = swingType; 
+  GLOB_STROKE.type = swingType; 
 }
 
 function selectSwingPower(swingPower) {
@@ -773,7 +789,7 @@ function selectSwingPower(swingPower) {
     }
   }
   document.getElementById("swing-power-img").src = swingPower + ".png";
-  GLOB_START.swing = swingPower; 
+  GLOB_STROKE.power = swingPower; 
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -800,16 +816,16 @@ function openManualDialog() {
 //////////////////////////////////////////////////////////////////////////////
 // Modify stroke dialog
 
-var GLOB_STROKE = null;
+var GLOB_STROKE_MODIF = null;
 
 function storeStrokeDialog() {
-  GLOB_STROKE["course"] = document.getElementById("modify-course").value;
-  GLOB_STROKE["hole"] = document.getElementById("modify-hole").value;
-  GLOB_STROKE["start"].type = document.getElementById("modify-swing-type").value;
-  GLOB_STROKE["start"].swing = document.getElementById("modify-swing-power").value;
-  GLOB_STROKE["end"].dist = document.getElementById("manual-modify-distance").value;
+  GLOB_STROKE_MODIF.course = document.getElementById("modify-course").value;
+  GLOB_STROKE_MODIF.hole = document.getElementById("modify-hole").value;
+  GLOB_STROKE_MODIF.type = document.getElementById("modify-swing-type").value;
+  GLOB_STROKE_MODIF.power = document.getElementById("modify-swing-power").value;
+  GLOB_STROKE_MODIF.dist = document.getElementById("manual-modify-distance").value;
 
-  postStroke(GLOB_STROKE);
+  postStroke(GLOB_STROKE_MODIF);
 
   showStatistics(); // Refresh statistics
   closeStrokeDialog();
@@ -825,10 +841,10 @@ async function openStrokeDialog(club, timestamp) {
   if (stroke == null) {
     return;
   }
-  GLOB_STROKE = stroke;
+  GLOB_STROKE_MODIF = stroke;
 
   document.getElementById("club-to-modify").innerHTML = club;
-  document.getElementById("manual-modify-distance").value = stroke["end"].dist;
+  document.getElementById("manual-modify-distance").value = stroke.dist;
 
   // Fill in courses
   const elemCourse = document.getElementById("modify-course");
@@ -840,13 +856,13 @@ async function openStrokeDialog(club, timestamp) {
   for (const course of Object.keys(data["course"])) {
     const elemOpt = document.createElement("option");
     elemOpt.setAttribute("value", course);
-    if (course == stroke["course"]) {
+    if (course == stroke.course) {
       elemOpt.setAttribute("selected", "");
     }
     elemOpt.innerText = course;
     elemCourse.appendChild(elemOpt);
   }
-  changeModifyCourse(parseInt(stroke["hole"]));
+  changeModifyCourse(parseInt(stroke.hole));
 
   // Fill swing type
   const elemSwingType = document.getElementById("modify-swing-type");
@@ -854,7 +870,7 @@ async function openStrokeDialog(club, timestamp) {
   for (const swingType of ["normal", "chip"]) {
     const elemOpt = document.createElement("option");
     elemOpt.setAttribute("value", swingType);
-    if (swingType == stroke["start"].type) {
+    if (swingType == stroke.type) {
       elemOpt.setAttribute("selected", "");
     }
     elemOpt.innerText = swingType;
@@ -867,7 +883,7 @@ async function openStrokeDialog(club, timestamp) {
   for (const power of [100, 75, 50, 25]) {
     const elemOpt = document.createElement("option");
     elemOpt.setAttribute("value", power);
-    if (power == stroke["start"].swing) {
+    if (power == stroke.power) {
       elemOpt.setAttribute("selected", "");
     }
     elemOpt.innerText = power + "%";
@@ -899,7 +915,7 @@ function changeModifyCourse(selectedHole = 1) {
 }
 
 async function deleteStrokeDialog() {
-  deleteStroke(GLOB_STROKE);
+  deleteStroke(GLOB_STROKE_MODIF);
   showStatistics(); // Refresh statistics
   closeStrokeDialog();
 }
@@ -940,9 +956,10 @@ async function getStroke(club, timestamp) {
   }
 }
 
+// Returns true if successful
 async function postStroke(stroke) {
   var user = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/dist/${user}/${stroke["start"].club}/${stroke["start"].timestamp}`;
+  const url = `${WAS_APP_URL}/dist/${user}/${stroke.club}/${stroke.timestamp}`;
   const request = new Request(url, {
     method: "POST",
     body: JSON.stringify(stroke),
@@ -954,12 +971,14 @@ async function postStroke(stroke) {
     }
   } catch (error) {
     openNoNetwork(error.message);
+    return false;
   }
+  return true;
 }
 
 async function deleteStroke(stroke) {
   var user = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/dist/${user}/${stroke["start"].club}/${stroke["start"].timestamp}`;
+  const url = `${WAS_APP_URL}/dist/${user}/${stroke.club}/${stroke.timestamp}`;
   // Remove stroke
   const request = new Request(url, {
     method: "DELETE",
@@ -995,7 +1014,7 @@ function closeNoNetwork() {
       <div class="course-container">
         <label for="course">Course:</label>
         <select name="course" id="course" onchange="changeCourse()">
-          <option value="none"></option>
+          <option value=""></option>
         </select>
       </div>
       <div id="hole-ref-distance-container">
