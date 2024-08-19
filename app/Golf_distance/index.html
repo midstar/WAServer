@@ -316,7 +316,7 @@ input[type='number'] {
 }
 
 /********** Manual input dialog styles **********/
-#no-network {
+#notification {
   display: none;
   z-index: 2;
   font-size: 25px;
@@ -332,21 +332,29 @@ input[type='number'] {
   border-width: 4px;
   border-radius: 10px;
   border-style: solid;
+  border-color: blue;
+}
+
+#notification.warning {
   border-color: red;
 }
 
-#no-network-head {
+#notification-head {
   font-weight: bold;
   margin-top: 10px;
   margin-bottom: 10px;
 }
 
-#no-network-icon {
+#notification-icon {
   font-size: 30px;
+  color: blue;
+}
+
+#notification-icon.warning {
   color: red;
 }
 
-#no-network-reason {
+#notification-reason {
   margin-bottom: 10px;
 }
 
@@ -634,9 +642,11 @@ async function showStatistics() {
       </table>`;
     
     document.getElementById("body-container-stat").innerHTML = table;
-  } else if (view == "export") {
+  } else if (view == "export-import") {
     document.getElementById("body-container-stat").innerHTML = `
     <div class="close-button button" onclick="exportCSV()">Export CSV</div>
+    <br>
+    <div class="close-button button" onclick="importCSV()">Import CSV</div>
     `;
   } else if (view == "history") {
     var table = `
@@ -709,8 +719,14 @@ async function getAllStrokes() {
 
 //////////////////////////////////////////////////////////////////////////////
 // Export CSV
+
+const CSV_SEPARATOR = ","; 
+const CSV_HEADINGS = ["Club","Time","Course","Hole","Type","Power","Lat 1","Long 1","Alt 1",
+                      "Lat 2","Long 2","Alt 2","Dist"];
+
 async function exportCSV() {
-  var t = ["Club,Time,Course,Hole,Type,Power,Lat 1,Long 1,Alt 1,Lat 2,Long 2,Alt 2,Dist"];
+  var t = [];
+  t.push(CSV_HEADINGS.join(CSV_SEPARATOR));
   for (const club of data["club"]) {
     const strokes = await getStrokes(club);
     if (strokes == null) {
@@ -718,7 +734,10 @@ async function exportCSV() {
       continue;
     }
     for (const [ts, s] of Object.entries(strokes)) {
-      t.push(`${s.club},${dateFormat(parseInt(ts))},${s.course},${s.hole},${s.type},${s.power},${s.start.lat},${s.start.long},${s.start.alt},${s.end.lat},${s.end.long},${s.end.alt},${s.dist}`);
+      var cols = [s.club,dateFormat(parseInt(ts)),s.course,s.hole,s.type,s.power,
+                  s.start.lat,s.start.long,s.start.alt,
+                  s.end.lat,s.end.long,s.end.alt,s.dist]
+      t.push(cols.join(CSV_SEPARATOR));
     }
   }
   download(`golfdist ${dateFormat(parseInt(Date.now()))}.csv`, t.join("\n"), "text/csv");
@@ -738,15 +757,83 @@ function download(filename, text, mime = "text/plain") {
 }
 
 function dateFormat(timestamp) {
+  var u = new Date(timestamp);
+  var us = u.toISOString();
+  return us.replace("T", " ");
+}
 
-    var u = new Date(timestamp);
+function fromDateFormat(dateString) {
+  var ds = dateString.replace(" ", "T");
+  var d = new Date(ds);
+  return d.getTime();
+}
 
-      return u.getUTCFullYear() +
-        '-' + ('0' + u.getUTCMonth()).slice(-2) +
-        '-' + ('0' + u.getUTCDate()).slice(-2) + 
-        ' ' + ('0' + u.getUTCHours()).slice(-2) +
-        ':' + ('0' + u.getUTCMinutes()).slice(-2) +
-        ':' + ('0' + u.getUTCSeconds()).slice(-2)
+//////////////////////////////////////////////////////////////////////////////
+// Import CSV
+async function importCSV() {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.setAttribute("accept", ".csv")
+
+  input.onchange = e => { 
+
+    // getting a hold of the file reference
+    var file = e.target.files[0]; 
+
+    // setting up the reader
+    var reader = new FileReader();
+    reader.readAsText(file,'UTF-8');
+
+    // here we tell the reader what to do when it's done reading...
+    reader.onload = readerEvent => {
+        parseCSV(readerEvent.target.result); // this is the content!
+    }
+
+  }
+
+  input.click();
+}
+
+async function parseCSV(content) {
+  var rows = content.split("\n");
+  if (rows.length < 2) {
+    alert("CSV files contains no data");
+    return;
+  }
+  var headings = rows.shift().split(CSV_SEPARATOR);
+  for (heading of CSV_HEADINGS) {
+    if(headings.indexOf(heading) == -1) {
+      alert(`Mandatory heading ${heading} is missing in CSV file`);
+      return;
+    }
+  }
+  var rowNum = 1; // 1 = Heading
+  for (row of rows) {
+    rowNum++;
+    var cols = row.split(CSV_SEPARATOR);
+    if (cols.length < CSV_HEADINGS.length) {
+      alert(`Row ${rowNum} missing columns:\n${row}`);
+      return;
+    }
+
+    var stroke = {
+      timestamp : fromDateFormat(cols[headings.indexOf("Time")]),
+      club: cols[headings.indexOf("Club")],
+      type: cols[headings.indexOf("Type")],
+      power: parseInt(cols[headings.indexOf("Power")]),
+      course: cols[headings.indexOf("Course")],
+      hole: cols[headings.indexOf("Hole")],
+      start : {lat : parseFloat(cols[headings.indexOf("Lat 1")]), 
+               long : parseFloat(cols[headings.indexOf("Long 1")]), 
+               alt : parseFloat(cols[headings.indexOf("Alt 1")])},      
+      end :   {lat : parseFloat(cols[headings.indexOf("Lat 2")]), 
+               long : parseFloat(cols[headings.indexOf("Long 2")]), 
+               alt : parseFloat(cols[headings.indexOf("Alt 2")])},
+      dist : parseInt(cols[headings.indexOf("Dist")])
+    };
+    postStroke(stroke);
+  }
+  openNotification("Import successful",`Imported ${rowNum - 1} strokes`, false);
 }
 
 
@@ -934,7 +1021,7 @@ async function getStrokes(club) {
     const json = await response.json();
     return json;
   } catch (error) {
-    openNoNetwork(error.message);
+    openNotification("No network!", error.message);
     return null;
   }
 
@@ -951,7 +1038,7 @@ async function getStroke(club, timestamp) {
     const json = await response.json();
     return json;
   } catch (error) {
-    openNoNetwork(error.message);
+    openNotification("No network!", error.message);
     return null;
   }
 }
@@ -970,7 +1057,7 @@ async function postStroke(stroke) {
       throw new Error(`Response status: ${response.status}`);
     }
   } catch (error) {
-    openNoNetwork(error.message);
+    openNotification("No network!", error.message);
     return false;
   }
   return true;
@@ -989,20 +1076,32 @@ async function deleteStroke(stroke) {
       throw new Error(`Response status: ${response.status}`);
     }
   } catch (error) {
-    openNoNetwork(error.message);
+    openNotification("No network!", error.message);
   }
 }
 
 //////////////////////////////////////////////////////////////////////////
-// No network dialog
-function openNoNetwork(reason) {
-  document.getElementById("no-network").style.display = "block";
-  document.getElementById("no-network-reason").innerHTML = reason;
-  setTimeout(closeNoNetwork, 3000);
+// Notification dialog
+function openNotification(head, reason, warning = true) {
+  document.getElementById("notification-head").innerHTML = head;
+  document.getElementById("notification-reason").innerHTML = reason;
+  var elemNotif = document.getElementById("notification");
+  elemNotif.style.display = "block";
+  var elemIcon = document.getElementById("notification-icon");
+  if (warning) {
+    elemIcon.innerHTML = "&#9888;";
+    elemIcon.classList.add("warning");
+    elemNotif.classList.add("warning");
+  } else {
+    elemIcon.innerHTML = "&#128712;";
+    elemIcon.classList.remove("warning");
+    elemNotif.classList.remove("warning");
+  }
+  setTimeout(closeNotification, 3000);
 }
 
-function closeNoNetwork() {
-  document.getElementById("no-network").style.display = "none";
+function closeNotification() {
+  document.getElementById("notification").style.display = "none";
 }
 
 
@@ -1053,7 +1152,7 @@ function closeNoNetwork() {
         <option value="chip">Chip min/med/max</option>
         <option value="chip-power">Chip power</option>
         <option value="history">History</option>
-        <option value="export">Export</option>
+        <option value="export-import">Export / Import</option>
       </select>
     </div>
     <div class="body-container" id="body-container-stat">
@@ -1145,10 +1244,10 @@ function closeNoNetwork() {
       <div class="close-button button" onclick="closeStrokeDialog()">Cancel</div>
     </div>
   </div>
-  <div id="no-network">
-    <div id="no-network-head">No network!</div>
-    <div id="no-network-icon">&#128423;</div>
-    <div id="no-network-reason">Unknown reason</div>
+  <div id="notification">
+    <div id="notification-head">No network!</div>
+    <div id="notification-icon">&#9888;</div>
+    <div id="notification-reason">Unknown reason</div>
 
   </div>
 </body>
