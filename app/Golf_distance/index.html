@@ -6,6 +6,8 @@
 <link rel="icon" type="image/x-icon" href="logo.ico?v=2">
 <link rel="stylesheet" href="../was/was.css">
 <script src="../was/was.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
+<script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
 <style>
 
 body {
@@ -423,11 +425,13 @@ function updateAppPage() {
   };
   navigator.geolocation.watchPosition(posUpdate, posError, options);
 
-  // Check if stat page is selected
+  // Check if other page is selected
   if (wasGetUrlParam("page") == "page-statistics") {
     showStatistics();
+  } else if (wasGetUrlParam("page") == "page-map") {
+    showMap();
   }
-};
+}
 
 function changeCourse() {
   const course = document.getElementById("course").value;
@@ -836,6 +840,124 @@ async function parseCSV(content) {
   openNotification("Import successful",`Imported ${rowNum - 1} strokes`, false);
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Map
+
+async function showMap() {
+  wasSetUrlParam("page", "page-map");
+  wasPageShow("page-map");
+
+  mapPlot(59.4041397, 17.8218556, 59.4044925, 17.8236006);
+  mapPlot(59.4033215,17.8198198,59.4022763,17.8197661);
+  mapPlot(59.4045664,17.8238975,59.4040029,17.8268493);
+}
+
+// Filled in first time map is shown
+var GLOB_MAP = {
+  map: null,
+  styleRed: null,
+  styleBlue: null,
+  layers: []
+};
+
+function mapSetup() {
+  GLOB_MAP.map = new ol.Map({
+      target: 'map',
+      layers: [
+          new ol.layer.Tile({
+          source: new ol.source.OSM()
+          })
+      ],
+      view: new ol.View({
+          center:[0,0],
+          zoom: 0
+      })
+  });
+
+  // Create the style of the start marker
+  GLOB_MAP.styleRed = new ol.style.Style({ 
+          image: new ol.style.Circle({ 
+              radius: 5, 
+              fill: new ol.style.Fill({color: 'rgba(200, 200, 255, 0.3)'}), 
+              stroke: new ol.style.Stroke({color: 'red', width: 3}) 
+          }) 
+      });
+
+  // Create the style of the end marker
+  GLOB_MAP.styleBlue = new ol.style.Style({ 
+      image: new ol.style.Circle({ 
+          radius: 5, 
+          fill: new ol.style.Fill({color: 'rgba(200, 200, 255, 0.3)'}), 
+          stroke: new ol.style.Stroke({color: 'blue', width: 3}) 
+      }) 
+  });
+}
+
+function mapPlot(latitude, longitude, latitude2, longitude2, clear = false) {
+
+    // Create the map unless already created
+    if (GLOB_MAP.map == null) {
+      mapSetup();
+    }
+  
+    if (clear) {
+      for(layer of GLOB_MAP.layers) {
+        GLOB_MAP.map.removeLayer(layer);
+      }
+      GLOB_MAP.layers = [];
+    }
+
+    // Create the markers
+    var markers = [];
+
+    // Start marker
+    var startMarker = new ol.Feature({
+        geometry: new ol.geom.Point(ol.proj.fromLonLat([
+            longitude, 
+            latitude]
+        ))
+    });
+    startMarker.setStyle(GLOB_MAP.styleRed);
+    markers.push(startMarker);
+
+    // End marker
+    var endMarker = new ol.Feature({
+        geometry: new ol.geom.Point(ol.proj.fromLonLat([
+            longitude2, 
+            latitude2]
+        ))
+    });
+    endMarker.setStyle(GLOB_MAP.styleBlue);
+    markers.push(endMarker);
+
+    // Line between markers
+    var lineMarker = new ol.Feature({
+        geometry: new ol.geom.LineString([
+          ol.proj.fromLonLat([
+              longitude, 
+              latitude]
+          ),
+          ol.proj.fromLonLat([
+            longitude2, 
+            latitude2]),
+          ])
+    });
+    markers.push(lineMarker);
+
+    // Create the layer where all markers are located and add to map
+    var layer = new ol.layer.Vector({
+        source: new ol.source.Vector({
+            features: markers 
+        })
+    });
+    GLOB_MAP.map.addLayer(layer);
+    GLOB_MAP.layers.push(layer);
+
+    // Center map
+    GLOB_MAP.map.getView().fit(layer.getSource().getExtent());
+    GLOB_MAP.map.getView().setZoom(GLOB_MAP.map.getView().getZoom() - 0.5);
+}
+
 
 //////////////////////////////////////////////////////////////////////////////
 // Swing dialog
@@ -1161,6 +1283,14 @@ function closeNotification() {
       <div id="stats-button" class="button" onclick="showApp()">Back</div>
     </div>
   </div>
+  <div id="page-map" class="was-page head-content-footer">
+    <div class="body-container" id="body-container-map">
+      <div id="map"></div>
+    </div>
+    <div class="footer-container">
+      <div id="stats-button" class="button" onclick="closeMap()">Back</div>
+    </div>
+  </div>
   <div id="dialog-swing-type" class="head-content-footer dialog">
     <div class="header-container">
       <div id="swing-type-container">
@@ -1248,7 +1378,6 @@ function closeNotification() {
     <div id="notification-head">No network!</div>
     <div id="notification-icon">&#9888;</div>
     <div id="notification-reason">Unknown reason</div>
-
   </div>
 </body>
 </html>
