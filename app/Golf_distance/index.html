@@ -260,7 +260,6 @@ label {
   padding-right: 10px;
   margin-left: 2px;
   margin-right: 2px;
-  /*width: 20%;*/
 }
 
 /********** General dialog styles **********/
@@ -505,9 +504,6 @@ function updateAppPage() {
   switch (wasGetUrlParam("page")) {
   case "page-statistics":
     showStatistics();
-    break;
-  case "page-map":
-    showMap();
     break;
   case "page-old-stroke":
     showOldStroke();
@@ -925,7 +921,19 @@ async function parseCSV(content) {
 //////////////////////////////////////////////////////////////////////////
 // Old stroke
 
-async function showOldStroke() {
+async function showOldStroke(strokeId=null) {
+  if (strokeId == null) {
+    strokeId = wasGetUrlParam("stroke");
+  }
+  if (strokeId == null) {
+    // Get last stroke
+    // TBD
+  }
+  if (strokeId == null) {
+    return; // No old strokes exists
+  }
+
+  console.log(wasGetUrlParam("stroke"));
   wasSetUrlParam("page", "page-old-stroke");
   wasPageShow("page-old-stroke");
 
@@ -936,15 +944,6 @@ async function showOldStroke() {
 
 //////////////////////////////////////////////////////////////////////////
 // Map
-
-async function showMap() {
-  wasSetUrlParam("page", "page-map");
-  wasPageShow("page-map");
-
-  mapPlot(59.4041397, 17.8218556, 59.4044925, 17.8236006);
-  mapPlot(59.4033215,17.8198198,59.4022763,17.8197661);
-  mapPlot(59.4045664,17.8238975,59.4040029,17.8268493);
-}
 
 // Filled in first time map is shown
 var GLOB_MAP = {
@@ -1233,7 +1232,7 @@ async function deleteStrokeDialog() {
 
 async function getStrokes(club) {
   var user = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/dist/${user}/${club}/`;
+  const url = `${WAS_APP_URL}/strokes/${user}/${club}/`;
   try {
     const response = await fetch(url);
     if (!response.ok) {
@@ -1250,7 +1249,7 @@ async function getStrokes(club) {
 
 async function getStroke(club, timestamp) {
   var user = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/dist/${user}/${club}/${timestamp}`;
+  const url = `${WAS_APP_URL}/strokes/${user}/${club}/${timestamp}`;
   try { 
     const response = await fetch(url);
     if (!response.ok) {
@@ -1267,7 +1266,7 @@ async function getStroke(club, timestamp) {
 // Returns true if successful
 async function postStroke(stroke) {
   var user = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/dist/${user}/${stroke.club}/${stroke.timestamp}`;
+  const url = `${WAS_APP_URL}/strokes/${user}/${stroke.club}/${stroke.timestamp}`;
   const request = new Request(url, {
     method: "POST",
     body: JSON.stringify(stroke),
@@ -1286,7 +1285,7 @@ async function postStroke(stroke) {
 
 async function deleteStroke(stroke) {
   var user = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/dist/${user}/${stroke.club}/${stroke.timestamp}`;
+  const url = `${WAS_APP_URL}/strokes/${user}/${stroke.club}/${stroke.timestamp}`;
   // Remove stroke
   const request = new Request(url, {
     method: "DELETE",
@@ -1388,17 +1387,6 @@ function closeNotification() {
       <div id="stats-button" class="button" onclick="showApp()">Back</div>
     </div>
   </div>
-
-
-  <div id="page-map" class="was-page head-content-footer">
-    <div class="body-container" id="body-container-map">
-      <!--<div id="map"></div>-->
-    </div>
-    <div class="footer-container">
-      <div id="stats-button" class="button" onclick="closeMap()">Back</div>
-    </div>
-  </div>
-
 
   <div id="page-old-stroke" class="was-page head-content-footer">
     <div class="header-container">
