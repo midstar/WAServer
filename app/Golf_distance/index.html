@@ -447,12 +447,11 @@ input[type='number'] {
 
 window.onload = async function() {
   await wasInit("Golf_distance", appPageCallback, "user", null);
-  console.log(await getStrokeByTimestamp("1723961512895"));
 }
 
 function appPageCallback(gameName) {
   wasPageShow("page-app");
-  updateAppPage();
+  setupApp();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -470,19 +469,14 @@ var GLOB_STROKE = undefined; // Redefined for every new stroke
 // Backup of previous non sent strokes in case of offline
 const GLOB_STROKES = []; 
 
-function updateAppPage() {
+function setupApp() {
   // Hide club tracker
   document.getElementById("club-tracker-container").style.display = "none";
   
-  // Fill in courses
-  const elemCourse = document.getElementById("course");
-  for (const course of Object.keys(data["course"])) {
-    const elemOpt = document.createElement("option");
-    elemOpt.setAttribute("value", course);
-    elemOpt.innerText = course;
-    elemCourse.appendChild(elemOpt);
-  }
-  
+  // Fill in courses (both ordinary and old-strokes)
+  fillSelect("course", Object.keys(data["course"]), false);
+  fillSelect("course-old-stroke", Object.keys(data["course"]), false);
+
   // Fill in clubs
   const elemClub = document.getElementById("club-container");
   for (const club of data["club"]) {
@@ -514,23 +508,30 @@ function updateAppPage() {
 
 function changeCourse() {
   const course = document.getElementById("course").value;
-  
-  // Remove all holes
-  const elemHole = document.getElementById("hole");
-  elemHole.innerHTML = "";
-  
+
   if (course in data["course"]) {
     // Fill in holes
-    for (const hole of Object.keys(data["course"][course])) {
-      const elemOpt = document.createElement("option");
-      elemOpt.setAttribute("value", hole);
-      elemOpt.innerText = hole;
-      elemHole.appendChild(elemOpt);
-    }
+    fillSelect("hole", Object.keys(data["course"][course]));
+  } else {
+    document.getElementById("hole").innerHTML = "";
   }
   
   // Update reference position
   updateRef();
+}
+
+// Fill options in a select element
+function fillSelect(selectId,valueArray,eraseOld=true) {
+  const elemSelect = document.getElementById(selectId);
+  if (eraseOld) {
+    elemSelect.innerHTML = ""; // Clear old contents
+  }
+  for (const value of valueArray) {
+      const elemOpt = document.createElement("option");
+      elemOpt.setAttribute("value", value);
+      elemOpt.innerText = value;
+      elemSelect.appendChild(elemOpt);
+    }
 }
 
 function updateRef() {
@@ -826,9 +827,12 @@ function download(filename, text, mime = "text/plain") {
   document.body.removeChild(element);
 }
 
-function dateFormat(timestamp) {
+function dateFormat(timestamp, removeMs = false) {
   var u = new Date(timestamp);
   var us = u.toISOString();
+  if(removeMs) {
+    us = us.substring(0, us.indexOf("."));
+  }
   return us.replace("T", " ");
 }
 
@@ -909,6 +913,8 @@ async function parseCSV(content) {
 //////////////////////////////////////////////////////////////////////////
 // Old stroke
 
+var GLOB_OLD_STROKE = null;
+
 async function showOldStroke(timestamp=null) {
   if (timestamp == null) {
     timestamp = wasGetUrlParam("stroke");
@@ -920,16 +926,49 @@ async function showOldStroke(timestamp=null) {
   if (timestamp == null) {
     return; // No old strokes exists
   }
-  var stroke = await getStrokeByTimestamp(timestamp);
+  var GLOB_OLD_STROKE = await getStrokeByTimestamp(timestamp);
 
   console.log(wasGetUrlParam("stroke"));
   wasSetUrlParam("page", "page-old-stroke");
   wasPageShow("page-old-stroke");
 
-  /*mapPlot(59.4041397, 17.8218556, 59.4044925, 17.8236006);
-  mapPlot(59.4033215,17.8198198,59.4022763,17.8197661);
-  mapPlot(59.4045664,17.8238975,59.4040029,17.8268493);*/
-  mapPlot(stroke.start.lat, stroke.start.long, stroke.end.lat, stroke.end.long, true);
+  // Fill in stroke
+  document.getElementById("course-old-stroke").value = GLOB_OLD_STROKE.course;
+  changeCourseOldStroke();
+  document.getElementById("hole-old-stroke").value = GLOB_OLD_STROKE.hole;
+
+  // Set date
+  document.getElementById("date").innerHTML = dateFormat(GLOB_OLD_STROKE.timestamp, true);
+
+  // Set club
+  document.getElementById("club-selected-old-stroke").innerHTML = GLOB_OLD_STROKE.club;
+
+  // Fill distance and altitude
+  const altDiff = Math.round(GLOB_OLD_STROKE.end.alt - GLOB_OLD_STROKE.start.alt);
+  var altText = "";
+  if (altDiff < 0) {
+    altText = `<sub>&#8595;${Math.abs(altDiff)} m</sub>`
+  } else {
+    altText = `<sup>&#8593;${altDiff} m</sup>`
+    
+  }
+  const clubDist = GLOB_OLD_STROKE.dist; //calcDist(GLOB_OLD_STROKE.end, GLOB_OLD_STROKE.start);
+  document.getElementById("club-distance-old-stroke").innerHTML = `${clubDist} m ${altText}`;
+
+  // Fill in map
+  mapPlot(GLOB_OLD_STROKE.start.lat, GLOB_OLD_STROKE.start.long, 
+          GLOB_OLD_STROKE.end.lat, GLOB_OLD_STROKE.end.long, true);
+}
+
+function changeCourseOldStroke() {
+  const course = document.getElementById("course-old-stroke").value;
+
+  if (course in data["course"]) {
+    // Fill in holes
+    fillSelect("hole-old-stroke", Object.keys(data["course"][course]));
+  } else {
+    document.getElementById("hole-old-stroke").innerHTML = "";
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1090,7 +1129,7 @@ function selectSwingPower(swingPower) {
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// Swing dialog
+// Store Manual dialog
 
 function storeManualDialog() {
   var manualDist = parseInt(document.getElementById("manual-distance").value);
@@ -1437,15 +1476,15 @@ function closeNotification() {
   <div id="page-old-stroke" class="was-page head-content-footer">
     <div class="header-container">
         <div class="course-container">
-          <label for="course">Course:</label>
-          <select name="course" id="course-old-stroke" onchange="tbd()">
+          <label for="course-old">Course:</label>
+          <select name="course-old" id="course-old-stroke" onchange="changeCourseOldStroke()">
             <option value=""></option>
           </select>
         </div>
         <div class="flex-center-container">
           <div class="hole-container">
-            <label for="hole">Hole:</label>
-            <select name="hole" id="hole-old-stroke"  onchange="tbd()">
+            <label for="hole-old">Hole:</label>
+            <select name="hole-old" id="hole-old-stroke"  onchange="tbd()">
             </select>
           </div>
           <div id="date">
