@@ -447,6 +447,7 @@ input[type='number'] {
 
 window.onload = async function() {
   await wasInit("Golf_distance", appPageCallback, "user", null);
+  console.log(await getStrokeByTimestamp("1723961512895"));
 }
 
 function appPageCallback(gameName) {
@@ -786,19 +787,6 @@ function filterDistances(strokes, swingType, swingPower) {
   return result.sort(function (a, b) {  return a - b;  });  
 }
 
-async function getAllStrokes() {
-  var result = {};
-  for (const club of data["club"]) {
-    const strokes = await getStrokes(club);
-    if (strokes == null) {
-      // No strokes availabe for club
-      continue;
-    }
-    result = {...result, ...strokes};
-  }
-  return result;
-}
-
 //////////////////////////////////////////////////////////////////////////////
 // Export CSV
 
@@ -921,25 +909,27 @@ async function parseCSV(content) {
 //////////////////////////////////////////////////////////////////////////
 // Old stroke
 
-async function showOldStroke(strokeId=null) {
-  if (strokeId == null) {
-    strokeId = wasGetUrlParam("stroke");
+async function showOldStroke(timestamp=null) {
+  if (timestamp == null) {
+    timestamp = wasGetUrlParam("stroke");
   }
-  if (strokeId == null) {
+  if (timestamp == null) {
     // Get last stroke
     // TBD
   }
-  if (strokeId == null) {
+  if (timestamp == null) {
     return; // No old strokes exists
   }
+  var stroke = await getStrokeByTimestamp(timestamp);
 
   console.log(wasGetUrlParam("stroke"));
   wasSetUrlParam("page", "page-old-stroke");
   wasPageShow("page-old-stroke");
 
   /*mapPlot(59.4041397, 17.8218556, 59.4044925, 17.8236006);
-  mapPlot(59.4033215,17.8198198,59.4022763,17.8197661);*/
-  mapPlot(59.4045664,17.8238975,59.4040029,17.8268493);
+  mapPlot(59.4033215,17.8198198,59.4022763,17.8197661);
+  mapPlot(59.4045664,17.8238975,59.4040029,17.8268493);*/
+  mapPlot(stroke.start.lat, stroke.start.long, stroke.end.lat, stroke.end.long, true);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1228,7 +1218,64 @@ async function deleteStrokeDialog() {
 }
 
 //////////////////////////////////////////////////////////////////////////
+// General stroke handling 
+
+// Does not require club, but is slower than getStroke function
+async function getStrokeByTimestamp(timestamp) {
+  var timestamps = await getAllStrokeTimestamps();
+  if (timestamp in timestamps) {
+    return getStroke(timestamps[timestamp], timestamp);
+  }
+  return null;
+}
+
+async function getAllStrokeTimestamps() {
+  var result = {};
+  for (const club of data["club"]) {
+    const timestamps = await getStrokeTimestamps(club);
+    for (timestamp of timestamps) {
+      result[timestamp] = club;
+    }
+  }
+  return result;
+}
+
+async function getAllStrokes() {
+  var result = {};
+  for (const club of data["club"]) {
+    const strokes = await getStrokes(club);
+    if (strokes == null) {
+      // No strokes availabe for club
+      continue;
+    }
+    result = {...result, ...strokes};
+  }
+  return result;
+}
+
+//////////////////////////////////////////////////////////////////////////
 // Server communication
+async function getStrokeTimestamps(club) {
+  var user = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/strokes/${user}/${club}/?ls=true`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      return []; // This is ok and sometimes expected
+    }
+    const json = await response.json();
+    var ids = [];
+    for (file of json.files) {
+      if(file.includes(".json")) {
+        ids.push(file.replace(".json",""));
+      }
+    }
+    return ids;
+  } catch (error) {
+    openNotification("No network!", error.message);
+    return [];
+  }  
+}
 
 async function getStrokes(club) {
   var user = wasGetUrlParam("user");
@@ -1236,7 +1283,7 @@ async function getStrokes(club) {
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      return null; // This is ok and expected
+      return null; // This is ok and sometimes expected
     }
     const json = await response.json();
     return json;
@@ -1244,7 +1291,6 @@ async function getStrokes(club) {
     openNotification("No network!", error.message);
     return null;
   }
-
 }
 
 async function getStroke(club, timestamp) {
