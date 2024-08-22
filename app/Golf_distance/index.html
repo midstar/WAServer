@@ -741,7 +741,7 @@ async function showStatistics() {
     for (ts of Object.keys(allStrokes).sort().reverse()) {
       var stroke = allStrokes[ts];
       var tsI = parseInt(ts);
-      table += `<tr onclick="openStrokeDialog('${stroke.club}',${tsI})"><td>${dateFormat(tsI)}</td><td>${stroke.course}</td><td>${stroke.hole}</td><td>${stroke.club}</td><td>${stroke.dist}</td></tr>`;
+      table += `<tr onclick="showOldStroke(${tsI})"><td>${dateFormat(tsI)}</td><td>${stroke.course}</td><td>${stroke.hole}</td><td>${stroke.club}</td><td>${stroke.dist}</td></tr>`;
     }
     
     table += `
@@ -958,6 +958,10 @@ async function showOldStroke(timestamp=null) {
   // Fill in map
   mapPlot(GLOB_OLD_STROKE.start.lat, GLOB_OLD_STROKE.start.long, 
           GLOB_OLD_STROKE.end.lat, GLOB_OLD_STROKE.end.long, true);
+}
+
+function closeOldStroke() {
+  showStatistics();
 }
 
 function changeCourseOldStroke() {
@@ -1506,7 +1510,7 @@ function closeNotification() {
     </div>
     <div class="footer-container footer-old-stroke">
       <div class="old-stroke-button button" onclick="tbd()">&lt;</div>
-      <div class="old-stroke-button button" onclick="tbd()">Close</div>
+      <div class="old-stroke-button button" onclick="closeOldStroke()">Close</div>
       <div class="old-stroke-button button" onclick="tbd()">Save</div>
       <div class="old-stroke-button button" onclick="tbd()">Delete</div>
       <div class="old-stroke-button button" onclick="tbd()">&gt;</div>
