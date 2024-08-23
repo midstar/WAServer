@@ -926,19 +926,22 @@ async function showOldStroke(timestamp=null) {
   if (timestamp == null) {
     return; // No old strokes exists
   }
-  var GLOB_OLD_STROKE = await getStrokeByTimestamp(timestamp);
+  GLOB_OLD_STROKE = await getStrokeByTimestamp(timestamp);
 
-  console.log(wasGetUrlParam("stroke"));
   wasSetUrlParam("page", "page-old-stroke");
   wasPageShow("page-old-stroke");
 
-  // Fill in stroke
+  // Fill course / hole
   document.getElementById("course-old-stroke").value = GLOB_OLD_STROKE.course;
   changeCourseOldStroke();
   document.getElementById("hole-old-stroke").value = GLOB_OLD_STROKE.hole;
 
   // Set date
   document.getElementById("date").innerHTML = dateFormat(GLOB_OLD_STROKE.timestamp, true);
+
+  // Fill in stroke
+  selectSwingPower(GLOB_OLD_STROKE.power);
+  selectSwingType(GLOB_OLD_STROKE.type);
 
   // Set club
   document.getElementById("club-selected-old-stroke").innerHTML = GLOB_OLD_STROKE.club;
@@ -962,6 +965,22 @@ async function showOldStroke(timestamp=null) {
 
 function closeOldStroke() {
   showStatistics();
+}
+
+async function deleteOldStroke() {
+  if (confirm("Are you sure that stroke shall be deleted?")) {
+    deleteStroke(GLOB_OLD_STROKE);
+    showStatistics(); // Refresh and show statistics
+  }
+}
+
+function modifyOldStroke() {
+  if (confirm("Are you sure that stroke shall be modified?")) {
+    GLOB_OLD_STROKE.course = document.getElementById("course-old-stroke").value;
+    GLOB_OLD_STROKE.hole = document.getElementById("hole-old-stroke").value;
+    postStroke(GLOB_OLD_STROKE);
+    showStatistics(); // Refresh and show statistics
+  }
 }
 
 function changeCourseOldStroke() {
@@ -1097,8 +1116,10 @@ function closeSwingDialog() {
   document.getElementById("dialog-swing-type").style.display = "none";
 
   // Show distances
-  document.getElementById("club-container").style.display = "none";
-  document.getElementById("club-tracker-container").style.display = "block";
+  if (wasGetUrlParam("page") != "page-old-stroke") {
+    document.getElementById("club-container").style.display = "none";
+    document.getElementById("club-tracker-container").style.display = "block";
+  }
 
 }
 
@@ -1111,11 +1132,20 @@ function selectSwingType(swingType) {
       child.classList.remove("selected-type");
     }
   }
-  GLOB_STROKE.type = swingType; 
-  if (swingType == "chip") {
-    document.getElementById("swing-type").innerHTML = "Chip";
+  if (wasGetUrlParam("page") != "page-old-stroke") {
+    GLOB_STROKE.type = swingType; 
+    if (swingType == "chip") {
+      document.getElementById("swing-type").innerHTML = "Chip";
+    } else {
+      document.getElementById("swing-type").innerHTML = "";
+    }
   } else {
-    document.getElementById("swing-type").innerHTML = "";
+    GLOB_OLD_STROKE.type = swingType; 
+    if (swingType == "chip") {
+      document.getElementById("swing-type-old-stroke").innerHTML = "Chip";
+    } else {
+      document.getElementById("swing-type-old-stroke").innerHTML = "";
+    }    
   }
 }
 
@@ -1128,8 +1158,13 @@ function selectSwingPower(swingPower) {
       child.classList.remove("selected-power");
     }
   }
-  document.getElementById("swing-power-img").src = swingPower + ".png";
-  GLOB_STROKE.power = swingPower; 
+  if (wasGetUrlParam("page") != "page-old-stroke") {
+    GLOB_STROKE.power = swingPower; 
+    document.getElementById("swing-power-img").src = swingPower + ".png";
+  } else {
+    GLOB_OLD_STROKE.power = swingPower; 
+    document.getElementById("swing-power-img-old-stroke").src = swingPower + ".png";
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1254,11 +1289,7 @@ function changeModifyCourse(selectedHole = 1) {
   }
 }
 
-async function deleteStrokeDialog() {
-  deleteStroke(GLOB_STROKE_MODIF);
-  showStatistics(); // Refresh statistics
-  closeStrokeDialog();
-}
+
 
 //////////////////////////////////////////////////////////////////////////
 // General stroke handling 
@@ -1498,7 +1529,7 @@ function closeNotification() {
         <hr>
     </div>
     <div class="body-container body-old-stroke">
-      <div id="club-and-type-old-stroke" onclick="tbd()">
+      <div id="club-and-type-old-stroke" onclick="showSwingDialog()">
         <img id="swing-power-img-old-stroke" src="100.png"></img>
         <div id="club-selected-old-stroke">PW
         </div>
@@ -1511,8 +1542,8 @@ function closeNotification() {
     <div class="footer-container footer-old-stroke">
       <div class="old-stroke-button button" onclick="tbd()">&lt;</div>
       <div class="old-stroke-button button" onclick="closeOldStroke()">Close</div>
-      <div class="old-stroke-button button" onclick="tbd()">Save</div>
-      <div class="old-stroke-button button" onclick="tbd()">Delete</div>
+      <div class="old-stroke-button button" onclick="modifyOldStroke()">Save</div>
+      <div class="old-stroke-button button" onclick="deleteOldStroke()">Delete</div>
       <div class="old-stroke-button button" onclick="tbd()">&gt;</div>
     </div>
   </div>
@@ -1600,7 +1631,7 @@ function closeNotification() {
     <div class="footer-container">
       <div class="button-group">
         <div class="close-button button half-button" onclick="storeStrokeDialog()">Store</div>
-        <div class="close-button button half-button" onclick="deleteStrokeDialog()">Delete</div>
+        <div class="close-button button half-button" onclick="deleteOldStroke()">Delete</div>
       </div>
       <div class="close-button button" onclick="closeStrokeDialog()">Cancel</div>
     </div>
