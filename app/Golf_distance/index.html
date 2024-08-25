@@ -927,6 +927,7 @@ async function showOldStroke(timestamp=null) {
     return; // No old strokes exists
   }
   GLOB_OLD_STROKE = await getStrokeByTimestamp(timestamp);
+  wasSetUrlParam("stroke", GLOB_OLD_STROKE.timestamp);
 
   wasSetUrlParam("page", "page-old-stroke");
   wasPageShow("page-old-stroke");
@@ -1244,7 +1245,7 @@ async function openStrokeDialog(club, timestamp) {
   elemSwingType.innerHTML = "";
   for (const swingType of ["normal", "chip"]) {
     const elemOpt = document.createElement("option");
-    elemOpt.setAttribute("value", swingType);
+    elemOpt.setAttribute("value", swingType);    
     if (swingType == stroke.type) {
       elemOpt.setAttribute("selected", "");
     }
@@ -1519,7 +1520,7 @@ function closeNotification() {
         <div class="flex-center-container">
           <div class="hole-container">
             <label for="hole-old">Hole:</label>
-            <select name="hole-old" id="hole-old-stroke"  onchange="tbd()">
+            <select name="hole-old" id="hole-old-stroke">
             </select>
           </div>
           <div id="date">
