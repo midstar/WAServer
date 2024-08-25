@@ -705,7 +705,7 @@ async function showStatistics() {
     for (ts of Object.keys(allStrokes).sort().reverse()) {
       var stroke = allStrokes[ts];
       var tsI = parseInt(ts);
-      table += `<tr onclick="showOldStroke(${tsI})"><td>${dateFormat(tsI)}</td><td>${stroke.course}</td><td>${stroke.hole}</td><td>${stroke.club}</td><td>${stroke.dist}</td></tr>`;
+      table += `<tr onclick="showOldStroke(${tsI})"><td>${dateFormat(tsI,true)}</td><td>${stroke.course}</td><td>${stroke.hole}</td><td>${stroke.club}</td><td>${stroke.dist}</td></tr>`;
     }
     
     table += `
@@ -1172,7 +1172,12 @@ function storeManualDialog() {
   var manualDist = parseInt(document.getElementById("manual-distance").value);
   if (manualDist > 0) {
     closeManualDialog();
-    markEnd(manualDist);
+    if (wasGetUrlParam("page") != "page-old-stroke") {
+      markEnd(manualDist);
+    } else {
+      GLOB_OLD_STROKE.dist = manualDist;
+      document.getElementById("club-distance-old-stroke").innerHTML = manualDist + " m";
+    }
   }
 }
 
@@ -1432,7 +1437,7 @@ function closeNotification() {
         <div id="swing-type-old-stroke">Chip
         </div>
       </div>
-      <div id="club-distance-old-stroke" onclick="tbd()">133 m<sup>12 m</sup></div>
+      <div id="club-distance-old-stroke" onclick="openManualDialog()"></div>
       <div id="map"></div>
     </div>
     <div class="footer-container footer-old-stroke">
