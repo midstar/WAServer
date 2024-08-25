@@ -187,8 +187,12 @@ label {
 
 /********** Footer styles **********/
 
-#stats-button {
+.stats-button {
   height: 55px;
+}
+
+.stats-half-button {
+  width: 45%;
 }
 
 /********** Old stroke page styles **********/
@@ -202,7 +206,7 @@ label {
   flex-flow: column;
 }
 
-.footer-old-stroke {
+.flex-button-group {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -879,6 +883,7 @@ async function parseCSV(content) {
 
 var GLOB_OLD_STROKE = null;
 var GLOB_OLD_STROKE_TIMESTAMPS = [];
+var GLOB_PREV_PAGE = "";
 
 async function showOldStroke(timestamp=null) {
 
@@ -908,6 +913,9 @@ async function showOldStroke(timestamp=null) {
   }
 
   wasSetUrlParam("stroke", GLOB_OLD_STROKE.timestamp);
+  if (wasGetUrlParam("page") != "page-old-stroke") {
+    GLOB_PREV_PAGE = wasGetUrlParam("page");
+  }
   wasSetUrlParam("page", "page-old-stroke");
   wasPageShow("page-old-stroke");
 
@@ -944,13 +952,21 @@ async function showOldStroke(timestamp=null) {
 }
 
 function closeOldStroke() {
-  showStatistics();
+  if (GLOB_PREV_PAGE == "page-statistics") {
+    showStatistics();
+  } else {
+    showApp();
+  }
 }
 
 async function deleteOldStroke() {
   if (confirm("Are you sure that stroke shall be deleted?")) {
     deleteStroke(GLOB_OLD_STROKE);
-    showStatistics(); // Refresh and show statistics
+    if (await nextOldStroke() == false) {
+      if (await prevOldStroke() == false) {
+        closeOldStroke();
+      }
+    }
   }
 }
 
@@ -959,7 +975,6 @@ function modifyOldStroke() {
     GLOB_OLD_STROKE.course = document.getElementById("course-old-stroke").value;
     GLOB_OLD_STROKE.hole = document.getElementById("hole-old-stroke").value;
     postStroke(GLOB_OLD_STROKE);
-    showStatistics(); // Refresh and show statistics
   }
 }
 
@@ -980,7 +995,9 @@ async function prevOldStroke() {
   var i = tsKeys.indexOf(GLOB_OLD_STROKE.timestamp.toString());
   if (i > 0) {
     showOldStroke(tsKeys[i - 1]);
+    return true;
   }
+  return false;
 }
 
 async function nextOldStroke() {
@@ -989,7 +1006,9 @@ async function nextOldStroke() {
   var i = tsKeys.indexOf(GLOB_OLD_STROKE.timestamp.toString());
   if (i < (tsKeys.length - 1)) {
     showOldStroke(tsKeys[i + 1]);
+    return true;
   }
+  return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1385,8 +1404,9 @@ function closeNotification() {
         <div id="cancel-back-button" class="button" onclick="markCancel()">Cancel / Back</div>
       </div>
     </div>
-    <div class="footer-container">
-      <div id="stats-button" class="button" onclick="showStatistics()">Statistics</div>
+    <div class="footer-container flex-button-group">
+      <div class="stats-button stats-half-button button" onclick="showOldStroke()">Old</div>
+      <div class="stats-button stats-half-button button" onclick="showStatistics()">Statistics</div>
     </div>
   </div>
 
@@ -1405,7 +1425,7 @@ function closeNotification() {
     <div class="body-container" id="body-container-stat">
     </div>
     <div class="footer-container">
-      <div id="stats-button" class="button" onclick="showApp()">Back</div>
+      <div class="stats-button button" onclick="showApp()">Back</div>
     </div>
   </div>
 
@@ -1440,7 +1460,7 @@ function closeNotification() {
       <div id="club-distance-old-stroke" onclick="openManualDialog()"></div>
       <div id="map"></div>
     </div>
-    <div class="footer-container footer-old-stroke">
+    <div class="footer-container flex-button-group">
       <div class="old-stroke-button button" onclick="prevOldStroke()">&lt;</div>
       <div class="old-stroke-button button" onclick="closeOldStroke()">Close</div>
       <div class="old-stroke-button button" onclick="modifyOldStroke()">Save</div>
