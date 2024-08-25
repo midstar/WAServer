@@ -356,43 +356,7 @@ input[type='number'] {
   font-size: 40px;
 }
 
-/********** Modify stroke dialog **********/
-
-#dialog-modify-stroke {
-  display: none;
-}
-
-#club-to-modify {
-  font-size: 40px;
-  font-weight: bold;
-  width: 100%;
-  text-align: center;
-}
-
-.manual-modify-distance-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 10px;
-  margin-right: 10px;
-}
-
-.modify-containers {
-  font-size: 20px;
-  display:flex;
-  flex-wrap: wrap;
-  margin: 10px;
-}
-
-.modify-container {
-  margin: 5px;
-}
-
-.modify-container select {
-  font-size: 20px;
-}
-
-/********** Manual input dialog styles **********/
+/********** Notification dialog styles **********/
 #notification {
   display: none;
   z-index: 2;
@@ -914,21 +878,36 @@ async function parseCSV(content) {
 // Old stroke
 
 var GLOB_OLD_STROKE = null;
+var GLOB_OLD_STROKE_TIMESTAMPS = [];
 
 async function showOldStroke(timestamp=null) {
+
+  GLOB_OLD_STROKE_TIMESTAMPS = await getAllStrokeTimestamps();
+
+  if (Object.keys(GLOB_OLD_STROKE_TIMESTAMPS).length == 0) {
+    // No old strokes exists
+    return;
+  }
   if (timestamp == null) {
     timestamp = wasGetUrlParam("stroke");
   }
   if (timestamp == null) {
     // Get last stroke
-    // TBD
+    var tsKeys = Object.keys(GLOB_OLD_STROKE_TIMESTAMPS);
+    tsKeys.sort()
+    timestamp = tsKeys[tsKeys.length - 1];
   }
-  if (timestamp == null) {
-    return; // No old strokes exists
-  }
-  GLOB_OLD_STROKE = await getStrokeByTimestamp(timestamp);
-  wasSetUrlParam("stroke", GLOB_OLD_STROKE.timestamp);
 
+  GLOB_OLD_STROKE = null;
+  if (timestamp in GLOB_OLD_STROKE_TIMESTAMPS) {
+    GLOB_OLD_STROKE = await getStroke(GLOB_OLD_STROKE_TIMESTAMPS[timestamp], timestamp);
+  } 
+  if(GLOB_OLD_STROKE == null) {
+    console.log("Invalid timestamp:" + timestamp)
+    return; // Invalid timestamp
+  }
+
+  wasSetUrlParam("stroke", GLOB_OLD_STROKE.timestamp);
   wasSetUrlParam("page", "page-old-stroke");
   wasPageShow("page-old-stroke");
 
@@ -992,6 +971,24 @@ function changeCourseOldStroke() {
     fillSelect("hole-old-stroke", Object.keys(data["course"][course]));
   } else {
     document.getElementById("hole-old-stroke").innerHTML = "";
+  }
+}
+
+async function prevOldStroke() {
+  var tsKeys = Object.keys(GLOB_OLD_STROKE_TIMESTAMPS);
+  tsKeys.sort()
+  var i = tsKeys.indexOf(GLOB_OLD_STROKE.timestamp.toString());
+  if (i > 0) {
+    showOldStroke(tsKeys[i - 1]);
+  }
+}
+
+async function nextOldStroke() {
+  var tsKeys = Object.keys(GLOB_OLD_STROKE_TIMESTAMPS);
+  tsKeys.sort()
+  var i = tsKeys.indexOf(GLOB_OLD_STROKE.timestamp.toString());
+  if (i < (tsKeys.length - 1)) {
+    showOldStroke(tsKeys[i + 1]);
   }
 }
 
@@ -1188,108 +1185,6 @@ function openManualDialog() {
   document.getElementById("manual-distance").value = "";
   document.getElementById("manual-distance").focus();
 }
-
-//////////////////////////////////////////////////////////////////////////////
-// Modify stroke dialog
-
-var GLOB_STROKE_MODIF = null;
-
-function storeStrokeDialog() {
-  GLOB_STROKE_MODIF.course = document.getElementById("modify-course").value;
-  GLOB_STROKE_MODIF.hole = document.getElementById("modify-hole").value;
-  GLOB_STROKE_MODIF.type = document.getElementById("modify-swing-type").value;
-  GLOB_STROKE_MODIF.power = parseInt(document.getElementById("modify-swing-power").value);
-  GLOB_STROKE_MODIF.dist = parseInt(document.getElementById("manual-modify-distance").value);
-
-  postStroke(GLOB_STROKE_MODIF);
-
-  showStatistics(); // Refresh statistics
-  closeStrokeDialog();
-}
-
-function closeStrokeDialog() {
-  document.getElementById("dialog-modify-stroke").style.display = "none";
-}
-
-async function openStrokeDialog(club, timestamp) {
-  // Get stroke
-  var stroke = await getStroke(club, timestamp);
-  if (stroke == null) {
-    return;
-  }
-  GLOB_STROKE_MODIF = stroke;
-
-  document.getElementById("club-to-modify").innerHTML = club;
-  document.getElementById("manual-modify-distance").value = stroke.dist;
-
-  // Fill in courses
-  const elemCourse = document.getElementById("modify-course");
-  elemCourse.innerHTML = "";
-  const elemOptBlank = document.createElement("option");
-  elemOptBlank.setAttribute("value", "");  
-  elemOptBlank.setAttribute("selected", "");
-  elemCourse.appendChild(elemOptBlank);
-  for (const course of Object.keys(data["course"])) {
-    const elemOpt = document.createElement("option");
-    elemOpt.setAttribute("value", course);
-    if (course == stroke.course) {
-      elemOpt.setAttribute("selected", "");
-    }
-    elemOpt.innerText = course;
-    elemCourse.appendChild(elemOpt);
-  }
-  changeModifyCourse(parseInt(stroke.hole));
-
-  // Fill swing type
-  const elemSwingType = document.getElementById("modify-swing-type");
-  elemSwingType.innerHTML = "";
-  for (const swingType of ["normal", "chip"]) {
-    const elemOpt = document.createElement("option");
-    elemOpt.setAttribute("value", swingType);    
-    if (swingType == stroke.type) {
-      elemOpt.setAttribute("selected", "");
-    }
-    elemOpt.innerText = swingType;
-    elemSwingType.appendChild(elemOpt);
-  }
-
-  // Fill swing power
-  const elemSwingPow = document.getElementById("modify-swing-power");
-  elemSwingPow.innerHTML = "";
-  for (const power of [100, 75, 50, 25]) {
-    const elemOpt = document.createElement("option");
-    elemOpt.setAttribute("value", power);
-    if (power == stroke.power) {
-      elemOpt.setAttribute("selected", "");
-    }
-    elemOpt.innerText = power + "%";
-    elemSwingPow.appendChild(elemOpt);
-  }
-
-  document.getElementById("dialog-modify-stroke").style.display = "flex";
-}
-
-function changeModifyCourse(selectedHole = 1) {
-  const course = document.getElementById("modify-course").value;
-  
-  // Remove all holes
-  const elemHole = document.getElementById("modify-hole");
-  elemHole.innerHTML = "";
-  
-  if (course in data["course"]) {
-    // Fill in holes
-    for (const hole of Object.keys(data["course"][course])) {
-      const elemOpt = document.createElement("option");
-      elemOpt.setAttribute("value", hole);
-      if (hole == selectedHole) {
-        elemOpt.setAttribute("selected", "");
-      }
-      elemOpt.innerText = hole;
-      elemHole.appendChild(elemOpt);
-    }
-  }
-}
-
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -1541,11 +1436,11 @@ function closeNotification() {
       <div id="map"></div>
     </div>
     <div class="footer-container footer-old-stroke">
-      <div class="old-stroke-button button" onclick="tbd()">&lt;</div>
+      <div class="old-stroke-button button" onclick="prevOldStroke()">&lt;</div>
       <div class="old-stroke-button button" onclick="closeOldStroke()">Close</div>
       <div class="old-stroke-button button" onclick="modifyOldStroke()">Save</div>
       <div class="old-stroke-button button" onclick="deleteOldStroke()">Delete</div>
-      <div class="old-stroke-button button" onclick="tbd()">&gt;</div>
+      <div class="old-stroke-button button" onclick="nextOldStroke()">&gt;</div>
     </div>
   </div>
 
@@ -1594,50 +1489,6 @@ function closeNotification() {
       <div class="close-button button" onclick="closeManualDialog()">Cancel</div>
     </div>
   </div>
-
-
-  <div id="dialog-modify-stroke" class="head-content-footer dialog">
-    <div id="club-to-modify">
-    </div>
-    <div class="header-container">
-      <div class="course-container">
-        <label for="course">Course:</label>
-        <select name="course" id="modify-course" onchange="changeModifyCourse()">
-        </select>
-      </div>
-    </div>
-    <div class="body-container" id="modify-distance-container">
-      <div class="modify-containers">
-        <div class="modify-container">
-          <label for="hole">Hole:</label>
-          <select name="hole" id="modify-hole"">
-          </select>
-        </div>
-        <div class="modify-container">
-          <label for="type">Type:</label>
-          <select name="type" id="modify-swing-type">
-          </select>
-        </div>
-        <div class="modify-container">
-          <label for="type">Power:</label>
-          <select name="power" id="modify-swing-power">
-          </select>
-        </div>
-        <div class="manual-modify-distance-container">
-          <label for="number">Distance:</label>
-          <input type="number" id="manual-modify-distance" name="distance">
-      </div>
-    </div>
-    </div>
-    <div class="footer-container">
-      <div class="button-group">
-        <div class="close-button button half-button" onclick="storeStrokeDialog()">Store</div>
-        <div class="close-button button half-button" onclick="deleteOldStroke()">Delete</div>
-      </div>
-      <div class="close-button button" onclick="closeStrokeDialog()">Cancel</div>
-    </div>
-  </div>
-
 
   <div id="notification">
     <div id="notification-head">No network!</div>
