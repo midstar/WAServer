@@ -15,7 +15,7 @@ body {
   padding: 0px;
 }
 
-/********** Main page styles **********/
+/********** General styles **********/
 
 .head-content-footer {
   display: flex;
@@ -52,6 +52,13 @@ body {
 
 .half-button {
   width: 45%;
+}
+
+.large-button {
+  height: 80px;
+  font-size: 30px;
+  font-weight: bold;
+  margin: 10px;
 }
 
 .button-group {
@@ -131,13 +138,17 @@ label {
   justify-content: center;
   flex-wrap: wrap;
   width: 100%;
-  height: 100%;
+  /*height: 100%;*/
 }
 .club {
-  font-size: 20px;
-  width: 75px;
-  height: 75px;
+  font-size: 25px;
+  width: 60px;
+  height: 60px;
 }
+.selected-club {
+  background-color: rgb(243, 112, 12);
+}
+
 /********** Body club tracker styles **********/
 #club-tracker-container {
   width: 100%;
@@ -147,10 +158,6 @@ label {
   font-size: 50px;
   text-align: center;
   margin-left: 20px;
-}
-#swing-type {
-  font-style: italic;
-  margin-left: 5px;
 }
 
 #club-and-type {
@@ -174,11 +181,7 @@ label {
 #club-distance sup {
   font-size: 30px;
 }
-#store-distance-button {
-  height: 100px;
-  font-size: 40px;
-  margin-top: 30px;
-}
+
 #cancel-back-button {
   height: 80px;
   font-size: 30px;
@@ -289,19 +292,25 @@ label {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  /*width: 90%;*/
-  height: 100%;
+  width:65px;
+  height: 90px;
+  margin: 5px;
   border-width: 3px;
   border-radius: 10px;
   border-style: dotted;
 }
 
+.swing-type {
+  font-size: 15px;
+  width: 60px;
+}
+
 #swing-power-container {
   display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  /*flex-wrap: wrap;*/
   width: 100%;
-  height: 100%;
+  /*height: 100%;*/
 }
 
 #dialog-swing-type {
@@ -309,16 +318,16 @@ label {
 }
 
 img {
-  height: 100px;
+  height: 60px;
 }
 
 .swing-button {
-  font-size: 20px;
+  font-size: 15px;
   text-align: center;
   margin: 5px;
   padding: 2px;
-  width:70px;
-  height: 130px;
+  width:50px;
+  height: 90px;
   border-width: 2px;
   border-radius: 10px;
   border-style: solid;
@@ -432,7 +441,17 @@ const GLOB_CURRENT = {lat : undefined, long : undefined, alt : undefined};
 const GLOB_REF = { lat : undefined, long : undefined};
 
 // The stroke we are building
-var GLOB_STROKE = undefined; // Redefined for every new stroke
+var GLOB_STROKE = {
+      timestamp : undefined,
+      club: undefined,
+      type: undefined, // normal or chip
+      power: undefined, // 25, 50, 75 or 100 (= full swing)
+      course: undefined,
+      hole: undefined,
+      start : {lat : undefined, long : undefined, alt : undefined},
+      end : {lat : undefined, long : undefined, alt : undefined},
+      dist : undefined // Calculated from start end or manually entered
+    };
 
 // Backup of previous non sent strokes in case of offline
 const GLOB_STROKES = []; 
@@ -450,10 +469,15 @@ function setupApp() {
   for (const club of data["club"]) {
     const elemDiv = document.createElement("div");
     elemDiv.setAttribute("class", "club button");
-    elemDiv.setAttribute("onclick", `markStart("${club}")`);
+    elemDiv.setAttribute("onclick", `selectClub("${club}")`);
     elemDiv.innerText = club;
     elemClub.appendChild(elemDiv);
   }
+
+  // Set default club etc
+  selectClub("DRW"); // TBD - DRW might not exist
+  selectSwingPower(100);
+  selectSwingType("normal");
   
   // Configure and start geolocation tracking
   options = {
@@ -516,23 +540,12 @@ function updateRef() {
 
 function markStart(club) {
   if (GLOB_CURRENT.lat != undefined) {
-    document.getElementById("club-selected").innerHTML = club;
+    GLOB_STROKE.timestamp  = Date.now();
+    GLOB_STROKE.start.lat  = GLOB_CURRENT.lat;
+    GLOB_STROKE.start.long = GLOB_CURRENT.long;
+    GLOB_STROKE.start.alt  = GLOB_CURRENT.alt;
 
-    GLOB_STROKE = {
-      timestamp : Date.now(),
-      club: club,
-      type: "normal", // normal or chip
-      power: 100, // 25, 50, 75 or 100 (= full swing)
-      course: undefined,
-      hole: undefined,
-      start : {lat : GLOB_CURRENT.lat, long : GLOB_CURRENT.long, alt : GLOB_CURRENT.alt},
-      end : {lat : undefined, long : undefined, alt : undefined},
-      dist : undefined // Calculated from start end or manually entered
-    };
     updateDistances();
-    selectSwingPower(100);
-    selectSwingType("normal");
-    showSwingDialog();
   }
 }
 
@@ -1122,23 +1135,21 @@ function mapPlot(latitude, longitude, latitude2, longitude2, clear = false) {
 
 
 //////////////////////////////////////////////////////////////////////////////
-// Swing dialog
-
-function showSwingDialog() {
-  document.getElementById("dialog-swing-type").style.display = "flex";
-}
-
-function closeSwingDialog() {
-  // Hide dialog
-  document.getElementById("dialog-swing-type").style.display = "none";
-
-  // Show distances
-  if (wasGetUrlParam("page") != "page-old-stroke") {
-    document.getElementById("club-container").style.display = "none";
-    document.getElementById("club-tracker-container").style.display = "block";
+// Select club
+function selectClub(club) {
+  var children = document.getElementById("club-container").children;
+  for (var child of children) {
+    if (child.innerText == club) {
+      child.classList.add("selected-club");
+    } else {
+      child.classList.remove("selected-club");
+    }
   }
-
+  GLOB_STROKE.club = club;   
 }
+
+//////////////////////////////////////////////////////////////////////////////
+// Swing type and swing power
 
 function selectSwingType(swingType) {
   var children = document.getElementById("swing-type-container").children;
@@ -1149,21 +1160,7 @@ function selectSwingType(swingType) {
       child.classList.remove("selected-type");
     }
   }
-  if (wasGetUrlParam("page") != "page-old-stroke") {
-    GLOB_STROKE.type = swingType; 
-    if (swingType == "chip") {
-      document.getElementById("swing-type").innerHTML = "Chip";
-    } else {
-      document.getElementById("swing-type").innerHTML = "";
-    }
-  } else {
-    GLOB_OLD_STROKE.type = swingType; 
-    if (swingType == "chip") {
-      document.getElementById("swing-type-old-stroke").innerHTML = "Chip";
-    } else {
-      document.getElementById("swing-type-old-stroke").innerHTML = "";
-    }    
-  }
+  GLOB_STROKE.type = swingType; 
 }
 
 function selectSwingPower(swingPower) {
@@ -1175,13 +1172,7 @@ function selectSwingPower(swingPower) {
       child.classList.remove("selected-power");
     }
   }
-  if (wasGetUrlParam("page") != "page-old-stroke") {
-    GLOB_STROKE.power = swingPower; 
-    document.getElementById("swing-power-img").src = swingPower + ".png";
-  } else {
-    GLOB_OLD_STROKE.power = swingPower; 
-    document.getElementById("swing-power-img-old-stroke").src = swingPower + ".png";
-  }
+  GLOB_STROKE.power = swingPower; 
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1389,43 +1380,45 @@ function closeNotification() {
       <hr>
     </div>
     <div class="body-container">
+      <div class="large-button button" onclick="markStart()">Start tracking</div>
       <div id="club-container">
+      </div>
+      <div id="swing-power-container">
+        <div id="swing-type-container">
+          <div id="normal-swing" class="swing-type button selected-type" onclick="selectSwingType('normal')">Normal</div>
+          <div id="chip-swing" class="swing-type button" onclick="selectSwingType('chip')">Chip</div>
+        </div>
+        <div id="pow-100" class="swing-button selected-power" onclick="selectSwingPower(100)">
+          <div>100%</div>
+          <img src="100.png"></img>
+        </div>
+        <div id="pow-75" class="swing-button" onclick="selectSwingPower(75)">
+          <div>75%</div>
+          <img src="75.png"></img>
+        </div>
+        <div id="pow-50" class="swing-button" onclick="selectSwingPower(50)">
+          <div>50%</div>
+          <img src="50.png"></img>
+        </div>
+        <div id="pow-25" class="swing-button" onclick="selectSwingPower(25)">
+          <div>25%</div>
+          <img src="25.png"></img>
+        </div>
       </div>
       <div id="club-tracker-container">
         <div id="club-and-type" onclick="showSwingDialog()">
           <img id="swing-power-img" src="100.png"></img>
           <div id="club-selected">
           </div>          
-          <div id="swing-type">
-          </div>
         </div>
         <div id="club-distance" onclick="openManualDialog()">- m</div>
-        <div id="store-distance-button" class="button" onclick="markEnd()">Store distance</div>
+        <div class="large-button button" onclick="markEnd()">Store distance</div>
         <div id="cancel-back-button" class="button" onclick="markCancel()">Cancel / Back</div>
       </div>
     </div>
     <div class="footer-container flex-button-group">
       <div class="stats-button stats-half-button button" onclick="showOldStroke()">Old</div>
       <div class="stats-button stats-half-button button" onclick="showStatistics()">Statistics</div>
-    </div>
-  </div>
-
-
-  <div id="page-statistics" class="was-page head-content-footer">
-    <div class="header-container" id="statistics-header">
-      <select name="statistics-view" id="statistics-view" onchange="showStatistics()">
-        <option value="normal">Normal min/med/max</option>
-        <option value="normal-power">Normal power</option>
-        <option value="chip">Chip min/med/max</option>
-        <option value="chip-power">Chip power</option>
-        <option value="history">History</option>
-        <option value="export-import">Export / Import</option>
-      </select>
-    </div>
-    <div class="body-container" id="body-container-stat">
-    </div>
-    <div class="footer-container">
-      <div class="stats-button button" onclick="showApp()">Back</div>
     </div>
   </div>
 
@@ -1470,6 +1463,25 @@ function closeNotification() {
   </div>
 
 
+  <div id="page-statistics" class="was-page head-content-footer">
+    <div class="header-container" id="statistics-header">
+      <select name="statistics-view" id="statistics-view" onchange="showStatistics()">
+        <option value="normal">Normal min/med/max</option>
+        <option value="normal-power">Normal power</option>
+        <option value="chip">Chip min/med/max</option>
+        <option value="chip-power">Chip power</option>
+        <option value="history">History</option>
+        <option value="export-import">Export / Import</option>
+      </select>
+    </div>
+    <div class="body-container" id="body-container-stat">
+    </div>
+    <div class="footer-container">
+      <div class="stats-button button" onclick="showApp()">Back</div>
+    </div>
+  </div>
+
+  <!--
   <div id="dialog-swing-type" class="head-content-footer dialog">
     <div class="header-container">
       <div id="swing-type-container">
@@ -1501,7 +1513,7 @@ function closeNotification() {
       <div class="close-button button" onclick="closeSwingDialog()">Ok</div>
     </div>
   </div>
-
+  -->
 
   <div id="dialog-manual-input" class="head-content-footer dialog">
     <div class="header-container">
