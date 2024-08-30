@@ -135,15 +135,26 @@ label {
 /********** Body club styles **********/
 #club-container {
   display: flex;
-  justify-content: center;
+  justify-content: space-evenly;
   flex-wrap: wrap;
   width: 100%;
   /*height: 100%;*/
 }
 .club {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 2px;
+  border-radius: 10px;
+  border-style: solid;
+  user-select: none;
+  cursor: pointer;
+
   font-size: 25px;
-  width: 60px;
-  height: 60px;
+  width: 16%; /* fit 5 clubs horizontally */
+  aspect-ratio: 1 / 1;
+  margin: 2px;
+  margin-top:5px;
 }
 .selected-club {
   background-color: rgb(243, 112, 12);
@@ -173,7 +184,7 @@ label {
   flex-grow: 1;
   font-size: 70px;
   text-align: center;
-  margin-top: 30px;
+  /*margin-top: 30px;*/
 }
 #club-distance sub {
   font-size: 30px;
@@ -182,19 +193,15 @@ label {
   font-size: 30px;
 }
 
-#cancel-back-button {
-  height: 80px;
-  font-size: 30px;
-  margin-top: 20px;
-}
+
 
 /********** Footer styles **********/
 
-.stats-button {
+.footer-button {
   height: 55px;
 }
 
-.stats-half-button {
+.footer-half-button {
   width: 45%;
 }
 
@@ -307,10 +314,8 @@ label {
 
 #swing-power-container {
   display: flex;
-  justify-content: space-between;
-  /*flex-wrap: wrap;*/
+  justify-content: space-evenly;
   width: 100%;
-  /*height: 100%;*/
 }
 
 #dialog-swing-type {
@@ -468,7 +473,7 @@ function setupApp() {
   const elemClub = document.getElementById("club-container");
   for (const club of data["club"]) {
     const elemDiv = document.createElement("div");
-    elemDiv.setAttribute("class", "club button");
+    elemDiv.setAttribute("class", "club");
     elemDiv.setAttribute("onclick", `selectClub("${club}")`);
     elemDiv.innerText = club;
     elemClub.appendChild(elemDiv);
@@ -538,6 +543,20 @@ function updateRef() {
   updateDistances();
 }
 
+function showTracker() {
+    document.getElementById("club-distance").style.display = "block";
+    document.getElementById("mark-start-button").style.display = "none";
+    document.getElementById("mark-end-button").style.display = "flex";
+    document.getElementById("cancel-button").style.display = "flex";
+}
+
+function hideTracker() {
+    document.getElementById("club-distance").style.display = "none";
+    document.getElementById("mark-start-button").style.display = "flex";
+    document.getElementById("mark-end-button").style.display = "none";
+    document.getElementById("cancel-button").style.display = "none";
+}
+
 function markStart(club) {
   if (GLOB_CURRENT.lat != undefined) {
     GLOB_STROKE.timestamp  = Date.now();
@@ -546,6 +565,7 @@ function markStart(club) {
     GLOB_STROKE.start.alt  = GLOB_CURRENT.alt;
 
     updateDistances();
+    showTracker();
   }
 }
 
@@ -573,13 +593,53 @@ async function markEnd(manualDist = 0) {
 
   } while(GLOB_STROKES.length > 0);
   
-  document.getElementById("club-container").style.display = "flex";
-  document.getElementById("club-tracker-container").style.display = "none";
+  hideTracker();
 }
 
 function markCancel() {
-  document.getElementById("club-container").style.display = "flex";
-  document.getElementById("club-tracker-container").style.display = "none";
+  hideTracker();
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// Select club
+function selectClub(club) {
+  var children = document.getElementById("club-container").children;
+  for (var child of children) {
+    if (child.innerText == club) {
+      child.classList.add("selected-club");
+    } else {
+      child.classList.remove("selected-club");
+    }
+  }
+  GLOB_STROKE.club = club;   
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Swing type and swing power
+
+function selectSwingType(swingType) {
+  var children = document.getElementById("swing-type-container").children;
+  for (var child of children) {
+    if (child.id == (swingType + "-swing")) {
+      child.classList.add("selected-type");
+    } else {
+      child.classList.remove("selected-type");
+    }
+  }
+  GLOB_STROKE.type = swingType; 
+}
+
+function selectSwingPower(swingPower) {
+  var children = document.getElementById("swing-power-container").children;
+  for (var child of children) {
+    if (child.id == ("pow-" + swingPower)) {
+      child.classList.add("selected-power");
+    } else {
+      child.classList.remove("selected-power");
+    }
+  }
+  GLOB_STROKE.power = swingPower; 
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1135,47 +1195,6 @@ function mapPlot(latitude, longitude, latitude2, longitude2, clear = false) {
 
 
 //////////////////////////////////////////////////////////////////////////////
-// Select club
-function selectClub(club) {
-  var children = document.getElementById("club-container").children;
-  for (var child of children) {
-    if (child.innerText == club) {
-      child.classList.add("selected-club");
-    } else {
-      child.classList.remove("selected-club");
-    }
-  }
-  GLOB_STROKE.club = club;   
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// Swing type and swing power
-
-function selectSwingType(swingType) {
-  var children = document.getElementById("swing-type-container").children;
-  for (var child of children) {
-    if (child.id == (swingType + "-swing")) {
-      child.classList.add("selected-type");
-    } else {
-      child.classList.remove("selected-type");
-    }
-  }
-  GLOB_STROKE.type = swingType; 
-}
-
-function selectSwingPower(swingPower) {
-  var children = document.getElementById("swing-power-container").children;
-  for (var child of children) {
-    if (child.id == ("pow-" + swingPower)) {
-      child.classList.add("selected-power");
-    } else {
-      child.classList.remove("selected-power");
-    }
-  }
-  GLOB_STROKE.power = swingPower; 
-}
-
-//////////////////////////////////////////////////////////////////////////////
 // Store Manual dialog
 
 function storeManualDialog() {
@@ -1380,7 +1399,9 @@ function closeNotification() {
       <hr>
     </div>
     <div class="body-container">
-      <div class="large-button button" onclick="markStart()">Start tracking</div>
+      <div id="club-distance" style="display:none" onclick="openManualDialog()">- m</div>
+      <div id="mark-start-button" class="large-button button" onclick="markStart()">Start tracking</div>
+      <div id="mark-end-button" class="large-button button" style="display:none" onclick="markEnd()">Store distance</div>
       <div id="club-container">
       </div>
       <div id="swing-power-container">
@@ -1417,8 +1438,9 @@ function closeNotification() {
       </div>
     </div>
     <div class="footer-container flex-button-group">
-      <div class="stats-button stats-half-button button" onclick="showOldStroke()">Old</div>
-      <div class="stats-button stats-half-button button" onclick="showStatistics()">Statistics</div>
+      <div class="footer-button footer-half-button button" onclick="showOldStroke()">Old</div>
+      <div class="footer-button footer-half-button button" onclick="showStatistics()">Statistics</div>
+      <div id="cancel-button" class="footer-button footer-half-button button" style="display:none" onclick="markCancel()">Cancel</div>
     </div>
   </div>
 
@@ -1477,7 +1499,7 @@ function closeNotification() {
     <div class="body-container" id="body-container-stat">
     </div>
     <div class="footer-container">
-      <div class="stats-button button" onclick="showApp()">Back</div>
+      <div class="footer-button button" onclick="showApp()">Back</div>
     </div>
   </div>
 
