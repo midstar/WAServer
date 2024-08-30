@@ -566,6 +566,8 @@ function markStart(club) {
 
     updateDistances();
     showTracker();
+  } else {
+    openNotification("Cannot mark start", "No GPS", true);
   }
 }
 
