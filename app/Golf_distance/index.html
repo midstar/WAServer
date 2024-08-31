@@ -1043,12 +1043,12 @@ async function showOldStroke(timestamp=null) {
   // Set date
   document.getElementById("date").innerHTML = dateFormat(GLOB_OLD_STROKE.timestamp, true);
 
-  // Fill in stroke
-  selectSwingPower(GLOB_OLD_STROKE.power,"swing-power-container");
-  selectSwingType(GLOB_OLD_STROKE.type, "swing-type-container");
-
   // Set club
-  document.getElementById("club-selected-old-stroke").innerHTML = GLOB_OLD_STROKE.club;
+  selectClub(GLOB_OLD_STROKE.club, "club-container-old-stroke");
+
+  // Fill in stroke
+  selectSwingPower(GLOB_OLD_STROKE.power,"swing-power-container-old-stroke");
+  selectSwingType(GLOB_OLD_STROKE.type, "swing-type-container-old-stroke");
 
   // Fill distance and altitude
   const altDiff = Math.round(GLOB_OLD_STROKE.end.alt - GLOB_OLD_STROKE.start.alt);
