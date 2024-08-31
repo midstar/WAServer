@@ -1077,6 +1077,9 @@ async function deleteOldStroke() {
 
 function modifyOldStroke() {
   if (confirm("Are you sure that stroke shall be modified?")) {
+    GLOB_OLD_STROKE.club = document.getElementById("club-container-old-stroke").getAttribute("club");
+    GLOB_OLD_STROKE.type = document.getElementById("swing-type-container-old-stroke").getAttribute("swingtype");
+    GLOB_OLD_STROKE.power = document.getElementById("swing-power-container-old-stroke").getAttribute("swingpower");
     GLOB_OLD_STROKE.course = document.getElementById("course-old-stroke").value;
     GLOB_OLD_STROKE.hole = document.getElementById("hole-old-stroke").value;
     postStroke(GLOB_OLD_STROKE);
@@ -1413,6 +1416,7 @@ function closeNotification() {
 
 
   <div id="page-app" class="was-page head-content-footer">
+    
     <div class="header-container">
       <div class="course-container">
         <label for="course">Course:</label>
@@ -1430,6 +1434,7 @@ function closeNotification() {
       </div>
       <hr>
     </div>
+
     <div class="body-container">
       <div id="club-distance" style="display:none" onclick="openManualDialog()">- m</div>
       <div id="mark-start-button" class="large-button button" onclick="markStart()">Start tracking</div>
@@ -1459,12 +1464,16 @@ function closeNotification() {
         </div>
       </div>
     </div>
+
     <div class="footer-container flex-button-group">
       <div class="footer-button footer-half-button button" onclick="showOldStroke()">Old</div>
       <div class="footer-button footer-half-button button" onclick="showStatistics()">Statistics</div>
       <div id="cancel-button" class="footer-button footer-half-button button" style="display:none" onclick="markCancel()">Cancel</div>
     </div>
   </div>
+
+
+
 
   <div id="page-old-stroke" class="was-page head-content-footer">
     <div class="header-container">
@@ -1486,6 +1495,7 @@ function closeNotification() {
         </div>
         <hr>
     </div>
+
     <div class="body-container body-old-stroke">
       <div id="club-distance-old-stroke" onclick="openManualDialog()">- m</div>
       <div id="club-container-old-stroke" class="club-container">
@@ -1514,6 +1524,7 @@ function closeNotification() {
       </div>
       <div id="map"></div>
     </div>
+
     <div class="footer-container flex-button-group">
       <div class="old-stroke-button button" onclick="prevOldStroke()">&lt;</div>
       <div class="old-stroke-button button" onclick="closeOldStroke()">Close</div>
@@ -1522,6 +1533,8 @@ function closeNotification() {
       <div class="old-stroke-button button" onclick="nextOldStroke()">&gt;</div>
     </div>
   </div>
+
+
 
 
   <div id="page-statistics" class="was-page head-content-footer">
