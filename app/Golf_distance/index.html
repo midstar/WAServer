@@ -133,7 +133,7 @@ label {
 }
 
 /********** Body club styles **********/
-#club-container {
+.club-container {
   display: flex;
   justify-content: space-evenly;
   flex-wrap: wrap;
@@ -161,10 +161,6 @@ label {
 }
 
 /********** Body club tracker styles **********/
-#club-tracker-container {
-  width: 100%;
-  height: 100%;
-}
 #club-selected {
   font-size: 50px;
   text-align: center;
@@ -222,6 +218,14 @@ label {
   justify-content: center;
 }
 
+#club-container-old-stroke .club {
+  border-width: 1px;
+  border-radius: 5px;
+  font-size: 14px;
+  width: 13%; /* fit 7 clubs horizontally */
+  margin-top:2px;
+}
+
 #club-tracker-container-old-stroke {
   width: 100%;
   height: 100%;
@@ -233,10 +237,40 @@ label {
   margin-left: 20px;
 }
 
-#swing-type-old-stroke {
-  font-style: italic;
-  margin-left: 5px;
+#swing-type-container-old-stroke {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  width:65px;
+  height: 60px;
+  margin: 5px;
+  border-width: 3px;
+  border-radius: 10px;
+  border-style: dotted;
 }
+
+#swing-type-container-old-stroke .swing-type {
+  font-size: 10px;
+}
+
+#swing-power-container-old-stroke .swing-button {
+  font-size: 10px;
+  text-align: center;
+  margin: 5px;
+  padding: 2px;
+  width:50px;
+  height: 60px;
+  border-width: 2px;
+  border-radius: 10px;
+  border-style: solid;
+  user-select: none;
+  cursor: pointer;
+}
+
+#swing-power-container-old-stroke .swing-button img {
+  height: 50px;
+}
+
 
 #club-and-type-old-stroke {
   /*flex-grow: 1;*/
@@ -248,15 +282,14 @@ label {
 }
 
 #club-distance-old-stroke {
-  font-size: 70px;
+  font-size: 50px;
   text-align: center;
-  margin-top: 30px;
 }
 #club-distance-old-stroke sub {
-  font-size: 30px;
+  font-size: 20px;
 }
 #club-distance-old-stroke sup {
-  font-size: 30px;
+  font-size: 20px;
 }
 
 #map {
@@ -312,7 +345,7 @@ label {
   width: 60px;
 }
 
-#swing-power-container {
+.swing-power-container {
   display: flex;
   justify-content: space-evenly;
   width: 100%;
@@ -320,10 +353,6 @@ label {
 
 #dialog-swing-type {
   display: none;
-}
-
-img {
-  height: 60px;
 }
 
 .swing-button {
@@ -338,6 +367,10 @@ img {
   border-style: solid;
   user-select: none;
   cursor: pointer;
+}
+
+.swing-button img {
+  height: 60px;
 }
 
 .selected-type {
@@ -462,27 +495,19 @@ var GLOB_STROKE = {
 const GLOB_STROKES = []; 
 
 function setupApp() {
-  // Hide club tracker
-  document.getElementById("club-tracker-container").style.display = "none";
-  
+
   // Fill in courses (both ordinary and old-strokes)
   fillSelect("course", Object.keys(data["course"]), false);
   fillSelect("course-old-stroke", Object.keys(data["course"]), false);
 
   // Fill in clubs
-  const elemClub = document.getElementById("club-container");
-  for (const club of data["club"]) {
-    const elemDiv = document.createElement("div");
-    elemDiv.setAttribute("class", "club");
-    elemDiv.setAttribute("onclick", `selectClub("${club}")`);
-    elemDiv.innerText = club;
-    elemClub.appendChild(elemDiv);
-  }
+  createClubElements("club-container");
+  createClubElements("club-container-old-stroke");
 
   // Set default club etc
-  selectClub("DRW"); // TBD - DRW might not exist
-  selectSwingPower(100);
-  selectSwingType("normal");
+  selectClub("DRW","club-container"); // TBD - DRW might not exist
+  selectSwingPower(100,"swing-power-container");
+  selectSwingType("normal", "swing-type-container");
   
   // Configure and start geolocation tracking
   options = {
@@ -572,7 +597,9 @@ function markStart(club) {
 }
 
 async function markEnd(manualDist = 0) {
-
+  GLOB_STROKE.club = document.getElementById("club-container").getAttribute("club");
+  GLOB_STROKE.type = document.getElementById("swing-type-container").getAttribute("swingtype");
+  GLOB_STROKE.power = document.getElementById("swing-power-container").getAttribute("swingpower");
   GLOB_STROKE.course = document.getElementById("course").value;
   GLOB_STROKE.hole = document.getElementById("hole").value;
   GLOB_STROKE.end.lat = GLOB_CURRENT.lat;
@@ -604,9 +631,21 @@ function markCancel() {
 
 
 //////////////////////////////////////////////////////////////////////////////
-// Select club
-function selectClub(club) {
-  var children = document.getElementById("club-container").children;
+// Club handling
+function createClubElements(clubContainer) {
+  const elemClubs = document.getElementById(clubContainer);
+  for (const club of data["club"]) {
+    const elemDiv = document.createElement("div");
+    elemDiv.setAttribute("class", "club");
+    elemDiv.setAttribute("onclick", `selectClub("${club}","${clubContainer}")`);
+    elemDiv.innerText = club;
+    elemClubs.appendChild(elemDiv);
+  }  
+}
+
+function selectClub(club, clubContainer) {
+  const elemClubs = document.getElementById(clubContainer);
+  var children = elemClubs.children;
   for (var child of children) {
     if (child.innerText == club) {
       child.classList.add("selected-club");
@@ -614,34 +653,36 @@ function selectClub(club) {
       child.classList.remove("selected-club");
     }
   }
-  GLOB_STROKE.club = club;   
+  elemClubs.setAttribute("club", club); // Custom attribute
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // Swing type and swing power
 
-function selectSwingType(swingType) {
-  var children = document.getElementById("swing-type-container").children;
+function selectSwingType(swingType, swingTypeContainer) {
+  const elemSwingTypes = document.getElementById(swingTypeContainer);
+  var children = elemSwingTypes.children;
   for (var child of children) {
-    if (child.id == (swingType + "-swing")) {
+    if (child.getAttribute("swingtype") == swingType) {
       child.classList.add("selected-type");
     } else {
       child.classList.remove("selected-type");
     }
   }
-  GLOB_STROKE.type = swingType; 
+  elemSwingTypes.setAttribute("swingtype", swingType); // Custom attribute
 }
 
-function selectSwingPower(swingPower) {
-  var children = document.getElementById("swing-power-container").children;
+function selectSwingPower(swingPower, swingPowerContainer) {
+  const elemSwingPowers = document.getElementById(swingPowerContainer);
+  var children = elemSwingPowers.children;
   for (var child of children) {
-    if (child.id == ("pow-" + swingPower)) {
+    if (child.getAttribute("power") == swingPower.toString()) {
       child.classList.add("selected-power");
     } else {
       child.classList.remove("selected-power");
     }
   }
-  GLOB_STROKE.power = swingPower; 
+  elemSwingPowers.setAttribute("swingpower", swingPower); // Custom attribute
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1003,8 +1044,8 @@ async function showOldStroke(timestamp=null) {
   document.getElementById("date").innerHTML = dateFormat(GLOB_OLD_STROKE.timestamp, true);
 
   // Fill in stroke
-  selectSwingPower(GLOB_OLD_STROKE.power);
-  selectSwingType(GLOB_OLD_STROKE.type);
+  selectSwingPower(GLOB_OLD_STROKE.power,"swing-power-container");
+  selectSwingType(GLOB_OLD_STROKE.type, "swing-type-container");
 
   // Set club
   document.getElementById("club-selected-old-stroke").innerHTML = GLOB_OLD_STROKE.club;
@@ -1404,39 +1445,29 @@ function closeNotification() {
       <div id="club-distance" style="display:none" onclick="openManualDialog()">- m</div>
       <div id="mark-start-button" class="large-button button" onclick="markStart()">Start tracking</div>
       <div id="mark-end-button" class="large-button button" style="display:none" onclick="markEnd()">Store distance</div>
-      <div id="club-container">
+      <div id="club-container" class="club-container">
       </div>
-      <div id="swing-power-container">
+      <div id="swing-power-container" class="swing-power-container">
         <div id="swing-type-container">
-          <div id="normal-swing" class="swing-type button selected-type" onclick="selectSwingType('normal')">Normal</div>
-          <div id="chip-swing" class="swing-type button" onclick="selectSwingType('chip')">Chip</div>
+          <div swingtype="normal" class="swing-type button selected-type" onclick="selectSwingType('normal','swing-type-container')">Normal</div>
+          <div swingtype="chip" class="swing-type button" onclick="selectSwingType('chip','swing-type-container')">Chip</div>
         </div>
-        <div id="pow-100" class="swing-button selected-power" onclick="selectSwingPower(100)">
+        <div power="100" class="swing-button selected-power" onclick="selectSwingPower(100,'swing-power-container')">
           <div>100%</div>
           <img src="100.png"></img>
         </div>
-        <div id="pow-75" class="swing-button" onclick="selectSwingPower(75)">
+        <div power="75" class="swing-button" onclick="selectSwingPower(75,'swing-power-container')">
           <div>75%</div>
           <img src="75.png"></img>
         </div>
-        <div id="pow-50" class="swing-button" onclick="selectSwingPower(50)">
+        <div power="50" class="swing-button" onclick="selectSwingPower(50,'swing-power-container')">
           <div>50%</div>
           <img src="50.png"></img>
         </div>
-        <div id="pow-25" class="swing-button" onclick="selectSwingPower(25)">
+        <div power="25" class="swing-button" onclick="selectSwingPower(25,'swing-power-container')">
           <div>25%</div>
           <img src="25.png"></img>
         </div>
-      </div>
-      <div id="club-tracker-container">
-        <div id="club-and-type" onclick="showSwingDialog()">
-          <img id="swing-power-img" src="100.png"></img>
-          <div id="club-selected">
-          </div>          
-        </div>
-        <div id="club-distance" onclick="openManualDialog()">- m</div>
-        <div class="large-button button" onclick="markEnd()">Store distance</div>
-        <div id="cancel-back-button" class="button" onclick="markCancel()">Cancel / Back</div>
       </div>
     </div>
     <div class="footer-container flex-button-group">
@@ -1467,14 +1498,40 @@ function closeNotification() {
         <hr>
     </div>
     <div class="body-container body-old-stroke">
-      <div id="club-and-type-old-stroke" onclick="showSwingDialog()">
+      <div id="club-distance-old-stroke" onclick="openManualDialog()">- m</div>
+      <div id="club-container-old-stroke" class="club-container">
+      </div>
+      <div id="swing-power-container-old-stroke" class="swing-power-container">
+        <div id="swing-type-container-old-stroke">
+          <div swingtype="normal" class="swing-type button selected-type" onclick="selectSwingType('normal','swing-type-container-old-stroke')">Normal</div>
+          <div swingtype="chip" class="swing-type button" onclick="selectSwingType('chip','swing-type-container-old-stroke')">Chip</div>
+        </div>
+        <div power="100" class="swing-button selected-power" onclick="selectSwingPower(100,'swing-power-container-old-stroke')">
+          <div>100%</div>
+          <img src="100.png"></img>
+        </div>
+        <div power="75" class="swing-button" onclick="selectSwingPower(75,'swing-power-container-old-stroke')">
+          <div>75%</div>
+          <img src="75.png"></img>
+        </div>
+        <div power="50" class="swing-button" onclick="selectSwingPower(50,'swing-power-container-old-stroke')">
+          <div>50%</div>
+          <img src="50.png"></img>
+        </div>
+        <div power="25" class="swing-button" onclick="selectSwingPower(25,'swing-power-container-old-stroke')">
+          <div>25%</div>
+          <img src="25.png"></img>
+        </div>
+      </div>
+
+      <!-- TBD remove -->
+      <div id="club-and-type-old-stroke" style="display:none" onclick="showSwingDialog()">
         <img id="swing-power-img-old-stroke" src="100.png"></img>
         <div id="club-selected-old-stroke">PW
         </div>
         <div id="swing-type-old-stroke">Chip
         </div>
       </div>
-      <div id="club-distance-old-stroke" onclick="openManualDialog()"></div>
       <div id="map"></div>
     </div>
     <div class="footer-container flex-button-group">
@@ -1504,40 +1561,6 @@ function closeNotification() {
       <div class="footer-button button" onclick="showApp()">Back</div>
     </div>
   </div>
-
-  <!--
-  <div id="dialog-swing-type" class="head-content-footer dialog">
-    <div class="header-container">
-      <div id="swing-type-container">
-        <div id="normal-swing" class="club button selected-type" onclick="selectSwingType('normal')">Normal</div>
-        <div id="chip-swing" class="club button" onclick="selectSwingType('chip')">Chip</div>
-      </div>
-    </div>
-    <div class="body-container" id="body-container-stat">
-      <div id="swing-power-container">
-        <div id="pow-100" class="swing-button selected-power" onclick="selectSwingPower(100)">
-          <div>100%</div>
-          <img src="100.png"></img>
-        </div>
-        <div id="pow-75" class="swing-button" onclick="selectSwingPower(75)">
-          <div>75%</div>
-          <img src="75.png"></img>
-        </div>
-        <div id="pow-50" class="swing-button" onclick="selectSwingPower(50)">
-          <div>50%</div>
-          <img src="50.png"></img>
-        </div>
-        <div id="pow-25" class="swing-button" onclick="selectSwingPower(25)">
-          <div>25%</div>
-          <img src="25.png"></img>
-        </div>
-      </div>
-    </div>
-    <div class="footer-container">
-      <div class="close-button button" onclick="closeSwingDialog()">Ok</div>
-    </div>
-  </div>
-  -->
 
   <div id="dialog-manual-input" class="head-content-footer dialog">
     <div class="header-container">
