@@ -999,6 +999,9 @@ async function showOldStroke(timestamp=null) {
 
   if (timestamp == null) {
     timestamp = wasGetUrlParam("stroke");
+    if (timestamp != null) {
+      timestamp = parseInt(timestamp);
+    }
   }
   if (timestamp == null) {
     timestamp = GLOB_OLD_STROKE_TIMESTAMPS[GLOB_OLD_STROKE_TIMESTAMPS.length - 1];
@@ -1094,7 +1097,7 @@ function changeCourseOldStroke() {
 }
 
 async function prevOldStroke() {
-  var i = GLOB_OLD_STROKE_TIMESTAMPS.indexOf(GLOB_OLD_STROKE.timestamp.toString());
+  var i = GLOB_OLD_STROKE_TIMESTAMPS.indexOf(GLOB_OLD_STROKE.timestamp);
   if (i > 0) {
     showOldStroke(GLOB_OLD_STROKE_TIMESTAMPS[i - 1]);
     return true;
@@ -1103,7 +1106,7 @@ async function prevOldStroke() {
 }
 
 async function nextOldStroke() {
-  var i = GLOB_OLD_STROKE_TIMESTAMPS.indexOf(GLOB_OLD_STROKE.timestamp.toString());
+  var i = GLOB_OLD_STROKE_TIMESTAMPS.indexOf(GLOB_OLD_STROKE.timestamp);
   if (i < (GLOB_OLD_STROKE_TIMESTAMPS.length - 1)) {
     showOldStroke(GLOB_OLD_STROKE_TIMESTAMPS[i + 1]);
     return true;
@@ -1261,7 +1264,7 @@ async function getStrokeTimestamps() {
     var ids = [];
     for (file of json.files) {
       if(file.includes(".json")) {
-        ids.push(file.replace(".json",""));
+        ids.push(parseInt(file.replace(".json","")));
       }
     }
     return ids;
