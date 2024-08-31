@@ -41,6 +41,8 @@ body {
   flex: 0 1 70px;
 }
 
+/********** Button styles **********/
+
 .button {
   font-size: 25px;
   margin: 5px;
@@ -71,6 +73,17 @@ body {
   justify-content: center;
 }
 
+.footer-button {
+  height: 55px;
+}
+
+.narrow-button {
+  height: 55px;
+  padding-left: 10px;
+  padding-right: 10px;
+  margin-left: 2px;
+  margin-right: 2px;
+}
 
 /********** Statictics page styles **********/
 
@@ -109,7 +122,8 @@ th, td {
   font-size: 15px;
 }
 
-/********** Header styles **********/
+/********** Course / Hole styles **********/
+
 .course-container {
   padding-bottom: 10px;
   display: flex;
@@ -136,7 +150,8 @@ label {
   padding-right: 5px;
 }
 
-/********** Body club styles **********/
+/********** Club styles **********/
+
 .club-container {
   display: flex;
   justify-content: space-evenly;
@@ -144,6 +159,7 @@ label {
   width: 100%;
   /*height: 100%;*/
 }
+
 .club {
   display: flex;
   align-items: center;
@@ -159,67 +175,6 @@ label {
   margin: 0px;
   margin-top:5px;
 }
-.selected-club {
-  background-color: rgb(243, 112, 12);
-}
-
-/********** Body club tracker styles **********/
-#club-selected {
-  font-size: 50px;
-  text-align: center;
-  margin-left: 20px;
-}
-
-#club-and-type {
-  flex-grow: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-  cursor: pointer;
-}
-
-#club-distance {
-  flex-grow: 1;
-  font-size: 70px;
-  text-align: center;
-  /*margin-top: 30px;*/
-}
-#club-distance sub {
-  font-size: 30px;
-}
-#club-distance sup {
-  font-size: 30px;
-}
-
-
-
-/********** Footer styles **********/
-
-.footer-button {
-  height: 55px;
-}
-
-.footer-half-button {
-  width: 45%;
-}
-
-/********** Old stroke page styles **********/
-#date {
-  flex-grow: 1;
-  text-align: center;
-}
-
-.body-old-stroke {
-  display: flex;
-  flex-flow: column;
-}
-
-.flex-button-group {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 
 #club-container-old-stroke .club {
   border-width: 1px;
@@ -229,9 +184,45 @@ label {
   margin-top:2px;
 }
 
-#club-tracker-container-old-stroke {
-  width: 100%;
-  height: 100%;
+.selected-club {
+  background-color: rgb(243, 112, 12);
+}
+
+#club-distance {
+  flex-grow: 1;
+  font-size: 70px;
+  text-align: center;
+}
+#club-distance sub {
+  font-size: 30px;
+}
+#club-distance sup {
+  font-size: 30px;
+}
+
+#club-distance-old-stroke {
+  font-size: 50px;
+  text-align: center;
+}
+#club-distance-old-stroke sub {
+  font-size: 20px;
+}
+#club-distance-old-stroke sup {
+  font-size: 20px;
+}
+
+/********** Swing type / power styles **********/
+
+#swing-type-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  width:65px;
+  height: 80px;
+  margin: 5px;
+  border-width: 3px;
+  border-radius: 10px;
+  border-style: dotted;
 }
 
 #swing-type-container-old-stroke {
@@ -246,8 +237,37 @@ label {
   border-style: dotted;
 }
 
+.swing-type {
+  font-size: 15px;
+  width: 60px;
+}
+
 #swing-type-container-old-stroke .swing-type {
   font-size: 10px;
+}
+
+.selected-type {
+  background-color: rgb(206, 206, 253);
+}
+
+.swing-power-container {
+  display: flex;
+  justify-content: space-evenly;
+  width: 100%;
+}
+
+.swing-button {
+  font-size: 15px;
+  text-align: center;
+  margin: 5px;
+  padding: 2px;
+  width:50px;
+  height: 80px;
+  border-width: 2px;
+  border-radius: 10px;
+  border-style: solid;
+  user-select: none;
+  cursor: pointer;
 }
 
 #swing-power-container-old-stroke .swing-button {
@@ -264,21 +284,27 @@ label {
   cursor: pointer;
 }
 
+.swing-button img {
+  height: 60px;
+}
+
 #swing-power-container-old-stroke .swing-button img {
   height: 50px;
 }
 
+.selected-power {
+  background-color: rgb(207, 248, 195);
+}
 
-
-#club-distance-old-stroke {
-  font-size: 50px;
+/********** Old stroke misc page styles **********/
+#date {
+  flex-grow: 1;
   text-align: center;
 }
-#club-distance-old-stroke sub {
-  font-size: 20px;
-}
-#club-distance-old-stroke sup {
-  font-size: 20px;
+
+.body-old-stroke {
+  display: flex;
+  flex-flow: column;
 }
 
 #map {
@@ -288,14 +314,6 @@ label {
   border-width: 2px;
   border-radius: 4px;
   border-style: solid;
-}
-
-.old-stroke-button {
-  height: 55px;
-  padding-left: 10px;
-  padding-right: 10px;
-  margin-left: 2px;
-  margin-right: 2px;
 }
 
 /********** General dialog styles **********/
@@ -313,65 +331,6 @@ label {
   border-width: 4px;
   border-radius: 10px;
   border-style: solid;
-}
-
-/********** Swing dialog styles **********/
-
-#swing-type-container {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  width:65px;
-  height: 80px;
-  margin: 5px;
-  border-width: 3px;
-  border-radius: 10px;
-  border-style: dotted;
-}
-
-.swing-type {
-  font-size: 15px;
-  width: 60px;
-}
-
-.swing-power-container {
-  display: flex;
-  justify-content: space-evenly;
-  width: 100%;
-}
-
-#dialog-swing-type {
-  display: none;
-}
-
-.swing-button {
-  font-size: 15px;
-  text-align: center;
-  margin: 5px;
-  padding: 2px;
-  width:50px;
-  height: 80px;
-  border-width: 2px;
-  border-radius: 10px;
-  border-style: solid;
-  user-select: none;
-  cursor: pointer;
-}
-
-.swing-button img {
-  height: 60px;
-}
-
-.selected-type {
-  background-color: rgb(206, 206, 253);
-}
-
-.selected-power {
-  background-color: rgb(207, 248, 195);
-}
-
-.close-button {
-  height: 55px;
 }
 
 /********** Manual input dialog styles **********/
@@ -397,6 +356,7 @@ input[type='number'] {
 }
 
 /********** Notification dialog styles **********/
+
 #notification {
   display: none;
   z-index: 2;
@@ -602,7 +562,8 @@ async function markEnd(manualDist = 0) {
 
   // Store "unsent" strokes in GLOB_STROKES in case
   // network is down to avoid "loosing" strokes
-  GLOB_STROKES.push(GLOB_STROKE);
+  const strokeCopy = JSON.parse(JSON.stringify(GLOB_STROKE));
+  GLOB_STROKES.push(strokeCopy);
   do {
     if (postStroke(GLOB_STROKES[0]) == false) {
       break; // Probably no network connection (try again later)
@@ -801,9 +762,9 @@ async function showStatistics() {
     document.getElementById("body-container-stat").innerHTML = table;
   } else if (view == "export-import") {
     document.getElementById("body-container-stat").innerHTML = `
-    <div class="close-button button" onclick="exportCSV()">Export CSV</div>
+    <div class="footer-button button" onclick="exportCSV()">Export CSV</div>
     <br>
-    <div class="close-button button" onclick="importCSV()">Import CSV</div>
+    <div class="footer-button button" onclick="importCSV()">Import CSV</div>
     `;
   } else if (view == "history") {
     var table = `
@@ -1423,10 +1384,10 @@ function closeNotification() {
       </div>
     </div>
 
-    <div class="footer-container flex-button-group">
-      <div class="footer-button footer-half-button button" onclick="showOldStroke()">Old</div>
-      <div class="footer-button footer-half-button button" onclick="showStatistics()">Statistics</div>
-      <div id="cancel-button" class="footer-button footer-half-button button" style="display:none" onclick="markCancel()">Cancel</div>
+    <div class="footer-container button-group">
+      <div class="footer-button half-button button" onclick="showOldStroke()">Old</div>
+      <div class="footer-button half-button button" onclick="showStatistics()">Statistics</div>
+      <div id="cancel-button" class="footer-button half-button button" style="display:none" onclick="markCancel()">Cancel</div>
     </div>
   </div>
 
@@ -1483,12 +1444,12 @@ function closeNotification() {
       <div id="map"></div>
     </div>
 
-    <div class="footer-container flex-button-group">
-      <div class="old-stroke-button button" onclick="prevOldStroke()">&lt;</div>
-      <div class="old-stroke-button button" onclick="closeOldStroke()">Close</div>
-      <div class="old-stroke-button button" onclick="modifyOldStroke()">Save</div>
-      <div class="old-stroke-button button" onclick="deleteOldStroke()">Delete</div>
-      <div class="old-stroke-button button" onclick="nextOldStroke()">&gt;</div>
+    <div class="footer-container button-group">
+      <div class="narrow-button button" onclick="prevOldStroke()">&lt;</div>
+      <div class="narrow-button button" onclick="closeOldStroke()">Close</div>
+      <div class="narrow-button button" onclick="modifyOldStroke()">Save</div>
+      <div class="narrow-button button" onclick="deleteOldStroke()">Delete</div>
+      <div class="narrow-button button" onclick="nextOldStroke()">&gt;</div>
     </div>
   </div>
 
@@ -1520,8 +1481,8 @@ function closeNotification() {
       <input type="number" id="manual-distance" name="distance" onchange="storeManualDialog()">
     </div>
     <div class="footer-container">
-      <div class="close-button button" onclick="storeManualDialog()">Store</div>
-      <div class="close-button button" onclick="closeManualDialog()">Cancel</div>
+      <div class="footer-button button" onclick="storeManualDialog()">Store</div>
+      <div class="footer-button button" onclick="closeManualDialog()">Cancel</div>
     </div>
   </div>
 
