@@ -583,12 +583,18 @@ function markCancel() {
 
 //////////////////////////////////////////////////////////////////////////////
 // Club handling
-function createClubElements(clubContainer) {
+
+// extraOnClick will be called as extraOnClick(club)
+function createClubElements(clubContainer, extraOnClick = "") {
   const elemClubs = document.getElementById(clubContainer);
   for (const club of data["club"]) {
     const elemDiv = document.createElement("div");
     elemDiv.setAttribute("class", "club");
-    elemDiv.setAttribute("onclick", `selectClub("${club}","${clubContainer}")`);
+    var extraFunc = "";
+    if (extraOnClick != "") {
+      extraFunc = `;${extraOnClick}("${club}");`
+    }
+    elemDiv.setAttribute("onclick", `selectClub("${club}","${clubContainer}")${extraFunc}`);
     elemDiv.innerText = club;
     elemClubs.appendChild(elemDiv);
   }  
@@ -756,7 +762,7 @@ async function showStatistics() {
       <table class="club-dist-table">
         <tr><th>Club</th><th>Power</th><th>Min</th><th>Median</th><th>Max</th></tr>`;
     for (const d of dists) {
-      table += `<tr><td>${d.club}</td><td>${d.power}%</td><td>${d.min}</td><td>${d.median}</td><td>${d.max}</td></tr>`;
+      table += `<tr onclick="showPlot('${d.club}')"><td>${d.club}</td><td>${d.power}%</td><td>${d.min}</td><td>${d.median}</td><td>${d.max}</td></tr>`;
     }
     table += `
       </table>`;
@@ -784,7 +790,7 @@ async function showStatistics() {
       </table>`;
     document.getElementById("body-container-stat").innerHTML = table;
   } else if (view == "club-plot") {
-    showPlot("7");
+    showPlot("GW");
   }
 }
 
@@ -830,14 +836,17 @@ function filterDistances(strokes, club, swingType, swingPower) {
 //////////////////////////////////////////////////////////////////////////////
 // Show plot
 async function showPlot(club = undefined, swingType = "normal") {
-  // Create elemnt to put plot inside
+  // Select correct option
+  document.getElementById("statistics-view").value = "club-plot";
+
+  // Create element to put plot inside
   const ctx = document.createElement('canvas');
   const bodyContainer = document.getElementById("body-container-stat");
   bodyContainer.innerHTML = "<div id='club-container-plot' class='club-container'>"; // Also clear
   bodyContainer.appendChild(ctx);
 
   // Generate clubs
-  createClubElements("club-container-plot");
+  createClubElements("club-container-plot","showPlot");
   selectClub(club, "club-container-plot");
   
   // Generate chart.js data / dataset
