@@ -661,6 +661,8 @@ function updateDistances() {
       // Update distance to reference
       const refDist = calcDist(GLOB_CURRENT, GLOB_REF);
       document.getElementById("ref-distance").innerHTML = `${refDist} m`;
+    } else {
+      document.getElementById("ref-distance").innerHTML = `- m`;
     }
     if (GLOB_STROKE != undefined && GLOB_STROKE.start.lat != undefined) {
       // Update distance club start position
