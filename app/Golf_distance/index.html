@@ -717,46 +717,45 @@ async function showStatistics() {
   var view = document.getElementById("statistics-view").value;
 
   if (view == "normal" || view == "chip") {
-    var table = `
-      <table class="club-dist-table">
-        <tr><th>Club</th><th>Min</th><th>Median</th><th>Max</th></tr>`;
-    const strokes = await getStrokes();
-    for (const club of data["club"]) {
-      const dist = filterDistances(strokes,club, view,null)
-      var min = "-";
-      var median = "-";
-      var max = "-";
-      if (dist.length > 0) {
-        min = dist[0];
-        median = getMedian(dist);
-        max = dist[dist.length - 1];
-      }
-      table += `<tr><td>${club}</td><td>${min}</td><td>${median}</td><td>${max}</td></tr>`;
-    }
-    table += `
-      </table>`;
-    
-    document.getElementById("body-container-stat").innerHTML = table;
-  } else if (view == "normal-power" || view == "chip-power") {
     var swingType = "normal";
     if (view.includes("chip")) {
       swingType = "chip";
     }
-    var table = `
-      <table class="club-dist-table">
-        <tr><th>Club</th><th>25%</th><th>50%</th><th>75%</th><th>100%</th></tr>`;
     const strokes = await getStrokes();
+    // Array with objects with min, median, max, club, power as values
+    dists = [];
     for (const club of data["club"]) {
-      var m = [];
       for(pow of [25,50,75,100]) {
         const dist = filterDistances(strokes,club, swingType,pow);
         if (dist.length > 0) {
-          m.push(getMedian(dist));
-        } else {
-          m.push("-");
+          dists.push({
+            min : dist[0],
+            median : getMedian(dist),
+            max : dist[dist.length - 1],
+            club : club,
+            power : pow
+          });
         }
       }
-      table += `<tr><td>${club}</td><td>${m[0]}</td><td>${m[1]}</td><td>${m[2]}</td><td>${m[3]}</td></tr>`;
+    }
+    // Sort dists from shortest to longest median
+    compare = function( a, b ) {
+      if ( a.median < b.median ){
+        return -1;
+      }
+      if ( a.median > b.median ){
+        return 1;
+      }
+      return 0;
+    }
+    dists.sort( compare );
+
+    // Create the table
+    var table = `
+      <table class="club-dist-table">
+        <tr><th>Club</th><th>Power</th><th>Min</th><th>Median</th><th>Max</th></tr>`;
+    for (const d of dists) {
+      table += `<tr><td>${d.club}</td><td>${d.power}%</td><td>${d.min}</td><td>${d.median}</td><td>${d.max}</td></tr>`;
     }
     table += `
       </table>`;
@@ -1461,10 +1460,8 @@ function closeNotification() {
   <div id="page-statistics" class="was-page head-content-footer">
     <div class="header-container" id="statistics-header">
       <select name="statistics-view" id="statistics-view" onchange="showStatistics()">
-        <option value="normal">Normal min/med/max</option>
-        <option value="normal-power">Normal power</option>
-        <option value="chip">Chip min/med/max</option>
-        <option value="chip-power">Chip power</option>
+        <option value="normal">Normal distances</option>
+        <option value="chip">Chip distances</option>
         <option value="history">History</option>
         <option value="export-import">Export / Import</option>
       </select>
