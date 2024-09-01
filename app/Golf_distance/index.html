@@ -873,11 +873,12 @@ async function showPlot(club = undefined, swingType = "normal") {
   };
 
   dataset = [];
-  for(pow of [25,50,75,100]) {
-    const xy = getXY(strokes, club, swingType, pow);
+  for(pow of [[25,'yellow'],[50,'red'],[75,'green'],[100,'blue']]) {
+    const xy = getXY(strokes, club, swingType, pow[0]);
     dataset.push({
-      label: `${pow}%`,
-      data: xy     
+      label: `${pow[0]}%`,
+      data: xy,
+      backgroundColor: pow[1]
     });
   }
 
