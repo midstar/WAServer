@@ -8,6 +8,7 @@
 <script src="../was/was.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
 <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 
 body {
@@ -782,6 +783,8 @@ async function showStatistics() {
     table += `
       </table>`;
     document.getElementById("body-container-stat").innerHTML = table;
+  } else if (view == "club-plot") {
+    showPlot("7");
   }
 }
 
@@ -822,6 +825,82 @@ function filterDistances(strokes, club, swingType, swingPower) {
     }
   }
   return result.sort(function (a, b) {  return a - b;  });  
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Show plot
+async function showPlot(club = undefined, swingType = "normal") {
+  // Create elemnt to put plot inside
+  const ctx = document.createElement('canvas');
+  const bodyContainer = document.getElementById("body-container-stat");
+  bodyContainer.innerHTML = "<div id='club-container-plot' class='club-container'>"; // Also clear
+  bodyContainer.appendChild(ctx);
+
+  // Generate clubs
+  createClubElements("club-container-plot");
+  selectClub(club, "club-container-plot");
+  
+  // Generate chart.js data / dataset
+  const strokes = await getStrokes();
+  getXY = function(strokes, club, swingType, swingPower) {
+    const xy = [];
+    if (strokes != null) {
+      for (const stroke of Object.values(strokes)) {
+        if ((club == stroke.club) &&
+            (swingType == null || swingType == stroke.type) &&
+            (swingPower == null || swingPower == stroke.power)) {
+          var altitude = 0;
+          if (stroke.start.alt != undefined && stroke.end.alt != undefined) {
+            altitude = stroke.end.alt - stroke.start.alt;
+          }
+          xy.push({
+            x: stroke.dist,
+            y: altitude
+          });
+        }
+      }
+    }
+    return xy;
+  };
+
+  dataset = [];
+  for(pow of [25,50,75,100]) {
+    const xy = getXY(strokes, club, swingType, pow);
+    dataset.push({
+      label: `${pow}%`,
+      data: xy     
+    });
+  }
+
+  const data = {
+    datasets: dataset
+  };
+
+  new Chart(ctx, {
+    type: 'scatter',
+    data: data,
+    options: {
+      scales: {
+        x: {
+          type: 'linear',
+          title: { 
+            display: true, 
+            align: 'center', 
+            text: 'Distance', 
+            color: 'black'
+          }
+        },
+        y: {
+          title: { 
+            display: true, 
+            align: 'center', 
+            text: 'Altitude', 
+            color: 'black'
+          }
+        }
+      }
+    }
+  });
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1462,6 +1541,7 @@ function closeNotification() {
       <select name="statistics-view" id="statistics-view" onchange="showStatistics()">
         <option value="normal">Normal distances</option>
         <option value="chip">Chip distances</option>
+        <option value="club-plot">Club plots</option>
         <option value="history">History</option>
         <option value="export-import">Export / Import</option>
       </select>
