@@ -42,6 +42,35 @@ body {
   flex: 0 1 70px;
 }
 
+/* Landscape mode */
+@media all and (orientation:landscape) {
+.head-content-footer {
+  flex-flow: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.header-container {
+  order: 1;
+  flex: 1 1 45%;
+  /*flex: 0 1 50%;*/
+}
+
+.body-container {
+  order: 3;
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.footer-container {
+  order: 2;
+  flex: 1 1 45%;
+  /*flex: 1 1 auto;*/
+}
+}
+
 /********** Button styles **********/
 
 .button {
@@ -66,6 +95,8 @@ body {
   font-size: 30px;
   font-weight: bold;
   margin: 5px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .button-group {
@@ -76,6 +107,8 @@ body {
 
 .footer-button {
   height: 55px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .narrow-button {
@@ -158,7 +191,15 @@ label {
   justify-content: space-evenly;
   flex-wrap: wrap;
   width: 100%;
-  /*height: 100%;*/
+}
+
+@media all and (orientation:landscape) {
+  .club-container {
+    display: flex;
+    /*justify-content: space-evenly;*/
+    flex-wrap: wrap;
+    width: 30%;
+  }
 }
 
 .club {
@@ -177,6 +218,15 @@ label {
   margin-top:5px;
 }
 
+/* Landscape mode */
+@media all and (orientation:landscape) {
+  .club {
+    border-width: 1px;
+    font-size: 15px;
+    width: 20%; /* fit 15 clubs horizontally */
+  }
+}
+
 #club-container-old-stroke .club {
   border-width: 1px;
   border-radius: 5px;
@@ -185,14 +235,24 @@ label {
   margin-top:2px;
 }
 
+/* Landscape mode */
+@media all and (orientation:landscape) {
+  #club-container-old-stroke .club {
+    border-width: 1px;
+    font-size: 15px;
+    width: 6%; /* fit 15 clubs horizontally */
+  }
+}
+
 .selected-club {
   background-color: rgb(243, 112, 12);
 }
 
 #club-distance {
-  flex-grow: 1;
   font-size: 70px;
   text-align: center;
+  margin-left: 20px;
+  margin-right: 20px;
 }
 #club-distance sub {
   font-size: 30px;
@@ -255,6 +315,12 @@ label {
   display: flex;
   justify-content: space-evenly;
   width: 100%;
+}
+
+@media all and (orientation:landscape) {
+  .swing-power-container {
+    width: 30%;
+  }
 }
 
 .swing-button {
