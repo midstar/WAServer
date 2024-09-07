@@ -60,6 +60,7 @@ body {
   order: 3;
   flex: 1 1 auto;
   display: flex;
+  flex-flow: row;
   flex-wrap: wrap;
   align-items: flex-start;
 }
@@ -156,6 +157,13 @@ th, td {
   font-size: 15px;
 }
 
+@media all and (orientation:landscape) {
+  canvas {
+    order: 5;
+    height: 50%;
+  }
+}
+
 /********** Course / Hole styles **********/
 
 .course-container {
@@ -195,10 +203,11 @@ label {
 
 @media all and (orientation:landscape) {
   .club-container {
+    order: 3;
     display: flex;
     /*justify-content: space-evenly;*/
     flex-wrap: wrap;
-    width: 30%;
+    width: 100%;
   }
 }
 
@@ -223,7 +232,7 @@ label {
   .club {
     border-width: 1px;
     font-size: 15px;
-    width: 20%; /* fit 15 clubs horizontally */
+    width: 50px; 
   }
 }
 
@@ -320,6 +329,7 @@ label {
 @media all and (orientation:landscape) {
   .swing-power-container {
     width: 30%;
+    order: 2;
   }
 }
 
