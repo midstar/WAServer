@@ -114,6 +114,13 @@ body {
   margin-right: 2px;
 }
 
+@media all and (orientation:landscape) {
+  .large-button {
+    height: 60px;
+  }
+}
+
+
 /********** App page styles **********/
 
 /* Landscape mode */
@@ -309,13 +316,25 @@ label {
 }
 
 /********** Swing type / power styles **********/
-
+/*
 #swing-type-container {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
   width:65px;
   height: 80px;
+  margin: 5px;
+  border-width: 3px;
+  border-radius: 10px;
+  border-style: dotted;
+}*/
+
+#swing-type-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  width:65px;
+  height: 60px;
   margin: 5px;
   border-width: 3px;
   border-radius: 10px;
@@ -335,9 +354,15 @@ label {
 }
 
 .swing-type {
+  width: 60px;
+  font-size: 10px;
+}
+
+/*
+.swing-type {
   font-size: 15px;
   width: 60px;
-}
+}*/
 
 #swing-type-container-old-stroke .swing-type {
   font-size: 10px;
@@ -354,6 +379,18 @@ label {
 }
 
 .swing-button {
+  font-size: 10px;
+  text-align: center;
+  margin: 5px;
+  padding: 2px;
+  width:50px;
+  height: 60px;
+  border-width: 2px;
+  border-radius: 10px;
+  border-style: solid;
+  user-select: none;
+  cursor: pointer;
+  /*
   font-size: 15px;
   text-align: center;
   margin: 5px;
@@ -364,7 +401,7 @@ label {
   border-radius: 10px;
   border-style: solid;
   user-select: none;
-  cursor: pointer;
+  cursor: pointer;*/
 }
 
 #swing-power-container-old-stroke .swing-button {
@@ -382,7 +419,9 @@ label {
 }
 
 .swing-button img {
-  height: 60px;
+  height: 50px;
+  /*
+  height: 60px;*/
 }
 
 #swing-power-container-old-stroke .swing-button img {
