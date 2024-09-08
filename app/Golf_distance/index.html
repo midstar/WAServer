@@ -125,7 +125,7 @@ body {
     grid-template-rows: auto 1fr;
   }
 
-  #club-distance {
+  .club-distance {
     grid-row: 1;
     grid-column: 1;
   }
@@ -281,15 +281,19 @@ label {
 }
 
 #club-distance {
+  color: blue;
+}
+
+.club-distance {
   font-size: 70px;
   text-align: center;
   margin-left: 20px;
   margin-right: 20px;
 }
-#club-distance sub {
+.club-distance sub {
   font-size: 30px;
 }
-#club-distance sup {
+.club-distance sup {
   font-size: 30px;
 }
 
@@ -646,6 +650,7 @@ function updateRef() {
 
 function showTracker() {
     document.getElementById("club-distance").style.display = "block";
+    document.getElementById("club-distance-empty").style.display = "none";
     document.getElementById("mark-start-button").style.display = "none";
     document.getElementById("mark-end-button").style.display = "flex";
     document.getElementById("cancel-button").style.display = "flex";
@@ -653,6 +658,7 @@ function showTracker() {
 
 function hideTracker() {
     document.getElementById("club-distance").style.display = "none";
+    document.getElementById("club-distance-empty").style.display = "block";
     document.getElementById("mark-start-button").style.display = "flex";
     document.getElementById("mark-end-button").style.display = "none";
     document.getElementById("cancel-button").style.display = "none";
@@ -1571,7 +1577,8 @@ function closeNotification() {
     </div>
 
     <div class="body-container body-app">
-      <div id="club-distance" style="display:none" onclick="openManualDialog()">- m</div>
+      <div id="club-distance" class="club-distance" style="display:none;" onclick="openManualDialog()">- m</div>
+      <div id="club-distance-empty" class="club-distance">-</div>
       <div id="mark-start-button" class="large-button button" onclick="markStart()">Start tracking</div>
       <div id="mark-end-button" class="large-button button" style="display:none" onclick="markEnd()">Store distance</div>
       <div id="club-container" class="club-container">
