@@ -19,15 +19,16 @@ body {
 /********** General styles **********/
 
 .head-content-footer {
-  display: flex;
-  flex-flow: column;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr 70px;
   height: 100%;
 }
 
 .header-container {
   font-size: 20px;
   margin: 2px;
-  flex: 0 1 auto;
+  grid-row: 1;
 }
 
 .header-container hr {
@@ -35,41 +36,34 @@ body {
 }
 
 .body-container {
-  flex: 1 1 auto;
+  grid-row: 2;
 }
 
 .footer-container {
-  flex: 0 1 70px;
+  grid-row: 3;
 }
 
 /* Landscape mode */
 @media all and (orientation:landscape) {
-.head-content-footer {
-  flex-flow: row;
-  flex-wrap: wrap;
-  align-items: flex-start;
-}
+  .head-content-footer {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto 1fr;
+  }
 
-.header-container {
-  order: 1;
-  flex: 1 1 45%;
-  /*flex: 0 1 50%;*/
-}
+  .header-container {
+    grid-row: 1;
+    grid-column: 1;
+  }
 
-.body-container {
-  order: 3;
-  flex: 1 1 auto;
-  display: flex;
-  flex-flow: row;
-  flex-wrap: wrap;
-  align-items: flex-start;
-}
+  .body-container {
+    grid-row: 2;
+    grid-column: 1 / span 2;
+  }
 
-.footer-container {
-  order: 2;
-  flex: 1 1 45%;
-  /*flex: 1 1 auto;*/
-}
+  .footer-container {
+    grid-row: 1;
+    grid-column: 2;
+  }
 }
 
 /********** Button styles **********/
@@ -120,9 +114,47 @@ body {
   margin-right: 2px;
 }
 
+/********** App page styles **********/
+
+/* Landscape mode */
+@media all and (orientation:landscape) {
+
+  .body-app {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  #club-distance {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  #mark-start-button {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  #mark-end-button {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  #club-container {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  #swing-power-container {
+    grid-row: 2;
+    grid-column: 2;
+  }
+
+}
+
 /********** Statictics page styles **********/
 
-#statistics-header {
+#header-container-stat {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -130,7 +162,7 @@ body {
 }
 
 #statistics-view {
-  width: 90%;
+  width: 100%;
   font-size: 25px;
   text-align: center; 
 }
@@ -157,10 +189,17 @@ th, td {
   font-size: 15px;
 }
 
+/* Landscape mode */
 @media all and (orientation:landscape) {
-  canvas {
-    order: 5;
-    height: 50%;
+
+  #body-container-stat {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: 1fr;
+  }
+
+  #body-container-stat table {
+    grid-column: 2;
   }
 }
 
@@ -196,43 +235,36 @@ label {
 
 .club-container {
   display: flex;
-  justify-content: space-evenly;
+  align-items: flex-start;
+  justify-content: start;
   flex-wrap: wrap;
   width: 100%;
-}
-
-@media all and (orientation:landscape) {
-  .club-container {
-    order: 3;
-    display: flex;
-    /*justify-content: space-evenly;*/
-    flex-wrap: wrap;
-    width: 100%;
-  }
 }
 
 .club {
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   border-width: 2px;
   border-radius: 10px;
   border-style: solid;
   user-select: none;
   cursor: pointer;
   font-size: 20px;
-  width: 17%; /* fit 5 clubs horizontally */
+  width: 19%; /* fit 5 clubs horizontally */
+  max-width: 70px;
   aspect-ratio: 1 / 1;
-  margin: 0px;
+  margin: 1px;
   margin-top:5px;
 }
 
 /* Landscape mode */
 @media all and (orientation:landscape) {
   .club {
-    border-width: 1px;
-    font-size: 15px;
-    width: 50px; 
+    width: 12px; /* fit 8 clubs horizontally */
+    min-width: 50px;
+    max-width: 70px;
   }
 }
 
@@ -242,15 +274,6 @@ label {
   font-size: 14px;
   width: 13%; /* fit 7 clubs horizontally */
   margin-top:2px;
-}
-
-/* Landscape mode */
-@media all and (orientation:landscape) {
-  #club-container-old-stroke .club {
-    border-width: 1px;
-    font-size: 15px;
-    width: 6%; /* fit 15 clubs horizontally */
-  }
 }
 
 .selected-club {
@@ -324,13 +347,6 @@ label {
   display: flex;
   justify-content: space-evenly;
   width: 100%;
-}
-
-@media all and (orientation:landscape) {
-  .swing-power-container {
-    width: 30%;
-    order: 2;
-  }
 }
 
 .swing-button {
@@ -749,7 +765,7 @@ function updateDistances() {
     }
     if (GLOB_STROKE != undefined && GLOB_STROKE.start.lat != undefined) {
       // Update distance club start position
-      const altDiff = Math.round(GLOB_CURRENT.alt - GLOB_STROKE.start.alt);
+      const altDiff = Math.round(GLOB_CURRENT.alt - GLOB_STROKE.start.alt); 
       var altText = "";
       if (altDiff < 0) {
         altText = `<sub>&#8595;${Math.abs(altDiff)} m</sub>`
@@ -757,7 +773,7 @@ function updateDistances() {
         altText = `<sup>&#8593;${altDiff} m</sup>`
         
       }
-      const clubDist = calcDist(GLOB_CURRENT, GLOB_STROKE.start);
+      const clubDist = calcDist(GLOB_CURRENT, GLOB_STROKE.start); 
       document.getElementById("club-distance").innerHTML = `${clubDist} m ${altText}`;
       
     }
@@ -1520,7 +1536,7 @@ function closeNotification() {
       <hr>
     </div>
 
-    <div class="body-container">
+    <div class="body-container body-app">
       <div id="club-distance" style="display:none" onclick="openManualDialog()">- m</div>
       <div id="mark-start-button" class="large-button button" onclick="markStart()">Start tracking</div>
       <div id="mark-end-button" class="large-button button" style="display:none" onclick="markEnd()">Store distance</div>
@@ -1623,7 +1639,7 @@ function closeNotification() {
 
 
   <div id="page-statistics" class="was-page head-content-footer">
-    <div class="header-container" id="statistics-header">
+    <div class="header-container" id="header-container-stat">
       <select name="statistics-view" id="statistics-view" onchange="showStatistics()">
         <option value="normal">Normal distances</option>
         <option value="chip">Chip distances</option>
@@ -1634,7 +1650,7 @@ function closeNotification() {
     </div>
     <div class="body-container" id="body-container-stat">
     </div>
-    <div class="footer-container">
+    <div class="footer-container" id="footer-container-stat">
       <div class="footer-button button" onclick="showApp()">Back</div>
     </div>
   </div>
@@ -1645,7 +1661,7 @@ function closeNotification() {
     <div class="body-container" id="manual-distance-container">
       <input type="number" id="manual-distance" name="distance" onchange="storeManualDialog()">
     </div>
-    <div class="footer-container">
+    <div class="footer-container" id="statistics-footer">
       <div class="footer-button button" onclick="storeManualDialog()">Store</div>
       <div class="footer-button button" onclick="closeManualDialog()">Cancel</div>
     </div>
