@@ -409,6 +409,40 @@ label {
   border-style: solid;
 }
 
+/* Landscape mode */
+@media all and (orientation:landscape) {
+
+  .body-old-stroke {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: auto auto 1fr;
+  }
+
+  #club-container-old-stroke {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #club-container-old-stroke .club {
+    border-width: 1px;
+    border-radius: 5px;
+    font-size: 12px;
+    width: 13%; /* fit 7 clubs horizontally */
+    min-width: 10px;
+    margin-top:2px;
+  }
+
+  #swing-power-container-old-stroke {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  #map {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+}
+
 /********** General dialog styles **********/
 
 .dialog {
