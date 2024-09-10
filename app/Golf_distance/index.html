@@ -165,22 +165,22 @@ body {
 
 }
 
-/********** Statictics page styles **********/
+/********** Data page styles **********/
 
-#header-container-stat {
+#header-container-data {
   display: flex;
   align-items: center;
   justify-content: center;
   padding-bottom: 5px;
 }
 
-#statistics-view {
+#data-view {
   width: 100%;
   font-size: 25px;
   text-align: center; 
 }
 
-#body-container-stat {
+#body-container-data {
   overflow-y: scroll;
 }
 
@@ -205,13 +205,13 @@ th, td {
 /* Landscape mode */
 @media all and (orientation:landscape) {
 
-  #body-container-stat {
+  #body-container-data {
     display: grid;
     grid-template-columns: 280px 1fr;
     grid-template-rows: 1fr;
   }
 
-  #body-container-stat table {
+  #body-container-data table {
     grid-column: 1 / span 2;
   }
 }
@@ -650,8 +650,8 @@ function setupApp() {
 
   // Check if other page is selected
   switch (wasGetUrlParam("page")) {
-  case "page-statistics":
-    showStatistics();
+  case "page-data":
+    showData();
     break;
   case "page-old-stroke":
     showOldStroke();
@@ -898,13 +898,13 @@ function toRad(Value)
 }
 
 //////////////////////////////////////////////////////////////////////////
-// Statistics
+// Data
 
-async function showStatistics() {
-  wasSetUrlParam("page", "page-statistics");
-  wasPageShow("page-statistics");
+async function showData() {
+  wasSetUrlParam("page", "page-data");
+  wasPageShow("page-data");
 
-  var view = document.getElementById("statistics-view").value;
+  var view = document.getElementById("data-view").value;
 
   if (view == "normal" || view == "chip") {
     var swingType = "normal";
@@ -950,9 +950,9 @@ async function showStatistics() {
     table += `
       </table>`;
     
-    document.getElementById("body-container-stat").innerHTML = table;
+    document.getElementById("body-container-data").innerHTML = table;
   } else if (view == "export-import") {
-    document.getElementById("body-container-stat").innerHTML = `
+    document.getElementById("body-container-data").innerHTML = `
     <div class="footer-button button" onclick="exportCSV()">Export CSV</div>
     <br>
     <div class="footer-button button" onclick="importCSV()">Import CSV</div>
@@ -971,7 +971,7 @@ async function showStatistics() {
     
     table += `
       </table>`;
-    document.getElementById("body-container-stat").innerHTML = table;
+    document.getElementById("body-container-data").innerHTML = table;
   } else if (view == "club-plot") {
     showPlot("GW");
   }
@@ -1020,11 +1020,11 @@ function filterDistances(strokes, club, swingType, swingPower) {
 // Show plot
 async function showPlot(club = undefined, swingType = "normal") {
   // Select correct option
-  document.getElementById("statistics-view").value = "club-plot";
+  document.getElementById("data-view").value = "club-plot";
 
   // Create element to put plot inside
   const ctx = document.createElement('canvas');
-  const bodyContainer = document.getElementById("body-container-stat");
+  const bodyContainer = document.getElementById("body-container-data");
   bodyContainer.innerHTML = "<div id='club-container-plot' class='club-container'>"; // Also clear
   bodyContainer.appendChild(ctx);
 
@@ -1290,8 +1290,8 @@ async function showOldStroke(timestamp=null) {
 }
 
 function closeOldStroke() {
-  if (GLOB_PREV_PAGE == "page-statistics") {
-    showStatistics();
+  if (GLOB_PREV_PAGE == "page-data") {
+    showData();
   } else {
     showApp();
   }
@@ -1660,7 +1660,7 @@ function closeNotification() {
 
     <div class="footer-container button-group">
       <div class="footer-button half-button button" onclick="showOldStroke()">Old</div>
-      <div class="footer-button half-button button" onclick="showStatistics()">Statistics</div>
+      <div class="footer-button half-button button" onclick="showData()">Data</div>
       <div id="cancel-button" class="footer-button half-button button" style="display:none" onclick="markCancel()">Cancel</div>
     </div>
   </div>
@@ -1730,9 +1730,9 @@ function closeNotification() {
 
 
 
-  <div id="page-statistics" class="was-page head-content-footer">
-    <div class="header-container" id="header-container-stat">
-      <select name="statistics-view" id="statistics-view" onchange="showStatistics()">
+  <div id="page-data" class="was-page head-content-footer">
+    <div class="header-container" id="header-container-data">
+      <select name="data-view" id="data-view" onchange="showData()">
         <option value="normal">Normal distances</option>
         <option value="chip">Chip distances</option>
         <option value="club-plot">Club plots</option>
@@ -1740,9 +1740,9 @@ function closeNotification() {
         <option value="export-import">Export / Import</option>
       </select>
     </div>
-    <div class="body-container" id="body-container-stat">
+    <div class="body-container" id="body-container-data">
     </div>
-    <div class="footer-container" id="footer-container-stat">
+    <div class="footer-container" id="footer-container-data">
       <div class="footer-button button" onclick="showApp()">Back</div>
     </div>
   </div>
@@ -1755,7 +1755,7 @@ function closeNotification() {
     <div class="body-container" id="manual-distance-container">
       <input type="number" id="manual-distance" name="distance" onchange="storeManualDialog()">
     </div>
-    <div class="footer-container" id="statistics-footer">
+    <div class="footer-container" id="data-footer">
       <div class="footer-button button" onclick="storeManualDialog()">Store</div>
       <div class="footer-button button" onclick="closeManualDialog()">Cancel</div>
     </div>
