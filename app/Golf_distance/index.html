@@ -117,6 +117,12 @@ body {
 @media all and (orientation:landscape) {
   .large-button {
     height: 60px;
+  }  
+  .footer-button {
+    height: 40px;
+  } 
+  .narrow-button {
+    height: 40px;
   }
 }
 
@@ -206,7 +212,7 @@ th, td {
   }
 
   #body-container-stat table {
-    grid-column: 2;
+    grid-column: 1 / span 2;
   }
 }
 
@@ -1734,6 +1740,8 @@ function closeNotification() {
       <div class="footer-button button" onclick="showApp()">Back</div>
     </div>
   </div>
+
+
 
   <div id="dialog-manual-input" class="head-content-footer dialog">
     <div class="header-container">
