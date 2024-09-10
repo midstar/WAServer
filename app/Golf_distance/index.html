@@ -200,6 +200,8 @@ th, td {
 
 .small-table th, .small-table td {
   font-size: 15px;
+  user-select: none;
+  cursor: pointer;
 }
 
 /* Landscape mode */
@@ -448,6 +450,8 @@ label {
 #date {
   flex-grow: 1;
   text-align: center;
+  user-select: none;
+  cursor: pointer;
 }
 
 .body-old-stroke {
@@ -1688,7 +1692,7 @@ function closeNotification() {
             <select name="hole-old" id="hole-old-stroke">
             </select>
           </div>
-          <div id="date">
+          <div id="date" onclick="showData('history')">
             2024-08-17
           </div>
         </div>
