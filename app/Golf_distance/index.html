@@ -289,12 +289,22 @@ label {
   }
 }
 
+#club-container-settings .club {
+  background-color: rgb(220, 220, 220);
+  color: gray;
+}
+
 #club-container-old-stroke .club {
   border-width: 1px;
   border-radius: 5px;
   font-size: 14px;
   width: 13%; /* fit 7 clubs horizontally */
   margin-top:2px;
+}
+
+#club-container-settings .selected-club {
+  background-color: lightgreen;
+  color: black;
 }
 
 .selected-club {
@@ -330,19 +340,6 @@ label {
 }
 
 /********** Swing type / power styles **********/
-/*
-#swing-type-container {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  width:65px;
-  height: 80px;
-  margin: 5px;
-  border-width: 3px;
-  border-radius: 10px;
-  border-style: dotted;
-}*/
-
 #swing-type-container {
   display: flex;
   justify-content: center;
@@ -372,12 +369,6 @@ label {
   font-size: 10px;
 }
 
-/*
-.swing-type {
-  font-size: 15px;
-  width: 60px;
-}*/
-
 #swing-type-container-old-stroke .swing-type {
   font-size: 10px;
 }
@@ -404,18 +395,6 @@ label {
   border-style: solid;
   user-select: none;
   cursor: pointer;
-  /*
-  font-size: 15px;
-  text-align: center;
-  margin: 5px;
-  padding: 2px;
-  width:50px;
-  height: 80px;
-  border-width: 2px;
-  border-radius: 10px;
-  border-style: solid;
-  user-select: none;
-  cursor: pointer;*/
 }
 
 #swing-power-container-old-stroke .swing-button {
@@ -434,8 +413,6 @@ label {
 
 .swing-button img {
   height: 50px;
-  /*
-  height: 60px;*/
 }
 
 #swing-power-container-old-stroke .swing-button img {
@@ -508,7 +485,6 @@ label {
   z-index: 1;
   width: 90%;
   height:auto;
-  /*height: 70%;*/
   position: absolute;
   left: 50%;
   top: 50%;
@@ -984,6 +960,8 @@ async function showData(view = "") {
     document.getElementById("body-container-data").innerHTML = table;
   } else if (view == "club-plot") {
     showPlot("GW");
+  } else if (view == "club-settings") {
+    showClubSettings();
   }
 }
 
@@ -1027,7 +1005,46 @@ function filterDistances(strokes, club, swingType, swingPower) {
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// Club settings
+
+function showClubSettings() {
+  document.getElementById("body-container-data").innerHTML = "<div id='save-clubs-button' class='footer-button button' onclick='saveClubSettings()'>Save</div>";
+  document.getElementById("body-container-data").innerHTML += "<div id='club-container-settings' class='club-container'></div>";
+  const elemClubs = document.getElementById("club-container-settings");
+  for (const club of data["club"]) {
+    const elemDiv = document.createElement("div");
+    elemDiv.setAttribute("class", "club");
+    elemDiv.setAttribute("onclick", `selectClubInSettings("${club}")`);
+    elemDiv.innerText = club;
+    elemClubs.appendChild(elemDiv);
+  }  
+}
+
+function selectClubInSettings(club) {
+  const elemClubs = document.getElementById("club-container-settings");
+  var children = elemClubs.children;
+  for (var child of children) {
+    if (child.innerText == club) {
+      child.classList.toggle("selected-club");
+    } 
+  }
+}
+
+function saveClubSettings() {
+  const clubs = [];
+  const elemClubs = document.getElementById("club-container-settings");
+  var children = elemClubs.children;
+  for (var child of children) {
+    if (child.classList.contains("selected-club")) {
+      clubs.push(child.innerText);
+    } 
+  }
+  alert(clubs);
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // Show plot
+
 async function showPlot(club = undefined, swingType = "normal") {
   // Select correct option
   document.getElementById("data-view").value = "club-plot";
@@ -1748,6 +1765,7 @@ function closeNotification() {
         <option value="club-plot">Club plots</option>
         <option value="history">History</option>
         <option value="export-import">Export / Import</option>
+        <option value="club-settings">Club settings</option>
       </select>
     </div>
     <div class="body-container" id="body-container-data">
