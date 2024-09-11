@@ -1062,11 +1062,7 @@ function saveClubSettings() {
     openNotification("No clubs selected", "You need to select at least one club", true);
     return
   }
-  GLOB_CLUBS.length = 0; // Empty
-  for (club of clubs) {
-    GLOB_CLUBS.push(club);
-  }
-  postClubs(GLOB_CLUBS);
+  postClubs(clubs);
   // Refresh the page
   location.reload();
 }
