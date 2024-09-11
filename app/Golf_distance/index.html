@@ -565,7 +565,7 @@ input[type='number'] {
 
 
 </style>
-<script src="data.js"></script>
+<script src="data.js?3"></script>
 <script>
 
 //////////////////////////////////////////////////////////////////////////////
@@ -582,6 +582,9 @@ function appPageCallback(gameName) {
 
 //////////////////////////////////////////////////////////////////////////////
 // App config
+
+// Clubs (the golf bag)
+const GLOB_CLUBS = [];
 
 // Current position (continous GPS update)
 const GLOB_CURRENT = {lat : undefined, long : undefined, alt : undefined};
@@ -605,13 +608,26 @@ var GLOB_STROKE = {
 // Backup of previous non sent strokes in case of offline
 const GLOB_STROKES = []; 
 
-function setupApp() {
+async function setupApp() {
 
   // Fill in courses (both ordinary and old-strokes)
   fillSelect("course", Object.keys(data["course"]), false);
   fillSelect("course-old-stroke", Object.keys(data["course"]), false);
 
   // Fill in clubs
+  const user_clubs = await getClubs();
+  var clubs = user_clubs;
+  if (user_clubs == null != user_clubs.length == 0) {
+    clubs = data["club_default"];
+  }
+  for (club of clubs) {
+    GLOB_CLUBS.push(club);
+  }
+  if (user_clubs.length == 0) {
+    // No clubs existed, lets create them
+    postClubs(GLOB_CLUBS);
+  }
+
   createClubElements("club-container");
   createClubElements("club-container-old-stroke");
 
@@ -750,7 +766,7 @@ function markCancel() {
 // extraOnClick will be called as extraOnClick(club)
 function createClubElements(clubContainer, extraOnClick = "") {
   const elemClubs = document.getElementById(clubContainer);
-  for (const club of data["club"]) {
+  for (const club of GLOB_CLUBS) {
     const elemDiv = document.createElement("div");
     elemDiv.setAttribute("class", "club");
     var extraFunc = "";
@@ -900,7 +916,7 @@ async function showData(view = "") {
     const strokes = await getStrokes();
     // Array with objects with min, median, max, club, power as values
     dists = [];
-    for (const club of data["club"]) {
+    for (const club of GLOB_CLUBS) {
       for(pow of [25,50,75,100]) {
         const dist = filterDistances(strokes,club, swingType,pow);
         if (dist.length > 0) {
@@ -1015,6 +1031,9 @@ function showClubSettings() {
     const elemDiv = document.createElement("div");
     elemDiv.setAttribute("class", "club");
     elemDiv.setAttribute("onclick", `selectClubInSettings("${club}")`);
+    if (GLOB_CLUBS.includes(club)) {
+      elemDiv.classList.add("selected-club");
+    }
     elemDiv.innerText = club;
     elemClubs.appendChild(elemDiv);
   }  
@@ -1039,7 +1058,17 @@ function saveClubSettings() {
       clubs.push(child.innerText);
     } 
   }
-  alert(clubs);
+  if (clubs.length == 0) {
+    openNotification("No clubs selected", "You need to select at least one club", true);
+    return
+  }
+  GLOB_CLUBS.length = 0; // Empty
+  for (club of clubs) {
+    GLOB_CLUBS.push(club);
+  }
+  postClubs(GLOB_CLUBS);
+  // Refresh the page
+  location.reload();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1602,6 +1631,42 @@ async function deleteStroke(stroke) {
   } catch (error) {
     openNotification("No network!", error.message);
   }
+}
+
+// Returns empty array if no clubs exists and null on error.
+async function getClubs() {
+  var user = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/userdata/${user}/clubs`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      return []; // This is ok and sometimes expected
+    }
+    const json = await response.json();
+    return json;
+  } catch (error) {
+    openNotification("No network!", error.message);
+    return null;
+  }
+}
+
+async function postClubs(clubs) {
+  var user = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/userdata/${user}/clubs`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify(clubs),
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+  } catch (error) {
+    openNotification("No network!", error.message);
+    return false;
+  }
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
