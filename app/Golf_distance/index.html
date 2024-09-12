@@ -1069,12 +1069,39 @@ function updateHoleSettings() {
     }
     table += `
     <tr>
-      <td>${hole}</td><td><input type="text" value="${latLongStr}"></td>
+      <td>${hole}</td><td><input id="set-hole-${hole}" type="text" value="${latLongStr}" onchange="validateLatLong('set-hole-${hole}')"></td>
     </tr>
     `
   } 
   table += "</table>"
   document.getElementById("hole-settings").innerHTML = table;
+}
+
+function validateLatLong(inputId) {
+  latLong = latLongFromStr(document.getElementById(inputId).value);
+  if (latLong == null) {
+    openNotification("Invalid format", "Enter format: lat,long", true);
+    document.getElementById(inputId).value = "";
+    return;    
+  }
+  document.getElementById(inputId).value = latLong.toString();
+}
+
+// Returns null if invalid
+function latLongFromStr(latLongStr) {
+  if (latLongStr == "") {
+    return [undefined, undefined];
+  } 
+  const latLong = latLongStr.split(",");
+  if (latLong.length != 2) {
+    return null;
+  }
+  const lat = parseFloat(latLong[0]);
+  const long = parseFloat(latLong[1]);
+  if (Number.isNaN(lat) || Number.isNaN(long)) {
+    return null;
+  }
+  return [lat, long];
 }
 
 //////////////////////////////////////////////////////////////////////////////
