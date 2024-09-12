@@ -1078,6 +1078,15 @@ function deleteCourse() {
   }
 }
 
+function saveCourse() {
+  const courseName = document.getElementById('course-settings').value;
+  const course = GLOB_COURSES[courseName];
+  for (hole of Object.keys(course)) {
+    course[hole] = latLongFromStr(document.getElementById(`set-hole-${hole}`).value);
+  } 
+  postCourses(GLOB_COURSES);  
+}
+
 function updateHoleSettings() {
   const courseName = document.getElementById('course-settings').value;
   const course = GLOB_COURSES[courseName];
