@@ -1052,9 +1052,9 @@ function filterDistances(strokes, club, swingType, swingPower) {
 function showCourseSettings() {
   document.getElementById("body-container-data").innerHTML = `
     <div class='button-group'>
-      <div class='footer-button button' onclick='saveClubSettings()'>Add</div>
-      <div class='footer-button button' onclick='saveClubSettings()'>Delete</div>
-      <div class='footer-button button' onclick='saveClubSettings()'>Save</div>
+      <div class='footer-button button' onclick='addCourse()'>Add</div>
+      <div class='footer-button button' onclick='deleteCourse()'>Delete</div>
+      <div class='footer-button button' onclick='saveCourse()'>Save Course</div>
     </div>
     <div class="course-container">
       <label for="course">Course:</label>
@@ -1066,6 +1066,16 @@ function showCourseSettings() {
   `; 
   fillSelect('course-settings', Object.keys(GLOB_COURSES));
   updateHoleSettings();
+}
+
+function deleteCourse() {
+  const courseName = document.getElementById('course-settings').value;
+  if (confirm(`Are you sure that "${courseName}" shall be deleted?`)) {
+    delete GLOB_COURSES[courseName];
+    postCourses(GLOB_COURSES);
+    // Refresh the page
+    location.reload();
+  }
 }
 
 function updateHoleSettings() {
