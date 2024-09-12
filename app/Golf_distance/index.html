@@ -592,11 +592,11 @@ function appPageCallback(gameName) {
 //////////////////////////////////////////////////////////////////////////////
 // App config
 
+// Courses
+var GLOB_COURSES = {};
+
 // Clubs (the golf bag)
 const GLOB_CLUBS = [];
-
-// Courses
-const GLOB_COURSES = {};
 
 // Current position (continous GPS update)
 const GLOB_CURRENT = {lat : undefined, long : undefined, alt : undefined};
@@ -622,14 +622,25 @@ const GLOB_STROKES = [];
 
 async function setupApp() {
 
+  // Fill in the courses
+  const user_courses = await getCourses();
+  GLOB_COURSES = user_courses;
+  if (user_courses == null || Object.keys(user_courses).length == 0) {
+    GLOB_COURSES = data["course"];
+    if (Object.keys(user_courses).length == 0) {
+      // No courses existed, lets create them
+      postCourses(GLOB_COURSES);
+    }
+  }
+
   // Fill in courses (both ordinary and old-strokes)
-  fillSelect("course", Object.keys(data["course"]), false);
-  fillSelect("course-old-stroke", Object.keys(data["course"]), false);
+  fillSelect("course", Object.keys(GLOB_COURSES), false);
+  fillSelect("course-old-stroke", Object.keys(GLOB_COURSES), false);
 
   // Fill in clubs
   const user_clubs = await getClubs();
   var clubs = user_clubs;
-  if (user_clubs == null != user_clubs.length == 0) {
+  if (user_clubs == null || user_clubs.length == 0) {
     clubs = data["club_default"];
   }
   for (club of clubs) {
@@ -642,6 +653,7 @@ async function setupApp() {
 
   createClubElements("club-container");
   createClubElements("club-container-old-stroke");
+
 
   // Set default club etc
   selectClub("DRW","club-container"); // TBD - DRW might not exist
@@ -670,9 +682,9 @@ async function setupApp() {
 function changeCourse() {
   const course = document.getElementById("course").value;
 
-  if (course in data["course"]) {
+  if (course in GLOB_COURSES) {
     // Fill in holes
-    fillSelect("hole", Object.keys(data["course"][course]));
+    fillSelect("hole", Object.keys(GLOB_COURSES[course]));
   } else {
     document.getElementById("hole").innerHTML = "";
   }
@@ -698,10 +710,10 @@ function fillSelect(selectId,valueArray,eraseOld=true) {
 function updateRef() {
   const course = document.getElementById("course").value;
   
-  if (course in data["course"]) {
+  if (course in GLOB_COURSES) {
     const hole = document.getElementById("hole").value;
-    GLOB_REF.lat  = data["course"][course][hole][0];
-    GLOB_REF.long = data["course"][course][hole][1];
+    GLOB_REF.lat  = GLOB_COURSES[course][hole][0];
+    GLOB_REF.long = GLOB_COURSES[course][hole][1];
   }
   
   updateDistances();
@@ -1052,13 +1064,13 @@ function showCourseSettings() {
     <div id='hole-settings'>
     </div>
   `; 
-  fillSelect('course-settings', Object.keys(data["course"]));
+  fillSelect('course-settings', Object.keys(GLOB_COURSES));
   updateHoleSettings();
 }
 
 function updateHoleSettings() {
   const courseName = document.getElementById('course-settings').value;
-  const course = data["course"][courseName];
+  const course = GLOB_COURSES[courseName];
   var table = `
     <table id='hole-settings-table'>
       <tr>
@@ -1461,9 +1473,9 @@ function modifyOldStroke() {
 function changeCourseOldStroke() {
   const course = document.getElementById("course-old-stroke").value;
 
-  if (course in data["course"]) {
+  if (course in GLOB_COURSES) {
     // Fill in holes
-    fillSelect("hole-old-stroke", Object.keys(data["course"][course]));
+    fillSelect("hole-old-stroke", Object.keys(GLOB_COURSES[course]));
   } else {
     document.getElementById("hole-old-stroke").innerHTML = "";
   }
