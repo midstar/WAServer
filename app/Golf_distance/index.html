@@ -595,6 +595,9 @@ function appPageCallback(gameName) {
 // Clubs (the golf bag)
 const GLOB_CLUBS = [];
 
+// Courses
+const GLOB_COURSES = {};
+
 // Current position (continous GPS update)
 const GLOB_CURRENT = {lat : undefined, long : undefined, alt : undefined};
 
@@ -1623,77 +1626,30 @@ function openManualDialog() {
 //////////////////////////////////////////////////////////////////////////
 // Server communication
 async function getStrokeTimestamps() {
-  var user = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/userdata/${user}/strokes/?ls=true`;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      return []; // This is ok and sometimes expected
-    }
-    const json = await response.json();
-    var ids = [];
-    for (file of json.files) {
-      if(file.includes(".json")) {
-        ids.push(parseInt(file.replace(".json","")));
-      }
-    }
-    return ids;
-  } catch (error) {
-    openNotification("No network!", error.message);
+  const files = await get(`strokes/?ls=true`, null);
+  if (files == null) {
     return [];
-  }  
+  }
+  var ids = [];
+  for (file of files.files) {
+    if(file.includes(".json")) {
+      ids.push(parseInt(file.replace(".json","")));
+    }
+  }
+  return ids;
 }
 
 async function getStrokes() {
-  var user = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/userdata/${user}/strokes/`;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      return null; // This is ok and sometimes expected
-    }
-    const json = await response.json();
-    return json;
-  } catch (error) {
-    openNotification("No network!", error.message);
-    return null;
-  }
+  return get(`strokes/`, null);
 }
 
 async function getStroke(timestamp) {
-  var user = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/userdata/${user}/strokes/${timestamp}`;
-  try { 
-    const response = await fetch(url);
-    if (!response.ok) {
-      return null; // This is ok and expected
-    }
-    const json = await response.json();
-    return json;
-  } catch (error) {
-    openNotification("No network!", error.message);
-    return null;
-  }
+  return get(`strokes/${timestamp}`, null);
 }
 
 // Returns true if successful
 async function postStroke(stroke) {
-  var user = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/userdata/${user}/strokes/${stroke.timestamp}`;
-  const request = new Request(url, {
-    method: "POST",
-    body: JSON.stringify(stroke),
-  });
-  try {
-    const response = await fetch(request);
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
-  } catch (error) {
-    openNotification("No network!", error.message);
-    return false;
-  }
-  return true;
+  return post(stroke,`strokes/${stroke.timestamp}`);
 }
 
 async function deleteStroke(stroke) {
@@ -1715,12 +1671,32 @@ async function deleteStroke(stroke) {
 
 // Returns empty array if no clubs exists and null on error.
 async function getClubs() {
+  return get("clubs", []);
+}
+
+async function postClubs(clubs) {
+  return post(clubs,"clubs");
+}
+
+// Returns empty object if no courses exists and null on error.
+async function getCourses() {
+  return get("courses", {});
+}
+
+async function postCourses(courses) {
+  return post(courses,"courses");
+}
+
+// Generic get function returns null on network error, default value on
+// server error (typically that object don't exist) or the actual object
+// on success
+async function get(pathDir, defaultObj) {
   var user = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/userdata/${user}/clubs`;
+  const url = `${WAS_APP_URL}/userdata/${user}/${pathDir}`;
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      return []; // This is ok and sometimes expected
+      return defaultObj; // This is ok and sometimes expected
     }
     const json = await response.json();
     return json;
@@ -1730,12 +1706,13 @@ async function getClubs() {
   }
 }
 
-async function postClubs(clubs) {
+// Generic post function returns true on success and false on error
+async function post(obj, pathDir) {
   var user = wasGetUrlParam("user");
-  const url = `${WAS_APP_URL}/userdata/${user}/clubs`;
+  const url = `${WAS_APP_URL}/userdata/${user}/${pathDir}`;
   const request = new Request(url, {
     method: "POST",
-    body: JSON.stringify(clubs),
+    body: JSON.stringify(obj),
   });
   try {
     const response = await fetch(request);
