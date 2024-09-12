@@ -561,6 +561,15 @@ input[type='number'] {
   margin-bottom: 10px;
 }
 
+/********** Course settings **********/
+
+#hole-settings-table {
+  width: 100%;
+}
+
+#hole-settings-table tbody td input {
+  width: 100%;
+}
 
 
 
@@ -976,6 +985,8 @@ async function showData(view = "") {
     document.getElementById("body-container-data").innerHTML = table;
   } else if (view == "club-plot") {
     showPlot("GW");
+  } else if (view == "course-settings") {
+    showCourseSettings();
   } else if (view == "club-settings") {
     showClubSettings();
   }
@@ -1021,10 +1032,56 @@ function filterDistances(strokes, club, swingType, swingPower) {
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// Course Settings
+
+function showCourseSettings() {
+  document.getElementById("body-container-data").innerHTML = `
+    <div class='button-group'>
+      <div class='footer-button button' onclick='saveClubSettings()'>Add</div>
+      <div class='footer-button button' onclick='saveClubSettings()'>Delete</div>
+      <div class='footer-button button' onclick='saveClubSettings()'>Save</div>
+    </div>
+    <div class="course-container">
+      <label for="course">Course:</label>
+      <select name="course" id="course-settings" onchange="updateHoleSettings()">
+      </select>
+    </div>
+    <div id='hole-settings'>
+    </div>
+  `; 
+  fillSelect('course-settings', Object.keys(data["course"]));
+  updateHoleSettings();
+}
+
+function updateHoleSettings() {
+  const courseName = document.getElementById('course-settings').value;
+  const course = data["course"][courseName];
+  var table = `
+    <table id='hole-settings-table'>
+      <tr>
+        <th>Hole</th><th>lat, long</th>
+      </tr>
+    `;
+  for (const [hole, latLong] of Object.entries(course)) {
+    var latLongStr = latLong.toString();
+    if (latLongStr == ",") {
+      latLongStr = "";
+    }
+    table += `
+    <tr>
+      <td>${hole}</td><td><input type="text" value="${latLongStr}"></td>
+    </tr>
+    `
+  } 
+  table += "</table>"
+  document.getElementById("hole-settings").innerHTML = table;
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // Club settings
 
 function showClubSettings() {
-  document.getElementById("body-container-data").innerHTML = "<div id='save-clubs-button' class='footer-button button' onclick='saveClubSettings()'>Save</div>";
+  document.getElementById("body-container-data").innerHTML = "<div class='footer-button button' onclick='saveClubSettings()'>Save</div>";
   document.getElementById("body-container-data").innerHTML += "<div id='club-container-settings' class='club-container'></div>";
   const elemClubs = document.getElementById("club-container-settings");
   for (const club of data["club"]) {
@@ -1826,6 +1883,7 @@ function closeNotification() {
         <option value="club-plot">Club plots</option>
         <option value="history">History</option>
         <option value="export-import">Export / Import</option>
+        <option value="course-settings">Course settings</option>
         <option value="club-settings">Club settings</option>
       </select>
     </div>
