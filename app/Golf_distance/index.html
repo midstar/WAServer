@@ -1088,6 +1088,7 @@ function showCourseSettings() {
 }
 
 function addCourse() {
+  document.getElementById("new-course-name").value = "";
   document.getElementById("dialog-add-course").style.display = "grid";
 }
 
@@ -1097,8 +1098,23 @@ function closeNewCourse() {
 
 function newCourse(nbrHoles) {
   const courseName = document.getElementById("new-course-name").value;
-  alert(courseName + " " + nbrHoles);
-  closeNewCourse();
+  if (courseName == "") {
+    closeNewCourse();    
+    openNotification("Invalid Course", "Course name cannot be empty", true);
+  } else if (courseName in GLOB_COURSES) {
+    closeNewCourse();    
+    openNotification("Invalid Course", `${courseName} already exist`, true);
+  } else {
+    const course = {};
+    for(var i = 1 ; i <= nbrHoles; i++) {
+      course[i] = [undefined, undefined];
+    }
+    GLOB_COURSES[courseName] = course;
+    postCourses(GLOB_COURSES);
+    closeNewCourse();  
+    // Refresh the page
+    location.reload();  
+  }
 }
 
 
