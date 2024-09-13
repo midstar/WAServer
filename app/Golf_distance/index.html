@@ -106,6 +106,13 @@ body {
   padding-right: 10px;
 }
 
+.footer-button-small {
+  font-size: 20px;
+  height: 55px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
 .narrow-button {
   height: 55px;
   padding-left: 10px;
@@ -204,6 +211,18 @@ th, td {
   cursor: pointer;
 }
 
+#course-settings-courses {
+  display: inline;
+}
+#course-settings-courses label {
+  font-size: 20px;
+  text-align:center;
+}
+#course-settings-courses select {
+  font-size: 20px;
+  width: 100%;
+}
+
 /* Landscape mode */
 @media all and (orientation:landscape) {
 
@@ -215,6 +234,14 @@ th, td {
 
   #body-container-data table {
     grid-column: 1 / span 2;
+  }
+
+  #course-settings-courses {
+    grid-column: 1;
+  }
+
+  #hole-settings {
+    grid-column: 2;
   }
 }
 
@@ -1071,11 +1098,11 @@ function filterDistances(strokes, club, swingType, swingPower) {
 function showCourseSettings() {
   document.getElementById("body-container-data").innerHTML = `
     <div class='button-group'>
-      <div class='footer-button button' onclick='addCourse()'>Add</div>
-      <div class='footer-button button' onclick='deleteCourse()'>Delete</div>
-      <div class='footer-button button' onclick='saveCourse()'>Save Course</div>
+      <div class='footer-button-small button' onclick='addCourse()'>Add</div>
+      <div class='footer-button-small button' onclick='deleteCourse()'>Delete</div>
+      <div class='footer-button-small button' onclick='saveCourse()'>Save Course</div>
     </div>
-    <div class="course-container">
+    <div id="course-settings-courses" class="">
       <label for="course">Course:</label>
       <select name="course" id="course-settings" onchange="updateHoleSettings()">
       </select>
@@ -2000,7 +2027,7 @@ function closeNotification() {
     </div>
     <div class="body-container body-container-dialog">
       <label for="course-name">Course Name:</label><br>
-      <input style="width:90%;" type="text" id="new-course-name" name="course-name">
+      <input type="text" id="new-course-name" name="course-name">
     </div>
     <div class="footer-container button-group">
       <div class="footer-button button" onclick="newCourse(18)">18 holes</div>
