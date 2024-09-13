@@ -495,26 +495,45 @@ label {
   border-style: solid;
 }
 
+.body-container-dialog {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+.body-container-dialog label {
+  font-size: 25px;
+}
+
 /********** Manual input dialog styles **********/
 
 #dialog-manual-input {
   display: none;
 }
 
-#manual-distance-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 40px;
-  margin-bottom: 40px;
-}
-
-input {
+#dialog-manual-input input {
   width: 90%
 }
 
-input[type='number'] { 
+#manual-distance { 
   font-size: 40px;
+}
+
+/********** Add course dialog styles **********/
+
+#dialog-add-course {
+  display: none;
+}
+
+#new-course-name input {
+  width: 90%; 
+}
+
+#new-course-name {
+  font-size: 20px;
 }
 
 /********** Notification dialog styles **********/
@@ -1067,6 +1086,21 @@ function showCourseSettings() {
   fillSelect('course-settings', Object.keys(GLOB_COURSES));
   updateHoleSettings();
 }
+
+function addCourse() {
+  document.getElementById("dialog-add-course").style.display = "grid";
+}
+
+function closeNewCourse() {
+  document.getElementById("dialog-add-course").style.display = "none";
+}
+
+function newCourse(nbrHoles) {
+  const courseName = document.getElementById("new-course-name").value;
+  alert(courseName + " " + nbrHoles);
+  closeNewCourse();
+}
+
 
 function deleteCourse() {
   const courseName = document.getElementById('course-settings').value;
@@ -1649,7 +1683,7 @@ function closeManualDialog() {
 }
 
 function openManualDialog() {
-  document.getElementById("dialog-manual-input").style.display = "flex";
+  document.getElementById("dialog-manual-input").style.display = "grid";
   document.getElementById("manual-distance").value = "";
   document.getElementById("manual-distance").focus();
 }
@@ -1934,12 +1968,28 @@ function closeNotification() {
   <div id="dialog-manual-input" class="head-content-footer dialog">
     <div class="header-container">
     </div>
-    <div class="body-container" id="manual-distance-container">
+    <div class="body-container body-container-dialog">
+      <label for="manual-distance">Distance in m:</label><br>
       <input type="number" id="manual-distance" name="distance" onchange="storeManualDialog()">
     </div>
-    <div class="footer-container" id="data-footer">
+    <div class="footer-container button-group" id="data-footer">
       <div class="footer-button button" onclick="storeManualDialog()">Store</div>
       <div class="footer-button button" onclick="closeManualDialog()">Cancel</div>
+    </div>
+  </div>
+
+
+  <div id="dialog-add-course" class="head-content-footer dialog">
+    <div class="header-container">
+    </div>
+    <div class="body-container body-container-dialog">
+      <label for="course-name">Course Name:</label><br>
+      <input style="width:90%;" type="text" id="new-course-name" name="course-name">
+    </div>
+    <div class="footer-container button-group">
+      <div class="footer-button button" onclick="newCourse(18)">18 holes</div>
+      <div class="footer-button button" onclick="newCourse(9)">9 holes</div>
+      <div class="footer-button button" onclick="closeNewCourse()">Cancel</div>
     </div>
   </div>
 
