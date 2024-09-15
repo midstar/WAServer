@@ -6,7 +6,7 @@
 waserver is a generic WEB Application Server. It has a general and 
 simple REST API interface for reading (GET) and storing (POST) json 
 data, thus it is very simple to create web applications without 
-updating updating anyting on the server side (such as PHP, rust,
+updating anyting on the server side (such as PHP, rust,
 java, python or similar).
 
 waserver consists of one executable and no external dependencies.
@@ -77,7 +77,7 @@ Following applications are available in this repository:
 * [3 in a row](app/3_in_a_row/): Two player game
 * [4 in a row](app/4_in_a_row/): Two player game
 * [Battleship](app/Battleship/): Two player game
-* [Golf Distance](app/Golf_Distance/): Measure distance of your golf strokes using GPS positioning
+* [Golf Distance](app/Golf_distance/): Measure distance of your golf strokes using GPS positioning
 
 ## REST API
 
