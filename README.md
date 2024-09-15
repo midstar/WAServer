@@ -3,8 +3,13 @@
 # waserver - WEB Application Server
 ![waserver builder](https://github.com/midstar/waserver/actions/workflows/build.yml/badge.svg)
 
-waserver is a generic WEB Application Server. It consists of one executable 
-and no external dependencies.
+waserver is a generic WEB Application Server. It has a general and 
+simple REST API interface for reading (GET) and storing (POST) json 
+data, thus it is very simple to create web applications without 
+updating anyting on the server side (such as PHP, rust,
+java, python or similar).
+
+waserver consists of one executable and no external dependencies.
 
 All majort platforms supported such as Windows, Linux (x86 and ARM)
 and Mac.
@@ -64,6 +69,15 @@ The applications needs to be put in following directory:
 
 To get a nice logo image in the waserver start page you need to add an image 
 called logo.ico inside the applicationname directory.
+
+## Avaliable applications
+
+Following applications are available in this repository:
+
+* [3 in a row](app/3_in_a_row/): Two player game
+* [4 in a row](app/4_in_a_row/): Two player game
+* [Battleship](app/Battleship/): Two player game
+* [Golf Distance](app/Golf_distance/): Measure distance of your golf strokes using GPS positioning
 
 ## REST API
 

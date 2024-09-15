@@ -1,0 +1,2045 @@
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta charset="utf-8"/>
+<html>
+<head>
+<title>Golf distance</title>
+<link rel="icon" type="image/x-icon" href="logo.ico?v=2">
+<link rel="stylesheet" href="../was/was.css">
+<script src="../was/was.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
+<script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+
+body {
+  margin: 0px;
+  padding: 0px;
+}
+
+/********** General styles **********/
+
+.head-content-footer {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr 70px;
+  height: 100%;
+}
+
+.header-container {
+  font-size: 20px;
+  margin: 2px;
+  grid-row: 1;
+}
+
+.header-container hr {
+  margin: 0px;
+}
+
+.body-container {
+  grid-row: 2;
+}
+
+.footer-container {
+  grid-row: 3;
+}
+
+/* Landscape mode */
+@media all and (orientation:landscape) {
+  .head-content-footer {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .header-container {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .body-container {
+    grid-row: 2;
+    grid-column: 1 / span 2;
+  }
+
+  .footer-container {
+    grid-row: 1;
+    grid-column: 2;
+  }
+}
+
+/********** Button styles **********/
+
+.button {
+  font-size: 25px;
+  margin: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 2px;
+  border-radius: 10px;
+  border-style: solid;
+  user-select: none;
+  cursor: pointer;
+}
+
+.half-button {
+  width: 45%;
+}
+
+.large-button {
+  height: 80px;
+  font-size: 30px;
+  font-weight: bold;
+  margin: 5px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.button-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.footer-button {
+  height: 55px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.footer-button-small {
+  font-size: 20px;
+  height: 55px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.narrow-button {
+  height: 55px;
+  padding-left: 10px;
+  padding-right: 10px;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+@media all and (orientation:landscape) {
+  .large-button {
+    height: 60px;
+  }  
+  .footer-button {
+    height: 40px;
+  } 
+  .narrow-button {
+    height: 40px;
+  }
+}
+
+
+/********** App page styles **********/
+
+/* Landscape mode */
+@media all and (orientation:landscape) {
+
+  .body-app {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .club-distance {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  #mark-start-button {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  #mark-end-button {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  #club-container {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  #swing-power-container {
+    grid-row: 2;
+    grid-column: 2;
+  }
+
+}
+
+/********** Data page styles **********/
+
+#header-container-data {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 5px;
+}
+
+#data-view {
+  width: 100%;
+  font-size: 25px;
+  text-align: center; 
+}
+
+#body-container-data {
+  overflow-y: scroll;
+}
+
+table {
+  margin: auto;
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid black;
+  padding-left: 5px;
+  padding-right: 5px;
+  font-size: 20px;
+  text-align: center;
+}
+
+.small-table th, .small-table td {
+  font-size: 15px;
+  user-select: none;
+  cursor: pointer;
+}
+
+#course-settings-courses {
+  display: inline;
+}
+#course-settings-courses label {
+  font-size: 20px;
+  text-align:center;
+}
+#course-settings-courses select {
+  font-size: 20px;
+  width: 100%;
+}
+
+/* Landscape mode */
+@media all and (orientation:landscape) {
+
+  #body-container-data {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: 1fr;
+  }
+
+  #body-container-data table {
+    grid-column: 1 / span 2;
+  }
+
+  #course-settings-courses {
+    grid-column: 1;
+  }
+
+  #hole-settings {
+    grid-column: 2;
+  }
+}
+
+/********** Course / Hole styles **********/
+
+.course-container {
+  padding-bottom: 10px;
+  display: flex;
+}
+.course-container select {
+  font-size: 20px;
+  flex-grow: 1;
+}
+.flex-center-container {
+  display: flex;
+  align-items: center;
+}
+.hole-container select {
+  width: 70px;
+  font-size: 35px;
+  text-align: center;
+}
+
+#hole-old-stroke {
+  font-size: 20px;
+  margin-right: 5px;
+}
+
+#ref-distance {
+  flex-grow: 1;
+  font-size: 40px;
+  text-align: center;
+}
+label {
+  padding-right: 5px;
+}
+
+/********** Club styles **********/
+
+.club-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: start;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.club {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-width: 2px;
+  border-radius: 10px;
+  border-style: solid;
+  user-select: none;
+  cursor: pointer;
+  font-size: 20px;
+  width: 19%; /* fit 5 clubs horizontally */
+  max-width: 70px;
+  aspect-ratio: 1 / 1;
+  margin: 1px;
+  margin-top:5px;
+}
+
+/* Landscape mode */
+@media all and (orientation:landscape) {
+  .club {
+    width: 12px; /* fit 8 clubs horizontally */
+    min-width: 50px;
+    max-width: 70px;
+  }
+}
+
+#club-container-settings .club {
+  background-color: rgb(220, 220, 220);
+  color: gray;
+}
+
+#club-container-old-stroke .club {
+  border-width: 1px;
+  border-radius: 5px;
+  font-size: 14px;
+  width: 13%; /* fit 7 clubs horizontally */
+  margin-top:2px;
+}
+
+#club-container-settings .selected-club {
+  background-color: lightgreen;
+  color: black;
+}
+
+.selected-club {
+  background-color: rgb(243, 112, 12);
+}
+
+#club-distance {
+  color: blue;
+}
+
+.club-distance {
+  font-size: 70px;
+  text-align: center;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+.club-distance sub {
+  font-size: 30px;
+}
+.club-distance sup {
+  font-size: 30px;
+}
+
+#club-distance-old-stroke {
+  font-size: 40px;
+  text-align: center;
+}
+#club-distance-old-stroke sub {
+  font-size: 15px;
+}
+#club-distance-old-stroke sup {
+  font-size: 15px;
+}
+
+/********** Swing type / power styles **********/
+#swing-type-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  width:65px;
+  height: 60px;
+  margin: 5px;
+  border-width: 3px;
+  border-radius: 10px;
+  border-style: dotted;
+}
+
+#swing-type-container-old-stroke {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  width:65px;
+  height: 60px;
+  margin: 5px;
+  border-width: 3px;
+  border-radius: 10px;
+  border-style: dotted;
+}
+
+.swing-type {
+  width: 60px;
+  font-size: 10px;
+}
+
+#swing-type-container-old-stroke .swing-type {
+  font-size: 10px;
+}
+
+.selected-type {
+  background-color: rgb(206, 206, 253);
+}
+
+.swing-power-container {
+  display: flex;
+  justify-content: space-evenly;
+  width: 100%;
+}
+
+.swing-button {
+  font-size: 10px;
+  text-align: center;
+  margin: 5px;
+  padding: 2px;
+  width:50px;
+  height: 60px;
+  border-width: 2px;
+  border-radius: 10px;
+  border-style: solid;
+  user-select: none;
+  cursor: pointer;
+}
+
+#swing-power-container-old-stroke .swing-button {
+  font-size: 10px;
+  text-align: center;
+  margin: 5px;
+  padding: 2px;
+  width:50px;
+  height: 60px;
+  border-width: 2px;
+  border-radius: 10px;
+  border-style: solid;
+  user-select: none;
+  cursor: pointer;
+}
+
+.swing-button img {
+  height: 50px;
+}
+
+#swing-power-container-old-stroke .swing-button img {
+  height: 50px;
+}
+
+.selected-power {
+  background-color: rgb(207, 248, 195);
+}
+
+/********** Old stroke misc page styles **********/
+#date {
+  flex-grow: 1;
+  text-align: center;
+  user-select: none;
+  cursor: pointer;
+}
+
+.body-old-stroke {
+  display: flex;
+  flex-flow: column;
+}
+
+#map {
+  flex: 1 1 auto;
+  margin-left: 4px;
+  margin-right: 4px;
+  border-width: 2px;
+  border-radius: 4px;
+  border-style: solid;
+}
+
+/* Landscape mode */
+@media all and (orientation:landscape) {
+
+  .body-old-stroke {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: auto auto 1fr;
+  }
+
+  #club-container-old-stroke {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #club-container-old-stroke .club {
+    border-width: 1px;
+    border-radius: 5px;
+    font-size: 12px;
+    width: 13%; /* fit 7 clubs horizontally */
+    min-width: 10px;
+    margin-top:2px;
+  }
+
+  #swing-power-container-old-stroke {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  #map {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+}
+
+/********** General dialog styles **********/
+
+.dialog {
+  z-index: 1;
+  width: 90%;
+  height:auto;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-width: 4px;
+  border-radius: 10px;
+  border-style: solid;
+}
+
+.body-container-dialog {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+.body-container-dialog label {
+  font-size: 25px;
+}
+
+/********** Manual input dialog styles **********/
+
+#dialog-manual-input {
+  display: none;
+}
+
+#dialog-manual-input input {
+  width: 90%
+}
+
+#manual-distance { 
+  font-size: 40px;
+}
+
+/********** Add course dialog styles **********/
+
+#dialog-add-course {
+  display: none;
+}
+
+#new-course-name input {
+  width: 90%; 
+}
+
+#new-course-name {
+  font-size: 20px;
+}
+
+/********** Notification dialog styles **********/
+
+#notification {
+  display: none;
+  z-index: 2;
+  font-size: 25px;
+  text-align:center;
+  z-index: 2;
+  width: 80%;
+  height:auto;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-width: 4px;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: blue;
+}
+
+#notification.warning {
+  border-color: red;
+}
+
+#notification-head {
+  font-weight: bold;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+#notification-icon {
+  font-size: 30px;
+  color: blue;
+}
+
+#notification-icon.warning {
+  color: red;
+}
+
+#notification-reason {
+  margin-bottom: 10px;
+}
+
+/********** Course settings **********/
+
+#hole-settings-table {
+  width: 100%;
+}
+
+#hole-settings-table tbody td input {
+  width: 100%;
+}
+
+
+
+</style>
+<script src="data.js?3"></script>
+<script>
+
+//////////////////////////////////////////////////////////////////////////////
+// Startup
+
+window.onload = async function() {
+  await wasInit("Golf_distance", appPageCallback, "user", null);
+}
+
+function appPageCallback(gameName) {
+  wasPageShow("page-app");
+  setupApp();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// App config
+
+// Courses
+var GLOB_COURSES = {};
+
+// Clubs (the golf bag)
+const GLOB_CLUBS = [];
+
+// Current position (continous GPS update)
+const GLOB_CURRENT = {lat : undefined, long : undefined, alt : undefined};
+
+// Position of current selected course / hole
+const GLOB_REF = { lat : undefined, long : undefined};
+
+// The stroke we are building
+var GLOB_STROKE = {
+      timestamp : undefined,
+      club: undefined,
+      type: undefined, // normal or chip
+      power: undefined, // 25, 50, 75 or 100 (= full swing)
+      course: undefined,
+      hole: undefined,
+      start : {lat : undefined, long : undefined, alt : undefined},
+      end : {lat : undefined, long : undefined, alt : undefined},
+      dist : undefined // Calculated from start end or manually entered
+    };
+
+// Backup of previous non sent strokes in case of offline
+const GLOB_STROKES = []; 
+
+async function setupApp() {
+
+  // Fill in the courses
+  const user_courses = await getCourses();
+  GLOB_COURSES = user_courses;
+  if (user_courses == null || Object.keys(user_courses).length == 0) {
+    GLOB_COURSES = data["course"];
+    if (Object.keys(user_courses).length == 0) {
+      // No courses existed, lets create them
+      postCourses(GLOB_COURSES);
+    }
+  }
+
+  // Fill in courses (both ordinary and old-strokes)
+  fillSelect("course", Object.keys(GLOB_COURSES), false);
+  fillSelect("course-old-stroke", Object.keys(GLOB_COURSES), false);
+
+  // Fill in clubs
+  const user_clubs = await getClubs();
+  var clubs = user_clubs;
+  if (user_clubs == null || user_clubs.length == 0) {
+    clubs = data["club_default"];
+  }
+  for (club of clubs) {
+    GLOB_CLUBS.push(club);
+  }
+  if (user_clubs.length == 0) {
+    // No clubs existed, lets create them
+    postClubs(GLOB_CLUBS);
+  }
+
+  createClubElements("club-container");
+  createClubElements("club-container-old-stroke");
+
+
+  // Set default club etc
+  selectClub("DRW","club-container"); // TBD - DRW might not exist
+  selectSwingPower(100,"swing-power-container");
+  selectSwingType("normal", "swing-type-container");
+  
+  // Configure and start geolocation tracking
+  options = {
+    enableHighAccuracy: true,
+    timeout: 5000,
+    maximumAge: 0
+  };
+  navigator.geolocation.watchPosition(posUpdate, posError, options);
+
+  // Check if other page is selected
+  switch (wasGetUrlParam("page")) {
+  case "page-data":
+    showData();
+    break;
+  case "page-old-stroke":
+    showOldStroke();
+    break;
+  }
+}
+
+function changeCourse() {
+  const course = document.getElementById("course").value;
+
+  if (course in GLOB_COURSES) {
+    // Fill in holes
+    fillSelect("hole", Object.keys(GLOB_COURSES[course]));
+  } else {
+    document.getElementById("hole").innerHTML = "";
+  }
+  
+  // Update reference position
+  updateRef();
+}
+
+// Fill options in a select element
+function fillSelect(selectId,valueArray,eraseOld=true) {
+  const elemSelect = document.getElementById(selectId);
+  if (eraseOld) {
+    elemSelect.innerHTML = ""; // Clear old contents
+  }
+  for (const value of valueArray) {
+      const elemOpt = document.createElement("option");
+      elemOpt.setAttribute("value", value);
+      elemOpt.innerText = value;
+      elemSelect.appendChild(elemOpt);
+    }
+}
+
+function updateRef() {
+  const course = document.getElementById("course").value;
+  
+  if (course in GLOB_COURSES) {
+    const hole = document.getElementById("hole").value;
+    GLOB_REF.lat  = GLOB_COURSES[course][hole][0];
+    GLOB_REF.long = GLOB_COURSES[course][hole][1];
+  }
+  
+  updateDistances();
+}
+
+function showTracker() {
+    document.getElementById("club-distance").style.display = "block";
+    document.getElementById("club-distance-empty").style.display = "none";
+    document.getElementById("mark-start-button").style.display = "none";
+    document.getElementById("mark-end-button").style.display = "flex";
+    document.getElementById("cancel-button").style.display = "flex";
+}
+
+function hideTracker() {
+    document.getElementById("club-distance").style.display = "none";
+    document.getElementById("club-distance-empty").style.display = "block";
+    document.getElementById("mark-start-button").style.display = "flex";
+    document.getElementById("mark-end-button").style.display = "none";
+    document.getElementById("cancel-button").style.display = "none";
+}
+
+function markStart(club) {
+  if (GLOB_CURRENT.lat != undefined) {
+    GLOB_STROKE.timestamp  = Date.now();
+    GLOB_STROKE.start.lat  = GLOB_CURRENT.lat;
+    GLOB_STROKE.start.long = GLOB_CURRENT.long;
+    GLOB_STROKE.start.alt  = GLOB_CURRENT.alt;
+
+    updateDistances();
+    showTracker();
+  } else {
+    openNotification("Cannot mark start", "No GPS", true);
+  }
+}
+
+async function markEnd(manualDist = 0) {
+  GLOB_STROKE.club = document.getElementById("club-container").getAttribute("club");
+  GLOB_STROKE.type = document.getElementById("swing-type-container").getAttribute("swingtype");
+  GLOB_STROKE.power = document.getElementById("swing-power-container").getAttribute("swingpower");
+  GLOB_STROKE.course = document.getElementById("course").value;
+  GLOB_STROKE.hole = document.getElementById("hole").value;
+  GLOB_STROKE.end.lat = GLOB_CURRENT.lat;
+  GLOB_STROKE.end.long = GLOB_CURRENT.long;
+  GLOB_STROKE.end.alt = GLOB_CURRENT.alt;
+  if (manualDist > 0) {
+    GLOB_STROKE.dist = manualDist;
+  } else {
+    GLOB_STROKE.dist = calcDist(GLOB_STROKE.end, GLOB_STROKE.start);
+  }
+
+  // Store "unsent" strokes in GLOB_STROKES in case
+  // network is down to avoid "loosing" strokes
+  const strokeCopy = JSON.parse(JSON.stringify(GLOB_STROKE));
+  GLOB_STROKES.push(strokeCopy);
+  do {
+    if (postStroke(GLOB_STROKES[0]) == false) {
+      break; // Probably no network connection (try again later)
+    }
+    GLOB_STROKES.pop();
+
+  } while(GLOB_STROKES.length > 0);
+  
+  hideTracker();
+}
+
+function markCancel() {
+  hideTracker();
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// Club handling
+
+// extraOnClick will be called as extraOnClick(club)
+function createClubElements(clubContainer, extraOnClick = "") {
+  const elemClubs = document.getElementById(clubContainer);
+  for (const club of GLOB_CLUBS) {
+    const elemDiv = document.createElement("div");
+    elemDiv.setAttribute("class", "club");
+    var extraFunc = "";
+    if (extraOnClick != "") {
+      extraFunc = `;${extraOnClick}("${club}");`
+    }
+    elemDiv.setAttribute("onclick", `selectClub("${club}","${clubContainer}")${extraFunc}`);
+    elemDiv.innerText = club;
+    elemClubs.appendChild(elemDiv);
+  }  
+}
+
+function selectClub(club, clubContainer) {
+  const elemClubs = document.getElementById(clubContainer);
+  var children = elemClubs.children;
+  for (var child of children) {
+    if (child.innerText == club) {
+      child.classList.add("selected-club");
+    } else {
+      child.classList.remove("selected-club");
+    }
+  }
+  elemClubs.setAttribute("club", club); // Custom attribute
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Swing type and swing power
+
+function selectSwingType(swingType, swingTypeContainer) {
+  const elemSwingTypes = document.getElementById(swingTypeContainer);
+  var children = elemSwingTypes.children;
+  for (var child of children) {
+    if (child.getAttribute("swingtype") == swingType) {
+      child.classList.add("selected-type");
+    } else {
+      child.classList.remove("selected-type");
+    }
+  }
+  elemSwingTypes.setAttribute("swingtype", swingType); // Custom attribute
+}
+
+function selectSwingPower(swingPower, swingPowerContainer) {
+  const elemSwingPowers = document.getElementById(swingPowerContainer);
+  var children = elemSwingPowers.children;
+  for (var child of children) {
+    if (child.getAttribute("power") == swingPower.toString()) {
+      child.classList.add("selected-power");
+    } else {
+      child.classList.remove("selected-power");
+    }
+  }
+  elemSwingPowers.setAttribute("swingpower", swingPower); // Custom attribute
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Geolocation stuff
+function posUpdate(pos) {
+  const crd = pos.coords;
+  GLOB_CURRENT.lat = crd.latitude;
+  GLOB_CURRENT.long = crd.longitude;
+  GLOB_CURRENT.alt = crd.altitude;
+  
+  updateDistances();
+}
+
+function posError(err) {
+  document.getElementById("ref-distance").innerHTML = "ERR";
+  document.getElementById("club-distance").innerHTML = "ERR";
+  GLOB_CURRENT.lat = undefined;
+  GLOB_CURRENT.long = undefined;
+  GLOB_CURRENT.alt = undefined;
+  console.log(err);
+}
+
+function updateDistances() {
+  if (GLOB_CURRENT.lat != undefined) {
+    if (GLOB_REF.lat != undefined) {
+      // Update distance to reference
+      const refDist = calcDist(GLOB_CURRENT, GLOB_REF);
+      document.getElementById("ref-distance").innerHTML = `${refDist} m`;
+    } else {
+      document.getElementById("ref-distance").innerHTML = `- m`;
+    }
+    if (GLOB_STROKE != undefined && GLOB_STROKE.start.lat != undefined) {
+      // Update distance club start position
+      const altDiff = Math.round(GLOB_CURRENT.alt - GLOB_STROKE.start.alt); 
+      var altText = "";
+      if (altDiff < 0) {
+        altText = `<sub>&#8595;${Math.abs(altDiff)} m</sub>`
+      } else {
+        altText = `<sup>&#8593;${altDiff} m</sup>`
+        
+      }
+      const clubDist = calcDist(GLOB_CURRENT, GLOB_STROKE.start); 
+      document.getElementById("club-distance").innerHTML = `${clubDist} m ${altText}`;
+      
+    }
+  }
+}
+
+function calcDist(pos1, pos2) {
+  return calcCrow(pos1.lat, pos1.long, pos2.lat, pos2.long);
+}
+
+//This function takes in latitude and longitude of two location and returns the distance between them as the crow flies (in m)
+function calcCrow(lat1, lon1, lat2, lon2) 
+{
+  var R = 6371000; // m
+  var dLat = toRad(lat2-lat1);
+  var dLon = toRad(lon2-lon1);
+  var lat1 = toRad(lat1);
+  var lat2 = toRad(lat2);
+  
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+  Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  var d = R * c;
+  return Math.round(d);
+}
+
+// Converts numeric degrees to radians
+function toRad(Value) 
+{
+  return Value * Math.PI / 180;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Data
+
+async function showData(view = "") {
+  wasSetUrlParam("page", "page-data");
+  wasPageShow("page-data");
+  if (view == "") {
+    view = wasGetUrlParam("data-view");
+  }
+  if (view == null || view == "-") {
+    view = document.getElementById("data-view").value;
+  }
+  wasSetUrlParam("data-view", view);
+  document.getElementById("data-view").value = view;
+
+  if (view == "normal" || view == "chip") {
+    var swingType = "normal";
+    if (view.includes("chip")) {
+      swingType = "chip";
+    }
+    const strokes = await getStrokes();
+    // Array with objects with min, median, max, club, power as values
+    dists = [];
+    for (const club of GLOB_CLUBS) {
+      for(pow of [25,50,75,100]) {
+        const dist = filterDistances(strokes,club, swingType,pow);
+        if (dist.length > 0) {
+          dists.push({
+            min : dist[0],
+            median : getMedian(dist),
+            max : dist[dist.length - 1],
+            club : club,
+            power : pow
+          });
+        }
+      }
+    }
+    // Sort dists from shortest to longest median
+    compare = function( a, b ) {
+      if ( a.median < b.median ){
+        return -1;
+      }
+      if ( a.median > b.median ){
+        return 1;
+      }
+      return 0;
+    }
+    dists.sort( compare );
+
+    // Create the table
+    var table = `
+      <table class="club-dist-table">
+        <tr><th>Club</th><th>Power</th><th>Min</th><th>Median</th><th>Max</th></tr>`;
+    for (const d of dists) {
+      table += `<tr onclick="showPlot('${d.club}')"><td>${d.club}</td><td>${d.power}%</td><td>${d.min}</td><td>${d.median}</td><td>${d.max}</td></tr>`;
+    }
+    table += `
+      </table>`;
+    
+    document.getElementById("body-container-data").innerHTML = table;
+  } else if (view == "export-import") {
+    document.getElementById("body-container-data").innerHTML = `
+    <div class="footer-button button" onclick="exportCSV()">Export CSV</div>
+    <br>
+    <div class="footer-button button" onclick="importCSV()">Import CSV</div>
+    `;
+  } else if (view == "history") {
+    var table = `
+      <table class="club-dist-table small-table">
+        <tr><th>Date</th><th>Course</th><th>Hole</th><th>Club</th><th>Dist</th></tr>`;
+
+    var storkes = await getStrokes();
+    for (ts of Object.keys(storkes).sort().reverse()) {
+      var stroke = storkes[ts];
+      var tsI = parseInt(ts);
+      table += `<tr onclick="showOldStroke(${tsI})"><td>${dateFormat(tsI,true)}</td><td>${stroke.course}</td><td>${stroke.hole}</td><td>${stroke.club}</td><td>${stroke.dist}</td></tr>`;
+    }
+    
+    table += `
+      </table>`;
+    document.getElementById("body-container-data").innerHTML = table;
+  } else if (view == "club-plot") {
+    showPlot("GW");
+  } else if (view == "course-settings") {
+    showCourseSettings();
+  } else if (view == "club-settings") {
+    showClubSettings();
+  }
+}
+
+function getMedian(array) {
+  if (array.length > 0) {
+    min = array[0];
+    max = array[array.length - 1];
+    if (array.length == 1) {
+      return array[0];
+    } else {
+      const middleIndex = Math.floor(array.length / 2);
+      if (array.length % 2 === 0) {
+          return Math.round((array[middleIndex - 1] + array[middleIndex]) / 2);
+      } else {
+          return array[middleIndex];
+      }
+    }
+  }
+  return 0;
+}
+
+function showApp() {
+  wasSetUrlParam("page", "page-app");
+  wasPageShow("page-app");
+}
+
+
+// Distances are sorted from smallest to largest
+function filterDistances(strokes, club, swingType, swingPower) {
+  const result = [];
+  if (strokes != null) {
+    for (const stroke of Object.values(strokes)) {
+      if ((club == stroke.club) &&
+          (swingType == null || swingType == stroke.type) &&
+          (swingPower == null || swingPower == stroke.power)) {
+        result.push(stroke.dist);
+      }
+    }
+  }
+  return result.sort(function (a, b) {  return a - b;  });  
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Course Settings
+
+function showCourseSettings() {
+  document.getElementById("body-container-data").innerHTML = `
+    <div class='button-group'>
+      <div class='footer-button-small button' onclick='addCourse()'>Add</div>
+      <div class='footer-button-small button' onclick='deleteCourse()'>Delete</div>
+      <div class='footer-button-small button' onclick='saveCourse()'>Save Course</div>
+    </div>
+    <div id="course-settings-courses" class="">
+      <label for="course">Course:</label>
+      <select name="course" id="course-settings" onchange="updateHoleSettings()">
+      </select>
+    </div>
+    <div id='hole-settings'>
+    </div>
+  `; 
+  fillSelect('course-settings', Object.keys(GLOB_COURSES));
+  updateHoleSettings();
+}
+
+function addCourse() {
+  document.getElementById("new-course-name").value = "";
+  document.getElementById("dialog-add-course").style.display = "grid";
+}
+
+function closeNewCourse() {
+  document.getElementById("dialog-add-course").style.display = "none";
+}
+
+function newCourse(nbrHoles) {
+  const courseName = document.getElementById("new-course-name").value;
+  if (courseName == "") {
+    closeNewCourse();    
+    openNotification("Invalid Course", "Course name cannot be empty", true);
+  } else if (courseName in GLOB_COURSES) {
+    closeNewCourse();    
+    openNotification("Invalid Course", `${courseName} already exist`, true);
+  } else {
+    const course = {};
+    for(var i = 1 ; i <= nbrHoles; i++) {
+      course[i] = [undefined, undefined];
+    }
+    GLOB_COURSES[courseName] = course;
+    postCourses(GLOB_COURSES);
+    closeNewCourse();  
+    // Refresh the page
+    location.reload();  
+  }
+}
+
+
+function deleteCourse() {
+  const courseName = document.getElementById('course-settings').value;
+  if (confirm(`Are you sure that "${courseName}" shall be deleted?`)) {
+    delete GLOB_COURSES[courseName];
+    postCourses(GLOB_COURSES);
+    // Refresh the page
+    location.reload();
+  }
+}
+
+function saveCourse() {
+  const courseName = document.getElementById('course-settings').value;
+  const course = GLOB_COURSES[courseName];
+  for (hole of Object.keys(course)) {
+    course[hole] = latLongFromStr(document.getElementById(`set-hole-${hole}`).value);
+  } 
+  postCourses(GLOB_COURSES);  
+}
+
+function updateHoleSettings() {
+  const courseName = document.getElementById('course-settings').value;
+  const course = GLOB_COURSES[courseName];
+  var table = `
+    <table id='hole-settings-table'>
+      <tr>
+        <th>Hole</th><th>lat, long</th>
+      </tr>
+    `;
+  for (const [hole, latLong] of Object.entries(course)) {
+    var latLongStr = latLong.toString();
+    if (latLongStr == ",") {
+      latLongStr = "";
+    }
+    table += `
+    <tr>
+      <td>${hole}</td><td><input id="set-hole-${hole}" type="text" value="${latLongStr}" onchange="validateLatLong('set-hole-${hole}')"></td>
+    </tr>
+    `
+  } 
+  table += "</table>"
+  document.getElementById("hole-settings").innerHTML = table;
+}
+
+function validateLatLong(inputId) {
+  latLong = latLongFromStr(document.getElementById(inputId).value);
+  if (latLong == null) {
+    openNotification("Invalid format", "Enter format: lat,long", true);
+    document.getElementById(inputId).value = "";
+    return;    
+  }
+  document.getElementById(inputId).value = latLong.toString();
+}
+
+// Returns null if invalid
+function latLongFromStr(latLongStr) {
+  if (latLongStr == "") {
+    return [undefined, undefined];
+  } 
+  const latLong = latLongStr.split(",");
+  if (latLong.length != 2) {
+    return null;
+  }
+  const lat = parseFloat(latLong[0]);
+  const long = parseFloat(latLong[1]);
+  if (Number.isNaN(lat) || Number.isNaN(long)) {
+    return null;
+  }
+  return [lat, long];
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Club settings
+
+function showClubSettings() {
+  document.getElementById("body-container-data").innerHTML = "<div class='footer-button button' onclick='saveClubSettings()'>Save</div>";
+  document.getElementById("body-container-data").innerHTML += "<div id='club-container-settings' class='club-container'></div>";
+  const elemClubs = document.getElementById("club-container-settings");
+  for (const club of data["club"]) {
+    const elemDiv = document.createElement("div");
+    elemDiv.setAttribute("class", "club");
+    elemDiv.setAttribute("onclick", `selectClubInSettings("${club}")`);
+    if (GLOB_CLUBS.includes(club)) {
+      elemDiv.classList.add("selected-club");
+    }
+    elemDiv.innerText = club;
+    elemClubs.appendChild(elemDiv);
+  }  
+}
+
+function selectClubInSettings(club) {
+  const elemClubs = document.getElementById("club-container-settings");
+  var children = elemClubs.children;
+  for (var child of children) {
+    if (child.innerText == club) {
+      child.classList.toggle("selected-club");
+    } 
+  }
+}
+
+function saveClubSettings() {
+  const clubs = [];
+  const elemClubs = document.getElementById("club-container-settings");
+  var children = elemClubs.children;
+  for (var child of children) {
+    if (child.classList.contains("selected-club")) {
+      clubs.push(child.innerText);
+    } 
+  }
+  if (clubs.length == 0) {
+    openNotification("No clubs selected", "You need to select at least one club", true);
+    return
+  }
+  postClubs(clubs);
+  // Refresh the page
+  location.reload();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Show plot
+
+async function showPlot(club = undefined, swingType = "normal") {
+  // Select correct option
+  document.getElementById("data-view").value = "club-plot";
+
+  // Create element to put plot inside
+  const ctx = document.createElement('canvas');
+  const bodyContainer = document.getElementById("body-container-data");
+  bodyContainer.innerHTML = "<div id='club-container-plot' class='club-container'>"; // Also clear
+  bodyContainer.appendChild(ctx);
+
+  // Generate clubs
+  createClubElements("club-container-plot","showPlot");
+  selectClub(club, "club-container-plot");
+  
+  // Generate chart.js data / dataset
+  const strokes = await getStrokes();
+  getXY = function(strokes, club, swingType, swingPower) {
+    const xy = [];
+    if (strokes != null) {
+      for (const stroke of Object.values(strokes)) {
+        if ((club == stroke.club) &&
+            (swingType == null || swingType == stroke.type) &&
+            (swingPower == null || swingPower == stroke.power)) {
+          var altitude = 0;
+          if (stroke.start.alt != undefined && stroke.end.alt != undefined) {
+            altitude = stroke.end.alt - stroke.start.alt;
+          }
+          xy.push({
+            x: stroke.dist,
+            y: altitude
+          });
+        }
+      }
+    }
+    return xy;
+  };
+
+  dataset = [];
+  for(pow of [[25,'yellow'],[50,'red'],[75,'green'],[100,'blue']]) {
+    const xy = getXY(strokes, club, swingType, pow[0]);
+    dataset.push({
+      label: `${pow[0]}%`,
+      data: xy,
+      backgroundColor: pow[1]
+    });
+  }
+
+  const data = {
+    datasets: dataset
+  };
+
+  new Chart(ctx, {
+    type: 'scatter',
+    data: data,
+    options: {
+      scales: {
+        x: {
+          type: 'linear',
+          title: { 
+            display: true, 
+            align: 'center', 
+            text: 'Distance', 
+            color: 'black'
+          }
+        },
+        y: {
+          title: { 
+            display: true, 
+            align: 'center', 
+            text: 'Altitude', 
+            color: 'black'
+          }
+        }
+      }
+    }
+  });
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Export CSV
+
+const CSV_SEPARATOR = ","; 
+const CSV_HEADINGS = ["Club","Time","Course","Hole","Type","Power","Lat 1","Long 1","Alt 1",
+                      "Lat 2","Long 2","Alt 2","Dist"];
+
+async function exportCSV() {
+  var t = [];
+  t.push(CSV_HEADINGS.join(CSV_SEPARATOR));
+  const strokes = await getStrokes();
+  if (strokes != null) {
+    for (const [ts, s] of Object.entries(strokes)) {
+      var cols = [s.club,dateFormat(parseInt(ts)),s.course,s.hole,s.type,s.power,
+                  s.start.lat,s.start.long,s.start.alt,
+                  s.end.lat,s.end.long,s.end.alt,s.dist]
+      t.push(cols.join(CSV_SEPARATOR));
+    }
+  }
+  download(`golfdist ${dateFormat(parseInt(Date.now()))}.csv`, t.join("\n"), "text/csv");
+}
+
+function download(filename, text, mime = "text/plain") {
+  var element = document.createElement('a');
+  element.setAttribute('href', `data:${mime};charset=utf-8,` + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  element.click();
+
+  document.body.removeChild(element);
+}
+
+function dateFormat(timestamp, removeMs = false) {
+  var u = new Date(timestamp);
+  var us = u.toISOString();
+  if(removeMs) {
+    us = us.substring(0, us.indexOf("."));
+  }
+  return us.replace("T", " ");
+}
+
+function fromDateFormat(dateString) {
+  var ds = dateString.replace(" ", "T");
+  var d = new Date(ds);
+  return d.getTime();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Import CSV
+async function importCSV() {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.setAttribute("accept", ".csv")
+
+  input.onchange = e => { 
+
+    // getting a hold of the file reference
+    var file = e.target.files[0]; 
+
+    // setting up the reader
+    var reader = new FileReader();
+    reader.readAsText(file,'UTF-8');
+
+    // here we tell the reader what to do when it's done reading...
+    reader.onload = readerEvent => {
+        parseCSV(readerEvent.target.result); // this is the content!
+    }
+
+  }
+
+  input.click();
+}
+
+async function parseCSV(content) {
+  var rows = content.split("\n");
+  if (rows.length < 2) {
+    alert("CSV files contains no data");
+    return;
+  }
+  var headings = rows.shift().split(CSV_SEPARATOR);
+  for (heading of CSV_HEADINGS) {
+    if(headings.indexOf(heading) == -1) {
+      alert(`Mandatory heading ${heading} is missing in CSV file`);
+      return;
+    }
+  }
+  var rowNum = 1; // 1 = Heading
+  for (row of rows) {
+    rowNum++;
+    var cols = row.split(CSV_SEPARATOR);
+    if (cols.length < CSV_HEADINGS.length) {
+      alert(`Row ${rowNum} missing columns:\n${row}`);
+      return;
+    }
+
+    var stroke = {
+      timestamp : fromDateFormat(cols[headings.indexOf("Time")]),
+      club: cols[headings.indexOf("Club")],
+      type: cols[headings.indexOf("Type")],
+      power: parseInt(cols[headings.indexOf("Power")]),
+      course: cols[headings.indexOf("Course")],
+      hole: cols[headings.indexOf("Hole")],
+      start : {lat : parseFloat(cols[headings.indexOf("Lat 1")]), 
+               long : parseFloat(cols[headings.indexOf("Long 1")]), 
+               alt : parseFloat(cols[headings.indexOf("Alt 1")])},      
+      end :   {lat : parseFloat(cols[headings.indexOf("Lat 2")]), 
+               long : parseFloat(cols[headings.indexOf("Long 2")]), 
+               alt : parseFloat(cols[headings.indexOf("Alt 2")])},
+      dist : parseInt(cols[headings.indexOf("Dist")])
+    };
+    postStroke(stroke);
+  }
+  openNotification("Import successful",`Imported ${rowNum - 1} strokes`, false);
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Old stroke
+
+var GLOB_OLD_STROKE = null;
+var GLOB_OLD_STROKE_TIMESTAMPS = [];
+var GLOB_PREV_PAGE = "";
+
+async function showOldStroke(timestamp=null) {
+
+  GLOB_OLD_STROKE_TIMESTAMPS = await getStrokeTimestamps();
+
+  if (GLOB_OLD_STROKE_TIMESTAMPS.length == 0) {
+    // No old strokes exists
+    return;
+  }
+  GLOB_OLD_STROKE_TIMESTAMPS.sort();
+
+  if (timestamp == null) {
+    timestamp = wasGetUrlParam("stroke");
+    if (timestamp != null) {
+      timestamp = parseInt(timestamp);
+    }
+  }
+  if (timestamp == null) {
+    timestamp = GLOB_OLD_STROKE_TIMESTAMPS[GLOB_OLD_STROKE_TIMESTAMPS.length - 1];
+  }
+
+  GLOB_OLD_STROKE = null;
+  if (GLOB_OLD_STROKE_TIMESTAMPS.includes(timestamp)) {
+    GLOB_OLD_STROKE = await getStroke(timestamp);
+  } 
+  if(GLOB_OLD_STROKE == null) {
+    console.log("Invalid timestamp:" + timestamp)
+    return; // Invalid timestamp
+  }
+
+  wasSetUrlParam("stroke", GLOB_OLD_STROKE.timestamp);
+  if (wasGetUrlParam("page") != "page-old-stroke") {
+    GLOB_PREV_PAGE = wasGetUrlParam("page");
+  }
+  wasSetUrlParam("page", "page-old-stroke");
+  wasPageShow("page-old-stroke");
+
+  // Fill course / hole
+  document.getElementById("course-old-stroke").value = GLOB_OLD_STROKE.course;
+  changeCourseOldStroke();
+  document.getElementById("hole-old-stroke").value = GLOB_OLD_STROKE.hole;
+
+  // Set date
+  document.getElementById("date").innerHTML = dateFormat(GLOB_OLD_STROKE.timestamp, true);
+
+  // Set club
+  selectClub(GLOB_OLD_STROKE.club, "club-container-old-stroke");
+
+  // Fill in stroke
+  selectSwingPower(GLOB_OLD_STROKE.power,"swing-power-container-old-stroke");
+  selectSwingType(GLOB_OLD_STROKE.type, "swing-type-container-old-stroke");
+
+  // Fill distance and altitude
+  const altDiff = Math.round(GLOB_OLD_STROKE.end.alt - GLOB_OLD_STROKE.start.alt);
+  var altText = "";
+  if (altDiff < 0) {
+    altText = `<sub>&#8595;${Math.abs(altDiff)} m</sub>`
+  } else {
+    altText = `<sup>&#8593;${altDiff} m</sup>`
+    
+  }
+  const clubDist = GLOB_OLD_STROKE.dist; //calcDist(GLOB_OLD_STROKE.end, GLOB_OLD_STROKE.start);
+  document.getElementById("club-distance-old-stroke").innerHTML = `${clubDist} m ${altText}`;
+
+  // Fill in map
+  mapPlot(GLOB_OLD_STROKE.start.lat, GLOB_OLD_STROKE.start.long, 
+          GLOB_OLD_STROKE.end.lat, GLOB_OLD_STROKE.end.long, true);
+}
+
+function closeOldStroke() {
+  if (GLOB_PREV_PAGE == "page-data") {
+    showData();
+  } else {
+    showApp();
+  }
+}
+
+async function deleteOldStroke() {
+  if (confirm("Are you sure that stroke shall be deleted?")) {
+    deleteStroke(GLOB_OLD_STROKE);
+    if (await nextOldStroke() == false) {
+      if (await prevOldStroke() == false) {
+        closeOldStroke();
+      }
+    }
+  }
+}
+
+function modifyOldStroke() {
+  if (confirm("Are you sure that stroke shall be modified?")) {
+    GLOB_OLD_STROKE.club = document.getElementById("club-container-old-stroke").getAttribute("club");
+    GLOB_OLD_STROKE.type = document.getElementById("swing-type-container-old-stroke").getAttribute("swingtype");
+    GLOB_OLD_STROKE.power = document.getElementById("swing-power-container-old-stroke").getAttribute("swingpower");
+    GLOB_OLD_STROKE.course = document.getElementById("course-old-stroke").value;
+    GLOB_OLD_STROKE.hole = document.getElementById("hole-old-stroke").value;
+    postStroke(GLOB_OLD_STROKE);
+  }
+}
+
+function changeCourseOldStroke() {
+  const course = document.getElementById("course-old-stroke").value;
+
+  if (course in GLOB_COURSES) {
+    // Fill in holes
+    fillSelect("hole-old-stroke", Object.keys(GLOB_COURSES[course]));
+  } else {
+    document.getElementById("hole-old-stroke").innerHTML = "";
+  }
+}
+
+async function prevOldStroke() {
+  var i = GLOB_OLD_STROKE_TIMESTAMPS.indexOf(GLOB_OLD_STROKE.timestamp);
+  if (i > 0) {
+    showOldStroke(GLOB_OLD_STROKE_TIMESTAMPS[i - 1]);
+    return true;
+  }
+  return false;
+}
+
+async function nextOldStroke() {
+  var i = GLOB_OLD_STROKE_TIMESTAMPS.indexOf(GLOB_OLD_STROKE.timestamp);
+  if (i < (GLOB_OLD_STROKE_TIMESTAMPS.length - 1)) {
+    showOldStroke(GLOB_OLD_STROKE_TIMESTAMPS[i + 1]);
+    return true;
+  }
+  return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Map
+
+// Filled in first time map is shown
+var GLOB_MAP = {
+  map: null,
+  styleRed: null,
+  styleBlue: null,
+  layers: []
+};
+
+function mapSetup() {
+  GLOB_MAP.map = new ol.Map({
+      target: 'map',
+      layers: [
+          new ol.layer.Tile({
+          source: new ol.source.OSM()
+          })
+      ],
+      view: new ol.View({
+          center:[0,0],
+          zoom: 0
+      })
+  });
+
+  // Create the style of the start marker
+  GLOB_MAP.styleRed = new ol.style.Style({ 
+          image: new ol.style.Circle({ 
+              radius: 5, 
+              fill: new ol.style.Fill({color: 'rgba(200, 200, 255, 0.3)'}), 
+              stroke: new ol.style.Stroke({color: 'red', width: 3}) 
+          }) 
+      });
+
+  // Create the style of the end marker
+  GLOB_MAP.styleBlue = new ol.style.Style({ 
+      image: new ol.style.Circle({ 
+          radius: 5, 
+          fill: new ol.style.Fill({color: 'rgba(200, 200, 255, 0.3)'}), 
+          stroke: new ol.style.Stroke({color: 'blue', width: 3}) 
+      }) 
+  });
+}
+
+function mapPlot(latitude, longitude, latitude2, longitude2, clear = false) {
+
+    // Create the map unless already created
+    if (GLOB_MAP.map == null) {
+      mapSetup();
+    }
+  
+    if (clear) {
+      for(layer of GLOB_MAP.layers) {
+        GLOB_MAP.map.removeLayer(layer);
+      }
+      GLOB_MAP.layers = [];
+    }
+
+    // Create the markers
+    var markers = [];
+
+    // Start marker
+    var startMarker = new ol.Feature({
+        geometry: new ol.geom.Point(ol.proj.fromLonLat([
+            longitude, 
+            latitude]
+        ))
+    });
+    startMarker.setStyle(GLOB_MAP.styleRed);
+    markers.push(startMarker);
+
+    // End marker
+    var endMarker = new ol.Feature({
+        geometry: new ol.geom.Point(ol.proj.fromLonLat([
+            longitude2, 
+            latitude2]
+        ))
+    });
+    endMarker.setStyle(GLOB_MAP.styleBlue);
+    markers.push(endMarker);
+
+    // Line between markers
+    var lineMarker = new ol.Feature({
+        geometry: new ol.geom.LineString([
+          ol.proj.fromLonLat([
+              longitude, 
+              latitude]
+          ),
+          ol.proj.fromLonLat([
+            longitude2, 
+            latitude2]),
+          ])
+    });
+    markers.push(lineMarker);
+
+    // Create the layer where all markers are located and add to map
+    var layer = new ol.layer.Vector({
+        source: new ol.source.Vector({
+            features: markers 
+        })
+    });
+    GLOB_MAP.map.addLayer(layer);
+    GLOB_MAP.layers.push(layer);
+
+    // Center map
+    GLOB_MAP.map.getView().fit(layer.getSource().getExtent());
+    GLOB_MAP.map.getView().setZoom(GLOB_MAP.map.getView().getZoom() - 0.5);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+// Store Manual dialog
+
+function storeManualDialog() {
+  var manualDist = parseInt(document.getElementById("manual-distance").value);
+  if (manualDist > 0) {
+    closeManualDialog();
+    if (wasGetUrlParam("page") != "page-old-stroke") {
+      markEnd(manualDist);
+    } else {
+      GLOB_OLD_STROKE.dist = manualDist;
+      document.getElementById("club-distance-old-stroke").innerHTML = manualDist + " m";
+    }
+  }
+}
+
+function closeManualDialog() {
+  document.getElementById("dialog-manual-input").style.display = "none";
+}
+
+function openManualDialog() {
+  document.getElementById("dialog-manual-input").style.display = "grid";
+  document.getElementById("manual-distance").value = "";
+  document.getElementById("manual-distance").focus();
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Server communication
+async function getStrokeTimestamps() {
+  const files = await get(`strokes/?ls=true`, null);
+  if (files == null) {
+    return [];
+  }
+  var ids = [];
+  for (file of files.files) {
+    if(file.includes(".json")) {
+      ids.push(parseInt(file.replace(".json","")));
+    }
+  }
+  return ids;
+}
+
+async function getStrokes() {
+  return get(`strokes/`, null);
+}
+
+async function getStroke(timestamp) {
+  return get(`strokes/${timestamp}`, null);
+}
+
+// Returns true if successful
+async function postStroke(stroke) {
+  return post(stroke,`strokes/${stroke.timestamp}`);
+}
+
+async function deleteStroke(stroke) {
+  var user = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/userdata/${user}/strokes/${stroke.timestamp}`;
+  // Remove stroke
+  const request = new Request(url, {
+    method: "DELETE",
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+  } catch (error) {
+    openNotification("No network!", error.message);
+  }
+}
+
+// Returns empty array if no clubs exists and null on error.
+async function getClubs() {
+  return get("clubs", []);
+}
+
+async function postClubs(clubs) {
+  return post(clubs,"clubs");
+}
+
+// Returns empty object if no courses exists and null on error.
+async function getCourses() {
+  return get("courses", {});
+}
+
+async function postCourses(courses) {
+  return post(courses,"courses");
+}
+
+// Generic get function returns null on network error, default value on
+// server error (typically that object don't exist) or the actual object
+// on success
+async function get(pathDir, defaultObj) {
+  var user = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/userdata/${user}/${pathDir}`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      return defaultObj; // This is ok and sometimes expected
+    }
+    const json = await response.json();
+    return json;
+  } catch (error) {
+    openNotification("No network!", error.message);
+    return null;
+  }
+}
+
+// Generic post function returns true on success and false on error
+async function post(obj, pathDir) {
+  var user = wasGetUrlParam("user");
+  const url = `${WAS_APP_URL}/userdata/${user}/${pathDir}`;
+  const request = new Request(url, {
+    method: "POST",
+    body: JSON.stringify(obj),
+  });
+  try {
+    const response = await fetch(request);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+  } catch (error) {
+    openNotification("No network!", error.message);
+    return false;
+  }
+  return true;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Notification dialog
+function openNotification(head, reason, warning = true) {
+  document.getElementById("notification-head").innerHTML = head;
+  document.getElementById("notification-reason").innerHTML = reason;
+  var elemNotif = document.getElementById("notification");
+  elemNotif.style.display = "block";
+  var elemIcon = document.getElementById("notification-icon");
+  if (warning) {
+    elemIcon.innerHTML = "&#9888;";
+    elemIcon.classList.add("warning");
+    elemNotif.classList.add("warning");
+  } else {
+    elemIcon.innerHTML = "&#128712;";
+    elemIcon.classList.remove("warning");
+    elemNotif.classList.remove("warning");
+  }
+  setTimeout(closeNotification, 3000);
+}
+
+function closeNotification() {
+  document.getElementById("notification").style.display = "none";
+}
+
+
+</script>
+</head>
+<body>
+
+
+  <div id="page-app" class="was-page head-content-footer">
+    
+    <div class="header-container">
+      <div class="course-container">
+        <label for="course">Course:</label>
+        <select name="course" id="course" onchange="changeCourse()">
+          <option value=""></option>
+        </select>
+      </div>
+      <div class="flex-center-container">
+        <div class="hole-container">
+          <label for="hole">Hole:</label>
+          <select name="hole" id="hole"  onchange="updateRef()">
+          </select>
+        </div>
+        <div id="ref-distance">- m</div>
+      </div>
+      <hr>
+    </div>
+
+    <div class="body-container body-app">
+      <div id="club-distance" class="club-distance" style="display:none;" onclick="openManualDialog()">- m</div>
+      <div id="club-distance-empty" class="club-distance">-</div>
+      <div id="mark-start-button" class="large-button button" onclick="markStart()">Start tracking</div>
+      <div id="mark-end-button" class="large-button button" style="display:none" onclick="markEnd()">Store distance</div>
+      <div id="club-container" class="club-container">
+      </div>
+      <div id="swing-power-container" class="swing-power-container">
+        <div id="swing-type-container">
+          <div swingtype="normal" class="swing-type button selected-type" onclick="selectSwingType('normal','swing-type-container')">Normal</div>
+          <div swingtype="chip" class="swing-type button" onclick="selectSwingType('chip','swing-type-container')">Chip</div>
+        </div>
+        <div power="100" class="swing-button selected-power" onclick="selectSwingPower(100,'swing-power-container')">
+          <div>100%</div>
+          <img src="100.png"></img>
+        </div>
+        <div power="75" class="swing-button" onclick="selectSwingPower(75,'swing-power-container')">
+          <div>75%</div>
+          <img src="75.png"></img>
+        </div>
+        <div power="50" class="swing-button" onclick="selectSwingPower(50,'swing-power-container')">
+          <div>50%</div>
+          <img src="50.png"></img>
+        </div>
+        <div power="25" class="swing-button" onclick="selectSwingPower(25,'swing-power-container')">
+          <div>25%</div>
+          <img src="25.png"></img>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-container button-group">
+      <div class="footer-button half-button button" onclick="showOldStroke()">Old</div>
+      <div class="footer-button half-button button" onclick="showData()">Data</div>
+      <div id="cancel-button" class="footer-button half-button button" style="display:none" onclick="markCancel()">Cancel</div>
+    </div>
+  </div>
+
+
+
+
+  <div id="page-old-stroke" class="was-page head-content-footer">
+    <div class="header-container">
+        <div class="course-container">
+          <label for="course-old">Course:</label>
+          <select name="course-old" id="course-old-stroke" onchange="changeCourseOldStroke()">
+            <option value=""></option>
+          </select>
+        </div>
+        <div class="flex-center-container">
+          <div class="hole-container">
+            <label for="hole-old">Hole:</label>
+            <select name="hole-old" id="hole-old-stroke">
+            </select>
+          </div>
+          <div id="date" onclick="showData('history')">
+            2024-08-17
+          </div>
+        </div>
+        <hr>
+    </div>
+
+    <div class="body-container body-old-stroke">
+      <div id="club-distance-old-stroke" onclick="openManualDialog()">- m</div>
+      <div id="club-container-old-stroke" class="club-container">
+      </div>
+      <div id="swing-power-container-old-stroke" class="swing-power-container">
+        <div id="swing-type-container-old-stroke">
+          <div swingtype="normal" class="swing-type button selected-type" onclick="selectSwingType('normal','swing-type-container-old-stroke')">Normal</div>
+          <div swingtype="chip" class="swing-type button" onclick="selectSwingType('chip','swing-type-container-old-stroke')">Chip</div>
+        </div>
+        <div power="100" class="swing-button selected-power" onclick="selectSwingPower(100,'swing-power-container-old-stroke')">
+          <div>100%</div>
+          <img src="100.png"></img>
+        </div>
+        <div power="75" class="swing-button" onclick="selectSwingPower(75,'swing-power-container-old-stroke')">
+          <div>75%</div>
+          <img src="75.png"></img>
+        </div>
+        <div power="50" class="swing-button" onclick="selectSwingPower(50,'swing-power-container-old-stroke')">
+          <div>50%</div>
+          <img src="50.png"></img>
+        </div>
+        <div power="25" class="swing-button" onclick="selectSwingPower(25,'swing-power-container-old-stroke')">
+          <div>25%</div>
+          <img src="25.png"></img>
+        </div>
+      </div>
+      <div id="map"></div>
+    </div>
+
+    <div class="footer-container button-group">
+      <div class="narrow-button button" onclick="prevOldStroke()">&lt;</div>
+      <div class="narrow-button button" onclick="closeOldStroke()">Close</div>
+      <div class="narrow-button button" onclick="modifyOldStroke()">Save</div>
+      <div class="narrow-button button" onclick="deleteOldStroke()">Delete</div>
+      <div class="narrow-button button" onclick="nextOldStroke()">&gt;</div>
+    </div>
+  </div>
+
+
+
+
+  <div id="page-data" class="was-page head-content-footer">
+    <div class="header-container" id="header-container-data">
+      <select name="data-view" id="data-view" onchange="showData('-')">
+        <option value="normal">Normal distances</option>
+        <option value="chip">Chip distances</option>
+        <option value="club-plot">Club plots</option>
+        <option value="history">History</option>
+        <option value="export-import">Export / Import</option>
+        <option value="course-settings">Course settings</option>
+        <option value="club-settings">Club settings</option>
+      </select>
+    </div>
+    <div class="body-container" id="body-container-data">
+    </div>
+    <div class="footer-container" id="footer-container-data">
+      <div class="footer-button button" onclick="showApp()">Back</div>
+    </div>
+  </div>
+
+
+
+  <div id="dialog-manual-input" class="head-content-footer dialog">
+    <div class="header-container">
+    </div>
+    <div class="body-container body-container-dialog">
+      <label for="manual-distance">Distance in m:</label><br>
+      <input type="number" id="manual-distance" name="distance" onchange="storeManualDialog()">
+    </div>
+    <div class="footer-container button-group" id="data-footer">
+      <div class="footer-button button" onclick="storeManualDialog()">Store</div>
+      <div class="footer-button button" onclick="closeManualDialog()">Cancel</div>
+    </div>
+  </div>
+
+
+  <div id="dialog-add-course" class="head-content-footer dialog">
+    <div class="header-container">
+    </div>
+    <div class="body-container body-container-dialog">
+      <label for="course-name">Course Name:</label><br>
+      <input type="text" id="new-course-name" name="course-name">
+    </div>
+    <div class="footer-container button-group">
+      <div class="footer-button-small button" onclick="newCourse(18)">18 holes</div>
+      <div class="footer-button-small button" onclick="newCourse(9)">9 holes</div>
+      <div class="footer-button-small button" onclick="closeNewCourse()">Cancel</div>
+    </div>
+  </div>
+
+  <div id="notification">
+    <div id="notification-head">No network!</div>
+    <div id="notification-icon">&#9888;</div>
+    <div id="notification-reason">Unknown reason</div>
+  </div>
+</body>
+</html>
