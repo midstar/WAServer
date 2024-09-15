@@ -1,4 +1,4 @@
-<img src="https://github.com/midstar/waserver/blob/feature/golf_distance/app/Golf_distance/logo.ico" width="30%">
+![](logo.ico)
 
 # Golf Distance
 
