@@ -6,8 +6,8 @@
 <link rel="icon" type="image/x-icon" href="logo.ico?v=2">
 <link rel="stylesheet" href="../was/was.css">
 <script src="../was/was.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
-<script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.1.0/ol.css" type="text/css">
+<script src="https://cdn.jsdelivr.net/npm/ol@v10.1.0/dist/ol.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 
@@ -1607,12 +1607,30 @@ var GLOB_MAP = {
 };
 
 function mapSetup() {
+
+  // Standard map layer
+  const standardLayer = new ol.layer.Tile({
+          source: new ol.source.OSM()
+  });
+
+  // Satellite map layer
+  const key = '9h8yyBVcyqIP2tx1SV8B';
+  const attributions =
+    '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> ' +
+    '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
+  const satelliteLayer = new ol.layer.Tile({
+    source: new ol.source.ImageTile({
+      attributions: attributions,
+      url: 'https://api.maptiler.com/maps/satellite/{z}/{x}/{y}.jpg?key=' + key,
+      tileSize: 512,
+      maxZoom: 20,
+    }),
+  });
+
   GLOB_MAP.map = new ol.Map({
       target: 'map',
       layers: [
-          new ol.layer.Tile({
-          source: new ol.source.OSM()
-          })
+        standardLayer
       ],
       view: new ol.View({
           center:[0,0],
@@ -1700,7 +1718,10 @@ function mapPlot(latitude, longitude, latitude2, longitude2, clear = false) {
     GLOB_MAP.layers.push(layer);
 
     // Center map
+    console.log("Zoom before: " + GLOB_MAP.map.getView().getZoom());
+    console.log("Layer extent: " + layer.getSource().getExtent());
     GLOB_MAP.map.getView().fit(layer.getSource().getExtent());
+    console.log("Zoom after: " + GLOB_MAP.map.getView().getZoom());
     GLOB_MAP.map.getView().setZoom(GLOB_MAP.map.getView().getZoom() - 0.5);
 }
 
