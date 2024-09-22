@@ -617,6 +617,23 @@ label {
   width: 100%;
 }
 
+/********** Map settings **********/
+
+#map-type-button-group .button {
+  background-color: rgb(220, 220, 220);
+  color: gray;
+}
+
+#map-type-button-group .selected-map {
+  background-color: lightgreen;
+  color: black;
+}
+
+#map-api-key-input {
+  width: 90%;
+  font-size: 20px;
+}
+
 
 
 </style>
@@ -1050,6 +1067,8 @@ async function showData(view = "") {
     showCourseSettings();
   } else if (view == "club-settings") {
     showClubSettings();
+  } else if (view == "map-settings") {
+    showMapSettings();
   }
 }
 
@@ -1260,6 +1279,59 @@ function saveClubSettings() {
   postClubs(clubs);
   // Refresh the page
   location.reload();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Map Settings
+
+async function showMapSettings() {
+  document.getElementById("body-container-data").innerHTML = `
+    <div class='footer-button button' onclick='saveMapSettings()'>Save</div>
+    <div class='button-group' id="map-type-button-group">
+      <div class='footer-button-small button' id="map-normal" onclick='normalMap()'>Normal</div>
+      <div class='footer-button-small button' id="map-satellite" onclick='satelliteMap()'>Satellite</div>
+    </div>
+    Get API key from <a href="https://www.maptiler.com/cloud/" target="_blank">https://www.maptiler.com/cloud/</a>
+    <input id="map-api-key-input"></input>
+  `; 
+  const settings = await getSettings();
+  if (("map-satellite" in settings) == false || settings["map-satellite"] == false) {
+    normalMap();
+  } else {
+    satelliteMap();
+  }
+  var mapApiKey = "";
+  if ("map-api-key" in settings) {
+    mapApiKey = settings["map-api-key"];
+  }
+  document.getElementById("map-api-key-input").value = mapApiKey;
+}
+
+async function saveMapSettings() {
+  const settings = await getSettings();
+  settings["map-api-key"] = document.getElementById("map-api-key-input").value;
+  if (document.getElementById("map-normal").classList.contains("selected-map")) {
+    settings["map-satellite"] = false;
+  } else {
+    settings["map-satellite"] = true;
+    if (settings["map-api-key"] == "") {
+      openNotification("No API Key", "Satellite map requires an API key", true);
+      return
+    }
+  }
+  postSettings(settings);
+  // Refresh the page
+  location.reload();
+}
+
+function normalMap() {
+  document.getElementById("map-normal").classList.add("selected-map");
+  document.getElementById("map-satellite").classList.remove("selected-map");
+}
+
+function satelliteMap() {
+  document.getElementById("map-normal").classList.remove("selected-map");
+  document.getElementById("map-satellite").classList.add("selected-map");
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1606,31 +1678,33 @@ var GLOB_MAP = {
   layers: []
 };
 
-function mapSetup() {
+async function mapSetup() {
 
   // Standard map layer
-  const standardLayer = new ol.layer.Tile({
+  var layer = new ol.layer.Tile({
           source: new ol.source.OSM()
   });
-
-  // Satellite map layer
-  const key = '9h8yyBVcyqIP2tx1SV8B';
-  const attributions =
-    '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> ' +
-    '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
-  const satelliteLayer = new ol.layer.Tile({
-    source: new ol.source.ImageTile({
-      attributions: attributions,
-      url: 'https://api.maptiler.com/maps/satellite/{z}/{x}/{y}.jpg?key=' + key,
-      tileSize: 512,
-      maxZoom: 20,
-    }),
-  });
+  const settings = await getSettings();
+  if ("map-satellite" in settings && settings["map-satellite"]) {
+    // Satellite map layer
+    const key = settings["map-api-key"];
+    const attributions =
+      '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> ' +
+      '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>';
+    layer = new ol.layer.Tile({
+      source: new ol.source.ImageTile({
+        attributions: attributions,
+        url: 'https://api.maptiler.com/maps/satellite/{z}/{x}/{y}.jpg?key=' + key,
+        tileSize: 512,
+        maxZoom: 20,
+      }),
+    });
+  }
 
   GLOB_MAP.map = new ol.Map({
       target: 'map',
       layers: [
-        standardLayer
+        layer
       ],
       view: new ol.View({
           center:[0,0],
@@ -1657,15 +1731,15 @@ function mapSetup() {
   });
 }
 
-function mapPlot(latitude, longitude, latitude2, longitude2, clear = false) {
+async function mapPlot(latitude, longitude, latitude2, longitude2, clear = false) {
 
     // Create the map unless already created
     if (GLOB_MAP.map == null) {
-      mapSetup();
+      await mapSetup();
     }
   
     if (clear) {
-      for(layer of GLOB_MAP.layers) {
+      for(const layer of GLOB_MAP.layers) {
         GLOB_MAP.map.removeLayer(layer);
       }
       GLOB_MAP.layers = [];
@@ -1718,10 +1792,8 @@ function mapPlot(latitude, longitude, latitude2, longitude2, clear = false) {
     GLOB_MAP.layers.push(layer);
 
     // Center map
-    console.log("Zoom before: " + GLOB_MAP.map.getView().getZoom());
-    console.log("Layer extent: " + layer.getSource().getExtent());
+    GLOB_MAP.map.updateSize();
     GLOB_MAP.map.getView().fit(layer.getSource().getExtent());
-    console.log("Zoom after: " + GLOB_MAP.map.getView().getZoom());
     GLOB_MAP.map.getView().setZoom(GLOB_MAP.map.getView().getZoom() - 0.5);
 }
 
@@ -1814,6 +1886,14 @@ async function getCourses() {
 
 async function postCourses(courses) {
   return post(courses,"courses");
+}
+
+async function getSettings() {
+  return get("settings", {});
+}
+
+async function postSettings(settings) {
+  return post(settings,"settings");
 }
 
 // Generic get function returns null on network error, default value on
@@ -2018,6 +2098,7 @@ function closeNotification() {
         <option value="export-import">Export / Import</option>
         <option value="course-settings">Course settings</option>
         <option value="club-settings">Club settings</option>
+        <option value="map-settings">Map settings</option>
       </select>
     </div>
     <div class="body-container" id="body-container-data">
